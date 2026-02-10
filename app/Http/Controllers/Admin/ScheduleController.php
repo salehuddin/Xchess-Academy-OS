@@ -18,6 +18,25 @@ use Illuminate\Support\Facades\DB;
 
 class ScheduleController extends Controller
 {
+    public function index(): Response
+    {
+        $schedules = ClassSchedule::with(['class.package', 'room'])
+            ->orderBy('start_time', 'desc')
+            ->paginate(10)
+            ->through(fn ($schedule) => [
+                'id' => $schedule->id,
+                'class_name' => $schedule->class->name ?? $schedule->class->package->title ?? 'N/A',
+                'room_name' => $schedule->room->name ?? 'N/A',
+                'start_time' => $schedule->start_time->format('Y-m-d H:i'),
+                'end_time' => $schedule->end_time->format('H:i'),
+                'status' => $schedule->is_delivered ? 'Delivered' : 'Pending',
+            ]);
+
+        return Inertia::render('Admin/Schedules/Index', [
+            'schedules' => $schedules
+        ]);
+    }
+
     public function create(Request $request): Response
     {
         return Inertia::render('Admin/Schedules/Create', [
