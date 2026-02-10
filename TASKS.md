@@ -16,6 +16,8 @@ This file tracks implementation progress based on the revised `techincal-impleme
 - [x] **Layout**: Authenticated Sidebar (Links & Icons)
 - [x] **Students**: Create & Edit Forms (Standardized Labels, Inputs, Validation)
 - [x] **Parents**: CRUD, Sidebar Link, Reusable Modal Integration
+- [x] **Coaches**: Admin CRUD, Sidebar Link, Availability Management
+- [x] **Schedules**: Admin CRUD, Sidebar Link
 - [ ] **Students**: Refactor Index (Search Theme) & Show (Tables)
 - [ ] **Classes**: Verify & Standardize Create/Edit/Index/Show
 - [ ] **Users**: Verify & Standardize Index/Management
