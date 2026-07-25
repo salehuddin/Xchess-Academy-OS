@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Models\Invoice;
 use App\Models\Student;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class GenerateMonthlyInvoices extends Command
 {
@@ -38,10 +37,11 @@ class GenerateMonthlyInvoices extends Command
             // Check if invoice already exists for this month
             if (Invoice::where('student_id', $student->id)->where('month_year', $monthYear)->exists()) {
                 $this->warn("Invoice for student {$student->name} already exists for {$monthYear}. Skipping.");
+
                 continue;
             }
 
-            $baseAmount = $student->classes->sum(fn($class) => $class->package->monthly_fee);
+            $baseAmount = $student->classes->sum(fn ($class) => $class->package->monthly_fee);
 
             if ($baseAmount <= 0) {
                 continue; // Skip if no billable classes
@@ -49,13 +49,13 @@ class GenerateMonthlyInvoices extends Command
 
             // Simple fixed discount logic for now
             $recurringDiscount = $student->recurring_discount ?? 0;
-            
+
             // Ensure total doesn't go negative
             $totalBeforeTax = max(0, $baseAmount - $recurringDiscount);
-            
+
             // Assuming 0 tax for now, or configurable
-            $taxAmount = 0; 
-            
+            $taxAmount = 0;
+
             $totalAmount = $totalBeforeTax + $taxAmount;
 
             Invoice::create([

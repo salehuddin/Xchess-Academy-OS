@@ -38,6 +38,13 @@ const EditIcon = (props) => (
   </svg>
 );
 
+const EyeIcon = (props) => (
+  <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+    <path d="M15.58 12c0 1.98-1.6 3.58-3.58 3.58S8.42 13.98 8.42 12s1.6-3.58 3.58-3.58 3.58 1.6 3.58 3.58Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+    <path d="M12 20.27c3.53 0 6.82-2.08 9.11-5.68.9-1.41.9-3.78 0-5.19-2.29-3.6-5.58-5.68-9.11-5.68-3.53 0-6.82 2.08-9.11 5.68-.9 1.41-.9 3.78 0 5.19 2.29 3.6 5.58 5.68 9.11 5.68Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+  </svg>
+);
+
 const DeleteIcon = (props) => (
   <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 20 20" width="1em" {...props}>
     <path d="M17.5 4.98332C14.725 4.70832 11.9333 4.56665 9.15 4.56665C7.5 4.56665 5.85 4.64998 4.2 4.81665L2.5 4.98332" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
@@ -74,30 +81,38 @@ export default function Index({ auth, coaches, filters }) {
     const [coachToDelete, setCoachToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    const [rowsPerPage, setRowsPerPage] = useState(filters?.per_page || 10);
+
+    const onRowsPerPageChange = useCallback((e) => {
+        const perPage = Number(e.target.value);
+        setRowsPerPage(perPage);
+        router.get(route('admin.coaches.index'), { ...filters, per_page: perPage, page: 1 }, { preserveState: true });
+    }, [filters]);
+
     // Handlers
     const onSearchChange = useCallback((value) => {
         if (value) {
             setFilterValue(value);
         } else {
             setFilterValue('');
-            router.get(route('admin.coaches.index'), { search: '' }, { preserveState: true, replace: true });
+            router.get(route('admin.coaches.index'), { ...filters, search: '' }, { preserveState: true, replace: true });
         }
-    }, []);
+    }, [filters]);
 
     const onSearchSubmit = (e) => {
         if(e.key === 'Enter') {
-             router.get(route('admin.coaches.index'), { search: filterValue }, { preserveState: true });
+             router.get(route('admin.coaches.index'), { ...filters, search: filterValue }, { preserveState: true });
         }
     };
 
     const onClear = useCallback(()=>{
         setFilterValue('');
-        router.get(route('admin.coaches.index'), { search: '' }, { preserveState: true });
-    },[]);
+        router.get(route('admin.coaches.index'), { ...filters, search: '' }, { preserveState: true });
+    },[filters]);
 
     const onPageChange = useCallback((page) => {
-        router.get(route('admin.coaches.index'), { search: filterValue, page }, { preserveState: true });
-    }, [filterValue]);
+        router.get(route('admin.coaches.index'), { ...filters, search: filterValue, page }, { preserveState: true });
+    }, [filters, filterValue]);
 
     const handleDelete = (coach) => {
         setCoachToDelete(coach);
@@ -161,6 +176,13 @@ export default function Index({ auth, coaches, filters }) {
             case "actions":
                 return (
                     <div className="relative flex items-center gap-2">
+                        <Tooltip content="View Coach">
+                            <Link href={route('admin.coaches.show', coach.id)}>
+                                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+                                    <EyeIcon />
+                                </span>
+                            </Link>
+                        </Tooltip>
                         <Tooltip content="Edit Coach">
                             <Link href={route('admin.coaches.edit', coach.id)}>
                                 <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
@@ -212,9 +234,25 @@ export default function Index({ auth, coaches, filters }) {
                         </Button>
                     </div>
                 </div>
+                <div className="flex justify-between items-center">
+                    <span className="text-default-400 text-small">Total {coaches.total} coaches</span>
+                    <label className="flex items-center text-default-400 text-small">
+                        Rows per page:
+                        <select
+                            className="bg-transparent outline-none text-default-400 text-small"
+                            onChange={onRowsPerPageChange}
+                            value={rowsPerPage}
+                        >
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </label>
+                </div>
             </div>
         );
-    }, [filterValue, onSearchChange, onSearchSubmit, onClear]);
+    }, [filterValue, onSearchChange, onSearchSubmit, onClear, coaches.total, onRowsPerPageChange, rowsPerPage]);
 
     const bottomContent = useMemo(() => {
         return (
@@ -264,7 +302,7 @@ export default function Index({ auth, coaches, filters }) {
                     bottomContent={bottomContent}
                     bottomContentPlacement="outside"
                     classNames={{
-                        wrapper: "max-h-[382px] bg-transparent shadow-none",
+                        wrapper: "bg-transparent shadow-none",
                     }}
                     topContent={topContent}
                     topContentPlacement="outside"

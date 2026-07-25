@@ -60,7 +60,14 @@ const statusColorMap = {
     Overdue: "danger",
 };
 
-export default function Index({ auth, invoices }) {
+export default function Index({ auth, invoices, filters }) {
+    const rowsPerPage = filters?.per_page || 10;
+
+    const onRowsPerPageChange = (e) => {
+        const perPage = Number(e.target.value);
+        router.get(route('admin.invoices.index'), { ...filters, per_page: perPage, page: 1 }, { preserveState: true });
+    };
+
     const renderCell = useCallback((invoice, columnKey) => {
         const cellValue = invoice[columnKey];
 
@@ -110,6 +117,25 @@ export default function Index({ auth, invoices }) {
         }
     }, []);
 
+    const topContent = (
+        <div className="flex justify-between items-center pb-2">
+            <span className="text-default-400 text-small">Total {invoices.total} invoices</span>
+            <label className="flex items-center text-default-400 text-small">
+                Rows per page:
+                <select
+                    className="bg-transparent outline-none text-default-400 text-small ml-1"
+                    onChange={onRowsPerPageChange}
+                    value={rowsPerPage}
+                >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+        </div>
+    );
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -128,6 +154,8 @@ export default function Index({ auth, invoices }) {
                 <Table
                     aria-label="Invoices table"
                     isHeaderSticky
+                    topContent={topContent}
+                    topContentPlacement="outside"
                     bottomContent={
                         invoices.links && invoices.last_page > 1 && (
                             <div className="flex w-full justify-center px-4 py-4 border-t border-gray-100">
@@ -138,14 +166,14 @@ export default function Index({ auth, invoices }) {
                                     color="primary"
                                     page={invoices.current_page}
                                     total={invoices.last_page}
-                                    onChange={(page) => router.get(route('admin.invoices.index', { page }), {}, { preserveState: true })}
+                                    onChange={(page) => router.get(route('admin.invoices.index', { ...filters, page }), {}, { preserveState: true })}
                                 />
                             </div>
                         )
                     }
                     bottomContentPlacement="outside"
                     classNames={{
-                        wrapper: "max-h-[382px] bg-transparent shadow-none",
+                        wrapper: "bg-transparent shadow-none",
                     }}
                     selectionMode="none"
                 >

@@ -6,8 +6,6 @@ use App\Enums\UserRole;
 use App\Models\ChessClass;
 use App\Models\Invoice;
 use App\Models\Student;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -27,15 +25,12 @@ class DashboardController extends Controller
                     ->where('month_year', now()->format('Y-m'))
                     ->sum('total_amount'),
             ];
-        } elseif ($user->role === UserRole::Coach) {
-            $stats = [
-                'my_classes' => ChessClass::where('coach_id', $user->id)->count(),
-                'upcoming_sessions' => 0, // Placeholder for schedule logic
-            ];
-        }
 
-        return Inertia::render('Dashboard', [
-            'stats' => $stats,
-        ]);
+            return Inertia::render('Dashboard', [
+                'stats' => $stats,
+            ]);
+        } elseif ($user->role === UserRole::Coach) {
+            return redirect()->route('coach.dashboard');
+        }
     }
 }

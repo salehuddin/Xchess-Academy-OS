@@ -99,6 +99,12 @@ export default function Index({ auth, parents, filters }) {
     const { isOpen: isStudentViewOpen, onOpen: onStudentViewOpen, onClose: onStudentViewClose } = useDisclosure();
     const [viewingStudent, setViewingStudent] = useState(null);
 
+    const onRowsPerPageChange = useCallback((e) => {
+        const perPage = Number(e.target.value);
+        setRowsPerPage(perPage);
+        router.get(route('admin.parents.index'), { ...filters, per_page: perPage, page: 1 }, { preserveState: true });
+    }, [filters]);
+
     // Handlers
     const onSearchChange = useCallback((value) => {
         if (value) {
@@ -290,9 +296,25 @@ export default function Index({ auth, parents, filters }) {
                         </Button>
                     </div>
                 </div>
+                <div className="flex justify-between items-center">
+                    <span className="text-default-400 text-small">Total {parents.total} parents</span>
+                    <label className="flex items-center text-default-400 text-small">
+                        Rows per page:
+                        <select
+                            className="bg-transparent outline-none text-default-400 text-small"
+                            onChange={onRowsPerPageChange}
+                            value={rowsPerPage}
+                        >
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </label>
+                </div>
             </div>
         );
-    }, [filterValue, onSearchChange, onSearchSubmit, onClear]);
+    }, [filterValue, onSearchChange, onSearchSubmit, onClear, parents.total, onRowsPerPageChange, rowsPerPage, handleAdd]);
 
     const bottomContent = useMemo(() => {
         return (
@@ -342,7 +364,7 @@ export default function Index({ auth, parents, filters }) {
                     bottomContent={bottomContent}
                     bottomContentPlacement="outside"
                     classNames={{
-                        wrapper: "max-h-[382px] bg-transparent shadow-none",
+                        wrapper: "bg-transparent shadow-none",
                     }}
                     sortDescriptor={sortDescriptor}
                     topContent={topContent}

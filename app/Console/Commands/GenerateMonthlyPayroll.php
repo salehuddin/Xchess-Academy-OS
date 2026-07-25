@@ -2,8 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\UserRole;
-use App\Models\ClassSchedule;
+use App\Models\Attendance;
 use App\Models\Payroll;
 use App\Models\User;
 use Carbon\Carbon;
@@ -36,17 +35,22 @@ class GenerateMonthlyPayroll extends Command
 
         $this->info("Generating payroll for {$monthInput}...");
 
-        $coaches = User::where('role', UserRole::Coach)->get();
+        $coaches = User::coaches()->get();
 
         foreach ($coaches as $coach) {
             $this->info("Processing coach: {$coach->name}");
 
             // Find sessions delivered by this coach in the given month
-            $sessionCount = ClassSchedule::whereHas('class', function ($query) use ($coach) {
-                $query->where('coach_id', $coach->id);
-            })
-                ->where('is_delivered', true)
-                ->whereBetween('start_time', [$startOfMonth, $endOfMonth])
+            // We count distinct (class_id, attendance_date) pairs from the attendance table
+            // where the class belongs to this coach
+            $sessionCount = Attendance::query()
+                ->whereHas('class', function ($query) use ($coach) {
+                    $query->where('coach_id', $coach->id);
+                })
+                ->whereBetween('attendance_date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
+                ->select('class_id', 'attendance_date')
+                ->distinct()
+                ->get()
                 ->count();
 
             if ($sessionCount > 0) {
@@ -69,7 +73,7 @@ class GenerateMonthlyPayroll extends Command
 
                 $this->info("  - Generated payroll: {$sessionCount} sessions, \${$totalAmount}");
             } else {
-                $this->info("  - No delivered sessions found.");
+                $this->info('  - No delivered sessions found.');
             }
         }
 

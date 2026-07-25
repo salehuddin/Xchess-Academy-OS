@@ -49,14 +49,17 @@ class DashboardTest extends TestCase
         // Create a class assigned to another coach
         ChessClass::factory()->create();
 
+        // Visiting /dashboard redirects coach to coach.dashboard
         $response = $this->actingAs($coach)->get('/dashboard');
+        $response->assertRedirect(route('coach.dashboard'));
 
+        // Visiting coach.dashboard renders Coach/Dashboard component
+        $response = $this->actingAs($coach)->get(route('coach.dashboard'));
         $response->assertStatus(200)
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Dashboard')
+                ->component('Coach/Dashboard')
                 ->has('stats', fn (Assert $json) => $json
                     ->where('my_classes', 1)
-                    ->where('upcoming_sessions', 0)
                     ->etc()
                 )
             );

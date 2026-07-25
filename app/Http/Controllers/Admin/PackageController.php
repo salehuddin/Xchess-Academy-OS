@@ -28,11 +28,16 @@ class PackageController extends Controller
             $query->latest();
         }
 
-        $packages = $query->paginate(10)->withQueryString();
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
+        $packages = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Packages/Index', [
             'packages' => $packages,
-            'filters' => $request->only(['search', 'sort', 'direction']),
+            'filters' => $request->only(['search', 'sort', 'direction', 'per_page']),
         ]);
     }
 
@@ -59,7 +64,7 @@ class PackageController extends Controller
     public function update(Request $request, Package $package)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255|unique:packages,title,' . $package->id,
+            'title' => 'required|string|max:255|unique:packages,title,'.$package->id,
             'monthly_fee' => 'required|numeric|min:0',
             'sessions_per_month' => 'required|integer|min:1|max:30',
             'coach_rate_per_session' => 'required|numeric|min:0',

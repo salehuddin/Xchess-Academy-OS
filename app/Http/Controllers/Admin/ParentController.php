@@ -13,16 +13,16 @@ class ParentController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = StudentParent::with(['students' => function($q) {
+        $query = StudentParent::with(['students' => function ($q) {
             $q->select('id', 'name', 'parent_id');
         }])->withCount('students');
 
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
@@ -35,7 +35,10 @@ class ParentController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
         $parents = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Parents/Index', [
@@ -66,7 +69,7 @@ class ParentController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:parents,email,' . $parent->id,
+            'email' => 'required|email|max:255|unique:parents,email,'.$parent->id,
             'phone' => 'nullable|string|max:20',
         ]);
 

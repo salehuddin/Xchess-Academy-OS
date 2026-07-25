@@ -33,7 +33,7 @@ This file tracks implementation progress based on the revised `techincal-impleme
 
 - [x] **Initial Migrations Created** (Students, Parents, Coaches, Rooms, Classes, Invoices, Payrolls)
 - [ ] **Review & Finalize Student/Parent Models**: Check fields (`student_uid`, `recurring_discount`) & Relations (`parents`, `invoices`, `classes`)
-- [ ] **Review & Finalize Class/Schedule/Room Models**: Check fields (`capacity`, `room_id`) & Relations (`schedules`, `attendances`)
+- [x] **Review & Finalize Class/Schedule/Room Models**: Check fields (`capacity`, `room_id`) & Relations (`schedules`, `attendances`)
 - [ ] **Review & Finalize Invoice/Payment Models**: Check fields (`manual_adjustment`, `status`, `notification_sent`) & Relations
 - [ ] **Review & Finalize Payroll Models**: Check fields (`sessions_delivered`, `hourly_rate`) & Relations
 - [ ] **Review & Finalize Task/Audit Models**: Check polymorphic relations and activity logging setup
@@ -43,10 +43,10 @@ This file tracks implementation progress based on the revised `techincal-impleme
 
 - [x] **Authentication**: Routes, Session Flow, Basic Roles
 - [x] **Student Registry Logic**: Onboarding flow & parent linking
-- [x] **Scheduling Logic**: Room conflict validation & class creation
-- [x] **Attendance Logic**: Logging presence & missed class flags
+- [x] **Scheduling Logic**: Refactored to JSON-based schedule (removed `class_schedules` table dependency), added Calendar Generator, updated Attendance & Payroll integration.
+- [x] **Attendance Logic**: Logging presence & missed class flags (Updated for JSON schedules)
 - [x] **Billing Logic**: Monthly draft generation command & manual adjustment calculations
-- [x] **Payroll Logic**: Session-based pay calculation
+- [x] **Payroll Logic**: Session-based pay calculation (Updated for JSON schedules)
 - [x] **Task Logic**: Basic CRUD for tasks
 
 ## Phase 3: Advanced Integrations & Features
@@ -71,5 +71,7 @@ This file tracks implementation progress based on the revised `techincal-impleme
     - [ ] **Parent View**: Invoice History & Child Schedule
 - [ ] **Robust Admin Settings**:
     - [ ] Global Configuration UI (Tax rates, Invoice dates)
-    - [ ] Notification Settings (Toggle Email/WhatsApp)
+    - [ ] External Services Settings (Chip Payment Gateway, SMTP Mailer, WhatsApp Messaging)
+    - [ ] System Logs Viewer (Laravel log inspection & error tracking)
+    - [ ] User Activity Logs (`spatie/laravel-activitylog` viewer for audit trails)
 - [ ] **Authorization Refinement**: Fine-tune Policies/Gates for strict data isolation

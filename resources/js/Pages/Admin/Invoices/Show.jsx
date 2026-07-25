@@ -43,8 +43,13 @@ export default function Show({ invoice }) {
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold leading-tight text-gray-800">Invoice #{invoice.id}</h2>
-                        <p className="text-sm text-gray-500">Manage invoice details and adjustments</p>
+                        <p className="text-sm text-gray-500">Manage invoice details, manual adjustments, and PDF exports</p>
                     </div>
+                    <a href={route('admin.invoices.pdf', invoice.id)} target="_blank" rel="noreferrer">
+                        <Button color="secondary" variant="flat" className="font-bold">
+                            📄 Download PDF Invoice
+                        </Button>
+                    </a>
                 </div>
             }
         >

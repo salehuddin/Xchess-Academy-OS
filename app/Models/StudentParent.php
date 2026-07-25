@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\StudentParentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StudentParent extends Model
 {
-    /** @use HasFactory<\Database\Factories\StudentParentFactory> */
+    /** @use HasFactory<StudentParentFactory> */
     use HasFactory;
 
     protected $table = 'parents';

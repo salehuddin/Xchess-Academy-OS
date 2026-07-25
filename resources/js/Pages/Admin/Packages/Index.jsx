@@ -193,6 +193,10 @@ export default function Index({ auth, packages, filters }) {
         });
     }, [filterValue]);
 
+    const onPageChange = useCallback((page) => {
+        router.get(route('admin.packages.index'), { ...filters, page }, { preserveState: true });
+    }, [filters]);
+
     // Modal Handlers
     const handleOpenCreate = () => {
         setEditingPackage(null);
@@ -344,15 +348,16 @@ export default function Index({ auth, packages, filters }) {
                             onChange={onRowsPerPageChange}
                             value={rowsPerPage}
                         >
-                            <option value="5">5</option>
                             <option value="10">10</option>
-                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
                         </select>
                     </label>
                 </div>
             </div>
         );
-    }, [filterValue, onSearchChange, onClear, visibleColumns, packages.total, rowsPerPage, onRowsPerPageChange]);
+    }, [filterValue, onSearchChange, onClear, visibleColumns, packages.total, rowsPerPage, onRowsPerPageChange, handleOpenCreate]);
 
     const bottomContent = useMemo(() => {
         return (
@@ -369,28 +374,19 @@ export default function Index({ auth, packages, filters }) {
                     color="primary"
                     page={packages.current_page}
                     total={packages.last_page}
-                    onChange={(page) => {
-                        router.get(packages.path + '?page=' + page, {
-                            search: filterValue,
-                            sort: sortDescriptor.column,
-                            direction: sortDescriptor.direction === 'ascending' ? 'asc' : 'desc',
-                        }, {
-                            preserveState: true,
-                            preserveScroll: true,
-                        });
-                    }}
+                    onChange={onPageChange}
                 />
                 <div className="hidden sm:flex w-[30%] justify-end gap-2">
-                    <Button isDisabled={packages.prev_page_url === null} size="sm" variant="flat" onPress={() => router.visit(packages.prev_page_url)}>
+                    <Button isDisabled={packages.prev_page_url === null} size="sm" variant="flat" onPress={() => onPageChange(packages.current_page - 1)}>
                         Previous
                     </Button>
-                    <Button isDisabled={packages.next_page_url === null} size="sm" variant="flat" onPress={() => router.visit(packages.next_page_url)}>
+                    <Button isDisabled={packages.next_page_url === null} size="sm" variant="flat" onPress={() => onPageChange(packages.current_page + 1)}>
                         Next
                     </Button>
                 </div>
             </div>
         );
-    }, [selectedKeys, packages.current_page, packages.last_page, filterValue, sortDescriptor, packages.data.length]);
+    }, [selectedKeys, packages.current_page, packages.last_page, packages.prev_page_url, packages.next_page_url, onPageChange, packages.data.length]);
 
     return (
         <AuthenticatedLayout
@@ -399,7 +395,7 @@ export default function Index({ auth, packages, filters }) {
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold leading-tight text-foreground">Packages</h2>
-                        <p className="text-sm text-default-500">Manage your package offerings</p>
+                        <p className="text-sm text-default-500">Manage learning packages & pricing</p>
                     </div>
                 </div>
             }
@@ -413,7 +409,7 @@ export default function Index({ auth, packages, filters }) {
                         bottomContent={bottomContent}
                         bottomContentPlacement="outside"
                         classNames={{
-                            wrapper: "max-h-[382px] bg-transparent shadow-none",
+                            wrapper: "bg-transparent shadow-none",
                         }}
                         selectedKeys={selectedKeys}
                         selectionMode="multiple"

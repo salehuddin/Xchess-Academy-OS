@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChessClass;
 use App\Models\Student;
 use App\Models\StudentParent;
 use Illuminate\Http\Request;
@@ -19,21 +20,21 @@ class StudentController extends Controller
 
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('student_uid', 'like', "%{$search}%")
-                  ->orWhere('nric_passport', 'like', "%{$search}%")
-                  ->orWhereHas('parent', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
-                  });
+                    ->orWhere('student_uid', 'like', "%{$search}%")
+                    ->orWhere('nric_passport', 'like', "%{$search}%")
+                    ->orWhereHas('parent', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
         }
 
         if ($request->has('status') && $request->status !== 'all') {
-             $statuses = explode(',', $request->status);
-             $query->whereIn('status', $statuses);
+            $statuses = explode(',', $request->status);
+            $query->whereIn('status', $statuses);
         }
 
         // Parent Filter
@@ -59,15 +60,18 @@ class StudentController extends Controller
         // Handle sorting by related columns if necessary, for now simple columns
         if (in_array($sort, ['name', 'nric_passport', 'current_level', 'preferred_language', 'date_of_registration', 'status', 'created_at'])) {
             $query->orderBy($sort, $direction);
-        } else if ($sort === 'parent') {
-             // Basic join for sorting by parent name could be complex, skipping or implementing simple version
-             // For simplicity, let's default to created_at if complex sort requested
-             $query->orderBy('created_at', 'desc');
+        } elseif ($sort === 'parent') {
+            // Basic join for sorting by parent name could be complex, skipping or implementing simple version
+            // For simplicity, let's default to created_at if complex sort requested
+            $query->orderBy('created_at', 'desc');
         } else {
-             $query->orderBy('created_at', 'desc');
+            $query->orderBy('created_at', 'desc');
         }
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
         $students = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Students/Index', [
@@ -118,7 +122,7 @@ class StudentController extends Controller
                     // Check if parent with email already exists to prevent duplicates in bulk
                     $parent = StudentParent::where('email', $studentData['parent_email'])->first();
 
-                    if (!$parent) {
+                    if (! $parent) {
                         $parent = StudentParent::create([
                             'name' => $studentData['parent_name'],
                             'email' => $studentData['parent_email'],
@@ -130,9 +134,9 @@ class StudentController extends Controller
                 }
 
                 // Generate Student UID
-                $uid = 'STU-' . strtoupper(Str::random(6));
+                $uid = 'STU-'.strtoupper(Str::random(6));
                 while (Student::where('student_uid', $uid)->exists()) {
-                    $uid = 'STU-' . strtoupper(Str::random(6));
+                    $uid = 'STU-'.strtoupper(Str::random(6));
                 }
 
                 Student::create([
@@ -184,9 +188,9 @@ class StudentController extends Controller
             }
 
             // Generate Student UID
-            $uid = 'STU-' . strtoupper(Str::random(6));
+            $uid = 'STU-'.strtoupper(Str::random(6));
             while (Student::where('student_uid', $uid)->exists()) {
-                $uid = 'STU-' . strtoupper(Str::random(6));
+                $uid = 'STU-'.strtoupper(Str::random(6));
             }
 
             Student::create([
@@ -237,7 +241,7 @@ class StudentController extends Controller
             'recurring_discount',
             'admin_notes',
             'status',
-            'parent_id'
+            'parent_id',
         ]));
 
         return redirect()->route('admin.students.index')->with('success', 'Student updated successfully.');
@@ -249,14 +253,14 @@ class StudentController extends Controller
 
         return Inertia::render('Admin/Students/Show', [
             'student' => $student,
-            'availableClasses' => \App\Models\ChessClass::with(['package', 'coach'])
+            'availableClasses' => ChessClass::with(['package', 'coach'])
                 ->whereDoesntHave('students', function ($q) use ($student) {
                     $q->where('student_id', $student->id);
                 })
                 ->get()
-                ->map(fn($c) => [
+                ->map(fn ($c) => [
                     'id' => $c->id,
-                    'name' => $c->package->title . ' (' . $c->id . ') - ' . $c->coach->name,
+                    'name' => $c->package->title.' ('.$c->id.') - '.$c->coach->name,
                 ]),
         ]);
     }
@@ -264,12 +268,14 @@ class StudentController extends Controller
     public function destroy(Student $student)
     {
         $student->delete();
+
         return redirect()->back()->with('success', 'Student deleted successfully.');
     }
 
     public function getParentDetails(StudentParent $parent)
     {
         $parent->load('students');
+
         return response()->json($parent);
     }
 
@@ -277,7 +283,7 @@ class StudentController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:parents,email,' . $parent->id,
+            'email' => 'required|email|max:255|unique:parents,email,'.$parent->id,
             'phone' => 'nullable|string|max:20',
         ]);
 
@@ -323,11 +329,18 @@ class StudentController extends Controller
         return redirect()->back()->with('success', 'Bulk action completed successfully.');
     }
 
+    public function getDetails(Student $student)
+    {
+        $student->load(['parent', 'classes.package', 'classes.coach', 'invoices']);
+
+        return response()->json($student);
+    }
+
     public function searchParents(Request $request)
     {
         $search = $request->input('query');
 
-        if (!$search) {
+        if (! $search) {
             return response()->json([]);
         }
 
@@ -339,6 +352,4 @@ class StudentController extends Controller
 
         return response()->json($parents);
     }
-
-
 }

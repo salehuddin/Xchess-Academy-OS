@@ -6,29 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::connection(config('activitylog.database_connection'))->create(config('activitylog.table_name'), function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('log_name')->nullable();
+        Schema::create('activity_log', function (Blueprint $table) {
+            $table->id();
+            $table->string('log_name')->nullable()->index();
             $table->text('description');
             $table->nullableMorphs('subject', 'subject');
+            $table->string('event')->nullable();
             $table->nullableMorphs('causer', 'causer');
+            $table->json('attribute_changes')->nullable();
             $table->json('properties')->nullable();
             $table->timestamps();
-
-            $table->index('log_name');
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::connection(config('activitylog.database_connection'))->dropIfExists(config('activitylog.table_name'));
     }
 };

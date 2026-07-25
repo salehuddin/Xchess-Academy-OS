@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import {
     Modal,
     ModalContent,
@@ -23,11 +24,7 @@ export default function StudentDetailsModal({ isOpen, onClose, student: initialS
     useEffect(() => {
         if (isOpen && initialStudent) {
             setStudent(initialStudent);
-
-            // Fetch fresh details if parent is missing but parent_id exists
-            if (initialStudent.parent_id && !initialStudent.parent) {
-                fetchStudentDetails(initialStudent.id);
-            }
+            fetchStudentDetails(initialStudent.id);
         } else {
             setStudent(null);
         }
@@ -36,28 +33,10 @@ export default function StudentDetailsModal({ isOpen, onClose, student: initialS
     const fetchStudentDetails = async (id) => {
         setLoading(true);
         try {
-            // Since we don't have a direct JSON API for student details,
-            // we will use the Inertia visit to the show page but ask for JSON?
-            // No, that's complicated.
-
-            // Let's use the 'admin.students.index' with a specific search to find this student
-            // This is a bit of a hack but avoids creating new routes.
-            // Or better, let's just add a route for this since it's cleaner.
-
-            // But I cannot add routes easily.
-            // Let's try to see if we can get the parent details another way.
-
-            // Actually, we can fetch the PARENT details! We have a route for that: admin.parents.details
-            // And then attach it to the student.
-
-            const response = await axios.get(route('admin.parents.details', initialStudent.parent_id));
-            setStudent(prev => ({
-                ...prev,
-                parent: response.data
-            }));
-
+            const response = await axios.get(route('admin.students.details', id));
+            setStudent(response.data);
         } catch (error) {
-            console.error("Failed to fetch parent details for student:", error);
+            console.error("Failed to fetch student details:", error);
         } finally {
             setLoading(false);
         }
@@ -176,9 +155,40 @@ export default function StudentDetailsModal({ isOpen, onClose, student: initialS
                                         </Card>
                                     </Tab>
                                     <Tab key="classes" title="Classes">
-                                        <div className="py-4 text-center text-default-500">
-                                            <p>Enrolled classes will appear here.</p>
-                                        </div>
+                                        {student.classes && student.classes.length > 0 ? (
+                                            <div className="flex flex-col gap-3">
+                                                {student.classes.map((cls) => (
+                                                    <div key={cls.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-default-50 transition-colors">
+                                                        <div className="flex flex-col gap-1">
+                                                            <Link
+                                                                href={route('admin.classes.show', cls.id)}
+                                                                className="font-bold text-primary hover:underline text-small"
+                                                            >
+                                                                {cls.name}
+                                                            </Link>
+                                                            <div className="flex items-center gap-2">
+                                                                <Chip size="sm" variant="flat" color={cls.status === 'Active' ? 'success' : 'default'} className="h-5 text-tiny">
+                                                                    {cls.status}
+                                                                </Chip>
+                                                                <span className="text-tiny text-default-500">
+                                                                    {cls.day}, {cls.start_time?.substring(0, 5)} - {cls.end_time?.substring(0, 5)}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-small font-semibold">{cls.package?.title}</p>
+                                                            <p className="text-tiny text-default-400">
+                                                                {cls.package?.monthly_fee ? new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR' }).format(cls.package.monthly_fee) : '-'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-4 text-center text-default-500">
+                                                <p>No enrolled classes found.</p>
+                                            </div>
+                                        )}
                                     </Tab>
                                     <Tab key="invoices" title="Invoices">
                                         <div className="py-4 text-center text-default-500">

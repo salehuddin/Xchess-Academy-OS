@@ -376,9 +376,10 @@ export default function Index({ auth, rooms, filters }) {
                             onChange={onRowsPerPageChange}
                             value={rowsPerPage}
                         >
-                            <option value="5">5</option>
                             <option value="10">10</option>
-                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
                         </select>
                     </label>
                 </div>
@@ -422,7 +423,7 @@ export default function Index({ auth, rooms, filters }) {
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold leading-tight text-foreground">Rooms</h2>
-                        <p className="text-sm text-default-500">Manage your room database</p>
+                        <p className="text-sm text-default-500">Manage physical rooms and online meeting links</p>
                     </div>
                 </div>
             }
@@ -436,7 +437,7 @@ export default function Index({ auth, rooms, filters }) {
                     bottomContent={bottomContent}
                     bottomContentPlacement="outside"
                     classNames={{
-                        wrapper: "max-h-[382px] bg-transparent shadow-none",
+                        wrapper: "bg-transparent shadow-none",
                     }}
                     selectedKeys={selectedKeys}
                     selectionMode="multiple"

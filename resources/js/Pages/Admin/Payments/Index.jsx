@@ -112,9 +112,8 @@ const columns = [
     { name: "ACTIONS", uid: "actions" },
 ];
 
-export default function Index({ auth, payments, invoices }) {
+export default function Index({ auth, payments = [], invoices = [] }) {
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
     const { data, setData, post, processing, errors, reset } = useForm({
         invoice_id: '',
         amount: '',
@@ -123,6 +122,17 @@ export default function Index({ auth, payments, invoices }) {
         transaction_id: '',
         notes: '',
     });
+
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const pages = Math.ceil(payments.length / rowsPerPage) || 1;
+
+    const items = useMemo(() => {
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        return payments.slice(start, end);
+    }, [page, payments, rowsPerPage]);
 
     const handleClose = () => {
         reset();
@@ -211,6 +221,42 @@ export default function Index({ auth, payments, invoices }) {
         }
     }, []);
 
+    const topContent = (
+        <div className="flex justify-between items-center pb-2">
+            <span className="text-default-400 text-small">Total {payments.length} payments</span>
+            <label className="flex items-center text-default-400 text-small">
+                Rows per page:
+                <select
+                    className="bg-transparent outline-none text-default-400 text-small ml-1"
+                    onChange={(e) => {
+                        setRowsPerPage(Number(e.target.value));
+                        setPage(1);
+                    }}
+                    value={rowsPerPage}
+                >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+        </div>
+    );
+
+    const bottomContent = pages > 1 ? (
+        <div className="flex w-full justify-center px-4 py-4 border-t border-gray-100">
+            <Pagination
+                isCompact
+                showControls
+                showShadow
+                color="primary"
+                page={page}
+                total={pages}
+                onChange={(p) => setPage(p)}
+            />
+        </div>
+    ) : null;
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -232,8 +278,12 @@ export default function Index({ auth, payments, invoices }) {
                 <Table
                     aria-label="Payments table"
                     isHeaderSticky
+                    topContent={topContent}
+                    topContentPlacement="outside"
+                    bottomContent={bottomContent}
+                    bottomContentPlacement="outside"
                     classNames={{
-                        wrapper: "max-h-[382px] bg-transparent shadow-none",
+                        wrapper: "bg-transparent shadow-none",
                     }}
                     selectionMode="none"
                 >
@@ -244,7 +294,7 @@ export default function Index({ auth, payments, invoices }) {
                             </TableColumn>
                         )}
                     </TableHeader>
-                    <TableBody items={payments} emptyContent={"No payments recorded yet."}>
+                    <TableBody items={items} emptyContent={"No payments recorded yet."}>
                         {(item) => (
                             <TableRow key={item.id}>
                                 {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}

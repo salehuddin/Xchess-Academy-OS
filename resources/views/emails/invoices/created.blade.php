@@ -11,7 +11,13 @@ An invoice has been generated for **{{ $invoice->student->name }}**.
 *Includes a manual adjustment of -${{ $invoice->manual_adjustment }}*
 @endif
 
-@component('mail::button', ['url' => config('app.url')])
+@php
+    $portalUrl = isset($invoice->student->parent->unique_access_token)
+        ? route('portal.invoice.show', [$invoice->student->parent->unique_access_token, $invoice->id])
+        : config('app.url');
+@endphp
+
+@component('mail::button', ['url' => $portalUrl])
 View Invoice
 @endcomponent
 

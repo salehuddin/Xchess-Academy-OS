@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Room;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Room>
+ * @extends Factory<Room>
  */
 class RoomFactory extends Factory
 {
@@ -23,7 +24,7 @@ class RoomFactory extends Factory
             : null;
 
         return [
-            'name' => $this->faker->word . ' Room',
+            'name' => $this->faker->word.' Room',
             'capacity' => $this->faker->numberBetween(10, 30),
             'mode' => $mode,
             'location' => $mode === 'physical'

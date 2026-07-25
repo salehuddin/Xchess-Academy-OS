@@ -3,15 +3,15 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Models\Attendance;
 use App\Models\ChessClass;
-use App\Models\ClassSchedule;
 use App\Models\Payroll;
+use App\Models\Student;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 class CoachPayrollTest extends TestCase
 {
@@ -27,7 +27,7 @@ class CoachPayrollTest extends TestCase
             'total_sessions' => 5,
             'base_rate' => 10,
             'total_amount' => 50,
-            'status' => 'Paid'
+            'status' => 'Paid',
         ]);
 
         $response = $this->actingAs($coach)->get(route('coach.payrolls.index'));
@@ -51,42 +51,40 @@ class CoachPayrollTest extends TestCase
         // 2. Create Class
         $class = ChessClass::factory()->create([
             'coach_id' => $coach->id,
+            'schedules' => [],
         ]);
+
+        $student = Student::factory()->create();
 
         // 3. Create Sessions (2 delivered in last month, 1 future, 1 undelivered)
         $lastMonth = Carbon::now()->subMonth()->format('Y-m');
         $startOfLastMonth = Carbon::now()->subMonth()->startOfMonth();
 
-        // Delivered Session 1
-        ClassSchedule::factory()->create([
+        // Delivered Session 1 (Attendance exists)
+        $date1 = $startOfLastMonth->copy()->addDays(1)->format('Y-m-d');
+        Attendance::create([
             'class_id' => $class->id,
-            'start_time' => $startOfLastMonth->copy()->addDays(1)->setHour(10),
-            'end_time' => $startOfLastMonth->copy()->addDays(1)->setHour(11),
-            'is_delivered' => true,
+            'attendance_date' => $date1,
+            'student_id' => $student->id,
+            'is_present' => true,
         ]);
 
-        // Delivered Session 2
-        ClassSchedule::factory()->create([
+        // Delivered Session 2 (Attendance exists)
+        $date2 = $startOfLastMonth->copy()->addDays(2)->format('Y-m-d');
+        Attendance::create([
             'class_id' => $class->id,
-            'start_time' => $startOfLastMonth->copy()->addDays(2)->setHour(10),
-            'end_time' => $startOfLastMonth->copy()->addDays(2)->setHour(11),
-            'is_delivered' => true,
+            'attendance_date' => $date2,
+            'student_id' => $student->id,
+            'is_present' => true,
         ]);
 
-        // Undelivered Session (should be ignored)
-        ClassSchedule::factory()->create([
+        // Future Session (should be ignored by date filter)
+        $futureDate = Carbon::now()->addDays(1)->format('Y-m-d');
+        Attendance::create([
             'class_id' => $class->id,
-            'start_time' => $startOfLastMonth->copy()->addDays(3)->setHour(10),
-            'end_time' => $startOfLastMonth->copy()->addDays(3)->setHour(11),
-            'is_delivered' => false,
-        ]);
-
-        // Future Session (should be ignored)
-        ClassSchedule::factory()->create([
-            'class_id' => $class->id,
-            'start_time' => Carbon::now()->addDays(1),
-            'end_time' => Carbon::now()->addDays(1)->addHour(),
-            'is_delivered' => true,
+            'attendance_date' => $futureDate,
+            'student_id' => $student->id,
+            'is_present' => true,
         ]);
 
         // 4. Run Command

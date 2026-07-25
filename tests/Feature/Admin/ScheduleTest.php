@@ -4,10 +4,8 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\UserRole;
 use App\Models\ChessClass;
-use App\Models\ClassSchedule;
-use App\Models\Room;
+use App\Models\Package;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,114 +22,80 @@ class ScheduleTest extends TestCase
         $this->admin = User::factory()->create(['role' => UserRole::Admin]);
     }
 
-    public function test_admin_can_create_schedule()
+    public function test_generator_calculates_correct_dates()
     {
-        $room = Room::factory()->create();
-        $class = ChessClass::factory()->create();
-        $start = Carbon::now()->addDay()->setHour(10)->setMinute(0);
-        $end = $start->copy()->addHour();
+        // Create a package
+        $package = Package::factory()->create(['sessions_per_month' => 4]);
+
+        // Create a class on Mondays
+        $class = ChessClass::factory()->create([
+            'package_id' => $package->id,
+            'day' => 'Monday',
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+            'schedules' => [],
+        ]);
+
+        // Use a known month: July 2025
+        // Mondays in July 2025: 7, 14, 21, 28
+        $month = '2025-07';
 
         $response = $this->actingAs($this->admin)->post(route('admin.schedules.store'), [
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start->toDateTimeString(),
-            'end_time' => $end->toDateTimeString(),
+            'month' => $month,
+            'package_ids' => [$package->id],
+            'excluded_dates' => [],
         ]);
 
+        $response->assertRedirect();
         $response->assertSessionHas('success');
-        $this->assertDatabaseHas('class_schedules', [
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start->toDateTimeString(),
-            'end_time' => $end->toDateTimeString(),
-        ]);
+
+        $class->refresh();
+        $this->assertCount(4, $class->schedules);
+        $this->assertEquals(['2025-07-07', '2025-07-14', '2025-07-21', '2025-07-28'], $class->schedules);
     }
 
-    public function test_cannot_create_schedule_with_conflict()
+    public function test_generator_respects_excluded_dates()
     {
-        $room = Room::factory()->create();
-        $class = ChessClass::factory()->create();
-        $start = Carbon::now()->addDay()->setHour(10)->setMinute(0);
-        $end = $start->copy()->addHour(); // 10:00 - 11:00
-
-        // Create existing schedule
-        ClassSchedule::create([
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start,
-            'end_time' => $end,
+        $package = Package::factory()->create(['sessions_per_month' => 4]);
+        $class = ChessClass::factory()->create([
+            'package_id' => $package->id,
+            'day' => 'Monday',
+            'schedules' => [],
         ]);
 
-        // Try to create overlapping schedule (exact match)
+        // July 2025 Mondays: 7, 14, 21, 28
+        // Exclude 14th
+        $month = '2025-07';
+        $excluded = ['2025-07-14'];
+
         $response = $this->actingAs($this->admin)->post(route('admin.schedules.store'), [
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start->toDateTimeString(),
-            'end_time' => $end->toDateTimeString(),
+            'month' => $month,
+            'package_ids' => [$package->id],
+            'excluded_dates' => $excluded,
         ]);
 
-        $response->assertSessionHasErrors('room_id');
-        
-        // Try overlapping start (09:30 - 10:30)
-        $response = $this->actingAs($this->admin)->post(route('admin.schedules.store'), [
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start->copy()->subMinutes(30)->toDateTimeString(),
-            'end_time' => $start->copy()->addMinutes(30)->toDateTimeString(),
-        ]);
-        $response->assertSessionHasErrors('room_id');
-
-        // Try overlapping end (10:30 - 11:30)
-        $response = $this->actingAs($this->admin)->post(route('admin.schedules.store'), [
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start->copy()->addMinutes(30)->toDateTimeString(),
-            'end_time' => $end->copy()->addMinutes(30)->toDateTimeString(),
-        ]);
-        $response->assertSessionHasErrors('room_id');
-
-        // Try enclosed (10:15 - 10:45)
-        $response = $this->actingAs($this->admin)->post(route('admin.schedules.store'), [
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start->copy()->addMinutes(15)->toDateTimeString(),
-            'end_time' => $end->copy()->subMinutes(15)->toDateTimeString(),
-        ]);
-        $response->assertSessionHasErrors('room_id');
-
-        // Try enclosing (09:00 - 12:00)
-        $response = $this->actingAs($this->admin)->post(route('admin.schedules.store'), [
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start->copy()->subHour()->toDateTimeString(),
-            'end_time' => $end->copy()->addHour()->toDateTimeString(),
-        ]);
-        $response->assertSessionHasErrors('room_id');
+        $class->refresh();
+        $this->assertCount(3, $class->schedules);
+        $this->assertEquals(['2025-07-07', '2025-07-21', '2025-07-28'], $class->schedules);
     }
 
-    public function test_can_create_adjacent_schedule()
+    public function test_can_update_class_schedules_manually()
     {
-        $room = Room::factory()->create();
-        $class = ChessClass::factory()->create();
-        $start = Carbon::now()->addDay()->setHour(10)->setMinute(0);
-        $end = $start->copy()->addHour(); // 10:00 - 11:00
+        $class = ChessClass::factory()->create(['schedules' => []]);
+        $newSchedules = ['2025-07-01', '2025-07-08'];
 
-        // Create existing schedule
-        ClassSchedule::create([
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $start,
-            'end_time' => $end,
+        $response = $this->actingAs($this->admin)->put(route('admin.classes.schedules.update', $class), [
+            'schedules' => $newSchedules,
         ]);
 
-        // Try immediately after (11:00 - 12:00)
-        $response = $this->actingAs($this->admin)->post(route('admin.schedules.store'), [
-            'class_id' => $class->id,
-            'room_id' => $room->id,
-            'start_time' => $end->toDateTimeString(),
-            'end_time' => $end->copy()->addHour()->toDateTimeString(),
-        ]);
+        $response->assertRedirect();
+        $class->refresh();
+        $this->assertEquals($newSchedules, $class->schedules);
+    }
 
-        $response->assertSessionHas('success');
+    public function test_index_redirects_to_generator()
+    {
+        $response = $this->actingAs($this->admin)->get(route('admin.schedules.index'));
+        $response->assertRedirect(route('admin.schedules.generator'));
     }
 }

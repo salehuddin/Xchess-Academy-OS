@@ -1,1 +1,0 @@
-feat: implement schedule listing and index page

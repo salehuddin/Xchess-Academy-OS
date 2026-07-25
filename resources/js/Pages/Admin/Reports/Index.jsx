@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import { useState, useMemo } from 'react';
 import {
     Card,
     CardBody,
@@ -9,6 +10,7 @@ import {
     TableBody,
     TableRow,
     TableCell,
+    Pagination,
 } from "@heroui/react";
 
 // Icons
@@ -103,7 +105,54 @@ const columns = [
     { name: "NET", uid: "net" },
 ];
 
-export default function Index({ auth, totalRevenue, totalExpenses, netIncome, monthlyStats }) {
+export default function Index({ auth, totalRevenue, totalExpenses, netIncome, monthlyStats = [] }) {
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const pages = Math.ceil(monthlyStats.length / rowsPerPage) || 1;
+
+    const items = useMemo(() => {
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        return monthlyStats.slice(start, end);
+    }, [page, monthlyStats, rowsPerPage]);
+
+    const topContent = (
+        <div className="flex justify-between items-center px-1 py-2">
+            <h3 className="text-lg font-bold text-gray-900">Monthly Breakdown</h3>
+            <label className="flex items-center text-default-400 text-small">
+                Rows per page:
+                <select
+                    className="bg-transparent outline-none text-default-400 text-small ml-1"
+                    onChange={(e) => {
+                        setRowsPerPage(Number(e.target.value));
+                        setPage(1);
+                    }}
+                    value={rowsPerPage}
+                >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+        </div>
+    );
+
+    const bottomContent = pages > 1 ? (
+        <div className="flex w-full justify-center px-4 py-4 border-t border-gray-100">
+            <Pagination
+                isCompact
+                showControls
+                showShadow
+                color="primary"
+                page={page}
+                total={pages}
+                onChange={(p) => setPage(p)}
+            />
+        </div>
+    ) : null;
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -160,14 +209,12 @@ export default function Index({ auth, totalRevenue, totalExpenses, netIncome, mo
                 <Table
                     aria-label="Monthly breakdown table"
                     isHeaderSticky
-                    topContent={
-                        <div className="px-1 py-2">
-                            <h3 className="text-lg font-bold text-gray-900">Monthly Breakdown</h3>
-                        </div>
-                    }
+                    topContent={topContent}
                     topContentPlacement="outside"
+                    bottomContent={bottomContent}
+                    bottomContentPlacement="outside"
                     classNames={{
-                        wrapper: "max-h-[382px] bg-transparent shadow-none",
+                        wrapper: "bg-transparent shadow-none",
                     }}
                     selectionMode="none"
                 >
@@ -178,18 +225,12 @@ export default function Index({ auth, totalRevenue, totalExpenses, netIncome, mo
                             </TableColumn>
                         )}
                     </TableHeader>
-                    <TableBody items={monthlyStats} emptyContent={"No financial data available yet."}>
+                    <TableBody items={items} emptyContent={"No financial data available."}>
                         {(item) => (
                             <TableRow key={item.month}>
-                                <TableCell className="font-medium text-gray-900">
-                                    {item.month}
-                                </TableCell>
-                                <TableCell className="text-success font-semibold">
-                                    ${item.revenue}
-                                </TableCell>
-                                <TableCell className="text-danger font-semibold">
-                                    ${item.expenses}
-                                </TableCell>
+                                <TableCell className="font-bold">{item.month}</TableCell>
+                                <TableCell className="text-success font-semibold">${item.revenue}</TableCell>
+                                <TableCell className="text-danger font-semibold">${item.expenses}</TableCell>
                                 <TableCell className={`font-bold ${item.net >= 0 ? 'text-primary' : 'text-danger'}`}>
                                     ${item.net}
                                 </TableCell>

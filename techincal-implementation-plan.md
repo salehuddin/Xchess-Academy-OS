@@ -56,9 +56,10 @@ Based on the strategic review, the development will proceed in the following 4 d
     - **Parent View**: (If applicable) Invoice history, child schedule.
     - **Finance View**: Dedicated dashboard for billing and payroll approval.
 - **Robust Admin Settings**:
-    - Configuration UI for "Invoice Generation Date".
-    - Notification preferences (toggle Email/WhatsApp).
-    - System-wide variables (default tax rate, etc.).
+    - Configuration UI for "Invoice Generation Date", tax rates, and default system variables.
+    - **External Services Settings**: GUI for managing credentials and API endpoints for Chip Payment Gateway, SMTP Mailer, and WhatsApp Messaging.
+    - **System Logs Viewer**: Dashboard module for real-time inspection of Laravel application logs and exception tracebacks.
+    - **User Activity Logs**: Comprehensive audit trail viewer powered by `spatie/laravel-activitylog` for tracking user actions, entity mutations, and administrative overrides.
 - **Authorization Refinement**: Fine-tune Policies and Gates to ensure strict data isolation where needed.
 
 ## 3. Backend Architecture & Security

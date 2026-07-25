@@ -604,10 +604,10 @@ export default function Index({ auth, students, filters, parents }) {
                             onChange={onRowsPerPageChange}
                             value={rowsPerPage}
                         >
-                            <option value="5">5</option>
                             <option value="10">10</option>
-                            <option value="15">15</option>
+                            <option value="25">25</option>
                             <option value="50">50</option>
+                            <option value="100">100</option>
                         </select>
                     </label>
                 </div>
@@ -665,7 +665,7 @@ export default function Index({ auth, students, filters, parents }) {
                     bottomContent={bottomContent}
                     bottomContentPlacement="outside"
                     classNames={{
-                        wrapper: "max-h-[382px] bg-transparent shadow-none",
+                        wrapper: "bg-transparent shadow-none",
                     }}
                     selectedKeys={selectedKeys}
                     selectionMode="multiple"

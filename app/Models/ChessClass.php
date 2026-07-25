@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ChessClassFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
 
 class ChessClass extends Model
 {
-    /** @use HasFactory<\Database\Factories\ChessClassFactory> */
+    /** @use HasFactory<ChessClassFactory> */
     use HasFactory;
 
     protected $table = 'classes';
@@ -20,13 +21,14 @@ class ChessClass extends Model
 
     protected $casts = [
         'link_expiry' => 'date',
+        'schedules' => 'array',
     ];
 
     protected static function booted()
     {
         static::creating(function ($model) {
             if (empty($model->uid)) {
-                $model->uid = 'CLS-' . strtoupper(Str::random(8));
+                $model->uid = 'CLS-'.strtoupper(Str::random(8));
             }
         });
     }
@@ -51,8 +53,8 @@ class ChessClass extends Model
         return $this->belongsToMany(Student::class, 'student_classes', 'class_id', 'student_id');
     }
 
-    public function schedules(): HasMany
+    public function classSessions(): HasMany
     {
-        return $this->hasMany(ClassSchedule::class, 'class_id');
+        return $this->hasMany(ClassSession::class, 'class_id');
     }
 }

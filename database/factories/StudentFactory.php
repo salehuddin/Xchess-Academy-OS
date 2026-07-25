@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Student;
+use App\Models\StudentParent;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Student>
+ * @extends Factory<Student>
  */
 class StudentFactory extends Factory
 {
@@ -17,9 +19,9 @@ class StudentFactory extends Factory
     public function definition(): array
     {
         return [
-            'student_uid' => 'STU-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'student_uid' => 'STU-'.$this->faker->unique()->numberBetween(1000, 9999),
             'name' => $this->faker->name(),
-            'parent_id' => \App\Models\StudentParent::factory(),
+            'parent_id' => StudentParent::factory(),
             'status' => 'Active',
             'current_level' => 'Beginner',
             'recurring_discount' => 0,

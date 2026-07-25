@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Package;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Package>
+ * @extends Factory<Package>
  */
 class PackageFactory extends Factory
 {
@@ -17,7 +18,7 @@ class PackageFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => $this->faker->word . ' Package',
+            'title' => $this->faker->word.' Package',
             'monthly_fee' => $this->faker->randomFloat(2, 50, 200),
             'coach_rate_per_session' => $this->faker->randomFloat(2, 10, 100),
             'sessions_per_month' => 4,

@@ -1,10 +1,125 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.js";
 
 @layer base {
   input:focus, textarea:focus, select:focus, button:focus {
     outline: none;
     outline-offset: 0;
+  }
+}
+
+@layer components {
+  .md-content {
+    color: var(--heroui-foreground, inherit);
+    line-height: 1.75rem;
+  }
+
+  .md-content h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .md-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .md-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .md-content p {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--heroui-default-700, #4b5563);
+  }
+
+  .md-content ul {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    list-style-type: disc;
+    padding-left: 1.5rem;
+  }
+
+  .md-content ol {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+  }
+
+  .md-content li {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .md-content a {
+    color: var(--heroui-primary, #e05d38);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+  }
+
+  .md-content blockquote {
+    border-left-width: 4px;
+    border-color: var(--heroui-divider, #e5e7eb);
+    padding-left: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    color: var(--heroui-default-600, #6b7280);
+  }
+
+  .md-content code {
+    background-color: var(--heroui-default-100, #f3f4f6);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.95em;
+  }
+
+  .md-content pre {
+    background-color: var(--heroui-default-100, #f3f4f6);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .md-content pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  .md-content hr {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-color: var(--heroui-divider, #e5e7eb);
+  }
+
+  .md-content table {
+    width: 100%;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+  }
+
+  .md-content th,
+  .md-content td {
+    border: 1px solid var(--heroui-divider, #e5e7eb);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  .md-content th {
+    background-color: var(--heroui-default-100, #f3f4f6);
+    font-weight: 600;
   }
 }

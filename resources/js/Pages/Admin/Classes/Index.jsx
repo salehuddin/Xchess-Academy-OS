@@ -150,10 +150,17 @@ const TimeInput = ({ label, value, onChange, isInvalid, errorMessage, isRequired
 
 export default function Index({ auth, classes, coaches, packages, rooms, filters }) {
     const [filterValue, setFilterValue] = useState(filters.search || '');
+    const [rowsPerPage, setRowsPerPage] = useState(classes.per_page || 10);
     const [sortDescriptor, setSortDescriptor] = useState({
         column: filters.sort || 'created_at',
         direction: filters.direction === 'asc' ? 'ascending' : 'descending',
     });
+
+    const onRowsPerPageChange = useCallback((e) => {
+        const perPage = Number(e.target.value);
+        setRowsPerPage(perPage);
+        router.get(route('admin.classes.index'), { ...filters, per_page: perPage, page: 1 }, { preserveState: true });
+    }, [filters]);
 
     // Create/Edit Modal State
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -395,9 +402,25 @@ export default function Index({ auth, classes, coaches, packages, rooms, filters
                         </Button>
                     </div>
                 </div>
+                <div className="flex justify-between items-center">
+                    <span className="text-default-400 text-small">Total {classes.total} classes</span>
+                    <label className="flex items-center text-default-400 text-small">
+                        Rows per page:
+                        <select
+                            className="bg-transparent outline-none text-default-400 text-small"
+                            onChange={onRowsPerPageChange}
+                            value={rowsPerPage}
+                        >
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </label>
+                </div>
             </div>
         );
-    }, [filterValue, onSearchChange, onSearchSubmit, onClear]);
+    }, [filterValue, onSearchChange, onSearchSubmit, onClear, classes.total, onRowsPerPageChange, rowsPerPage, handleAdd]);
 
     const bottomContent = useMemo(() => {
         return (
@@ -447,7 +470,7 @@ export default function Index({ auth, classes, coaches, packages, rooms, filters
                     bottomContent={bottomContent}
                     bottomContentPlacement="outside"
                     classNames={{
-                        wrapper: "max-h-[382px] bg-transparent shadow-none",
+                        wrapper: "bg-transparent shadow-none",
                     }}
                     sortDescriptor={sortDescriptor}
                     topContent={topContent}

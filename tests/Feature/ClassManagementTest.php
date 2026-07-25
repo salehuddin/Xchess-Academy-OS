@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Models\ChessClass;
+use App\Models\ClassSession;
 use App\Models\Package;
+use App\Models\Room;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,7 +17,9 @@ class ClassManagementTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
+
     protected $coach;
+
     protected $package;
 
     protected function setUp(): void
@@ -51,12 +55,21 @@ class ClassManagementTest extends TestCase
 
     public function test_admin_can_create_class()
     {
+        $room = Room::factory()->create();
+
         $response = $this->actingAs($this->admin)
             ->from(route('admin.classes.index'))
             ->post(route('admin.classes.store'), [
-            'coach_id' => $this->coach->id,
-            'package_id' => $this->package->id,
-        ]);
+                'name' => 'Test Class',
+                'status' => 'Active',
+                'mode' => 'Physical',
+                'coach_id' => $this->coach->id,
+                'package_id' => $this->package->id,
+                'day' => 'Monday',
+                'start_time' => '09:00',
+                'end_time' => '10:00',
+                'room_id' => $room->id,
+            ]);
 
         $response->assertRedirect(route('admin.classes.index'));
         $this->assertDatabaseHas('classes', [
@@ -104,11 +117,19 @@ class ClassManagementTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_view_class_details()
+    public function test_admin_can_view_class_details_with_sessions()
     {
         $chessClass = ChessClass::factory()->create([
             'coach_id' => $this->coach->id,
             'package_id' => $this->package->id,
+        ]);
+
+        $session = ClassSession::create([
+            'class_id' => $chessClass->id,
+            'session_date' => now()->toDateString(),
+            'topic' => 'Test Topic',
+            'notes' => 'Test Notes',
+            'coach_id' => $this->coach->id,
         ]);
 
         $response = $this->actingAs($this->admin)->get(route('admin.classes.show', $chessClass->id));
@@ -117,6 +138,8 @@ class ClassManagementTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->component('Admin/Classes/Show')
             ->where('chessClass.id', $chessClass->id)
+            ->has('chessClass.class_sessions', 1)
+            ->where('chessClass.class_sessions.0.topic', 'Test Topic')
         );
     }
 }

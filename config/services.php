@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'driver' => env('WHATSAPP_DRIVER', 'log'),
+        'twilio' => [
+            'account_sid' => env('TWILIO_ACCOUNT_SID'),
+            'auth_token' => env('TWILIO_AUTH_TOKEN'),
+            'from' => env('TWILIO_WHATSAPP_FROM'),
+        ],
+        'meta_cloud' => [
+            'access_token' => env('META_WHATSAPP_ACCESS_TOKEN'),
+            'phone_number_id' => env('META_WHATSAPP_PHONE_NUMBER_ID'),
+        ],
+    ],
+
 ];

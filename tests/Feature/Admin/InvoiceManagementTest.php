@@ -91,7 +91,7 @@ class InvoiceManagementTest extends TestCase
         $invoice = Invoice::factory()->create([
             'student_id' => $student->id,
             'status' => 'Draft',
-            'notification_sent' => false
+            'notification_sent' => false,
         ]);
 
         $response = $this->actingAs($admin)->post(route('admin.invoices.send', $invoice));

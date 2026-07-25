@@ -4,17 +4,18 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
-
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, LogsActivity, Notifiable;
 
     /**
@@ -27,6 +28,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_coach',
         'hourly_rate',
         'preferred_levels',
         'availability_slots',
@@ -53,6 +55,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'is_coach' => 'boolean',
             'hourly_rate' => 'decimal:2',
         ];
     }
@@ -60,13 +63,25 @@ class User extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email', 'role'])
+            ->logOnly(['name', 'email', 'role', 'is_coach'])
             ->logOnlyDirty();
     }
 
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    public function isCoach(): bool
+    {
+        return $this->role === UserRole::Coach || (bool) $this->is_coach;
+    }
+
+    public function scopeCoaches($query)
+    {
+        return $query->where('role', UserRole::Coach->value)
+            ->orWhere('is_coach', true)
+            ->orWhereHas('coachProfile');
     }
 
     public function hasAnyRole(UserRole ...$roles): bool
@@ -87,5 +102,10 @@ class User extends Authenticatable
     public function coachProfile(): HasOne
     {
         return $this->hasOne(CoachProfile::class);
+    }
+
+    public function classes(): HasMany
+    {
+        return $this->hasMany(ChessClass::class, 'coach_id');
     }
 }

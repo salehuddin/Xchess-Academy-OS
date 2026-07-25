@@ -42,19 +42,19 @@ class ReportingTest extends TestCase
             'student_id' => $student->id,
             'total_amount' => 100,
             'status' => 'Paid',
-            'month_year' => '2023-01'
+            'month_year' => '2023-01',
         ]);
         Invoice::factory()->create([
             'student_id' => $student->id,
             'total_amount' => 50,
             'status' => 'Paid',
-            'month_year' => '2023-01'
+            'month_year' => '2023-01',
         ]);
         Invoice::factory()->create([
             'student_id' => $student->id,
             'total_amount' => 200,
             'status' => 'Pending', // Should be ignored
-            'month_year' => '2023-01'
+            'month_year' => '2023-01',
         ]);
 
         // Create Paid Payrolls (Expenses)
@@ -64,7 +64,7 @@ class ReportingTest extends TestCase
             'total_sessions' => 5,
             'base_rate' => 10,
             'total_amount' => 50,
-            'status' => 'Paid'
+            'status' => 'Paid',
         ]);
         Payroll::create([
             'coach_id' => $coach->id,
@@ -72,7 +72,7 @@ class ReportingTest extends TestCase
             'total_sessions' => 5,
             'base_rate' => 10,
             'total_amount' => 25,
-            'status' => 'Processed' // Should be ignored
+            'status' => 'Processed', // Should be ignored
         ]);
 
         $response = $this->actingAs($admin)->get(route('admin.reports.index'));

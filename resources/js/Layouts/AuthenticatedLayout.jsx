@@ -162,6 +162,15 @@ const ReportIcon = (props) => (
     </svg>
 );
 
+const DocsIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <path d="M7 3H16C17.1046 3 18 3.89543 18 5V21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M18 7H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 11H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 15H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
 const TaskIcon = (props) => (
     <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
         <polyline points="9 11 12 14 22 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -192,6 +201,28 @@ const PackageIcon = (props) => (
     </svg>
 );
 
+const SettingsIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+);
+
+const ActivityIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const LogIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
 const SidebarItem = ({ href, icon: Icon, label, active, badge, collapsed }) => (
     <Link
         href={href}
@@ -219,8 +250,10 @@ const SidebarItem = ({ href, icon: Icon, label, active, badge, collapsed }) => (
     </Link>
 );
 
-export default function AuthenticatedLayout({ user, header, children }) {
-    const { url } = usePage();
+export default function AuthenticatedLayout({ user: userProp, header, children }) {
+    const page = usePage();
+    const { url } = page;
+    const user = userProp || page.props?.auth?.user || {};
     const [collapsed, setCollapsed] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window === "undefined") return false;
@@ -275,155 +308,262 @@ export default function AuthenticatedLayout({ user, header, children }) {
                     {/* Dashboard Section */}
                     <div>
                         <SidebarItem
-                            href={route('dashboard')}
+                            href={user?.role === 'Coach' ? route('coach.dashboard') : route('dashboard')}
                             icon={DashboardIcon}
                             label="Dashboard"
-                            active={url.startsWith('/dashboard')}
+                            active={url.startsWith('/dashboard') || url.startsWith('/coach/dashboard')}
                             collapsed={collapsed}
                         />
                     </div>
 
-                    {/* Academic Section */}
-                    <div>
-                        {!collapsed && (
-                            <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
-                                Academic
+                    {user?.role === 'Admin' && (
+                        <>
+                            {/* Academic Section */}
+                            <div>
+                                {!collapsed && (
+                                    <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
+                                        Academic
+                                    </div>
+                                )}
+                                <div className="space-y-1">
+                                    <SidebarItem
+                                        href={route('admin.students.index')}
+                                        icon={UsersIcon}
+                                        label="Students"
+                                        active={url.startsWith('/admin/students')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.parents.index')}
+                                        icon={ParentsIcon}
+                                        label="Parents"
+                                        active={url.startsWith('/admin/parents')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.classes.index')}
+                                        icon={ClassesIcon}
+                                        label="Classes"
+                                        active={url.startsWith('/admin/classes')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.schedules.generator')}
+                                        icon={ScheduleIcon}
+                                        label="Schedules"
+                                        active={url.startsWith('/admin/schedules')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.attendances.index')}
+                                        icon={AttendanceIcon}
+                                        label="Attendance"
+                                        active={url.startsWith('/admin/attendances')}
+                                        collapsed={collapsed}
+                                    />
+                                </div>
                             </div>
-                        )}
-                        <div className="space-y-1">
-                            <SidebarItem
-                                href={route('admin.students.index')}
-                                icon={UsersIcon}
-                                label="Students"
-                                active={url.startsWith('/admin/students')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.parents.index')}
-                                icon={ParentsIcon}
-                                label="Parents"
-                                active={url.startsWith('/admin/parents')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.classes.index')}
-                                icon={ClassesIcon}
-                                label="Classes"
-                                active={url.startsWith('/admin/classes')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.schedules.index')}
-                                icon={ScheduleIcon}
-                                label="Schedules"
-                                active={url.startsWith('/admin/schedules')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.attendances.index')}
-                                icon={AttendanceIcon}
-                                label="Attendance"
-                                active={url.startsWith('/admin/attendances')}
-                                collapsed={collapsed}
-                            />
-                        </div>
-                    </div>
 
-                    {/* Management Section */}
-                    <div>
-                        {!collapsed && (
-                            <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
-                                Management
+                            {/* Management Section */}
+                            <div>
+                                {!collapsed && (
+                                    <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
+                                        Management
+                                    </div>
+                                )}
+                                <div className="space-y-1">
+                                    <SidebarItem
+                                        href={route('admin.coaches.index')}
+                                        icon={CoachIcon}
+                                        label="Coaches"
+                                        active={url.startsWith('/admin/coaches')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.users.index')}
+                                        icon={StaffIcon}
+                                        label="Users / Staff"
+                                        active={url.startsWith('/admin/users')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.rooms.index')}
+                                        icon={RoomIcon}
+                                        label="Rooms"
+                                        active={url.startsWith('/admin/rooms')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.packages.index')}
+                                        icon={PackageIcon}
+                                        label="Packages"
+                                        active={url.startsWith('/admin/packages')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.tasks.index')}
+                                        icon={TaskIcon}
+                                        label="Tasks"
+                                        active={url.startsWith('/admin/tasks')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.docs.index')}
+                                        icon={DocsIcon}
+                                        label="Docs"
+                                        active={url.startsWith('/admin/docs')}
+                                        collapsed={collapsed}
+                                    />
+                                </div>
                             </div>
-                        )}
-                        <div className="space-y-1">
-                            <SidebarItem
-                                href={route('admin.coaches.index')}
-                                icon={CoachIcon}
-                                label="Coaches"
-                                active={url.startsWith('/admin/coaches')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.users.index')}
-                                icon={StaffIcon}
-                                label="Users / Staff"
-                                active={url.startsWith('/admin/users')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.rooms.index')}
-                                icon={RoomIcon}
-                                label="Rooms"
-                                active={url.startsWith('/admin/rooms')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.packages.index')}
-                                icon={PackageIcon}
-                                label="Packages"
-                                active={url.startsWith('/admin/packages')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.tasks.index')}
-                                icon={TaskIcon}
-                                label="Tasks"
-                                active={url.startsWith('/admin/tasks')}
-                                collapsed={collapsed}
-                            />
-                        </div>
-                    </div>
 
-                    {/* Finance Section */}
-                    <div>
-                        {!collapsed && (
-                            <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
-                                Finance
+                            {/* Finance Section */}
+                            <div>
+                                {!collapsed && (
+                                    <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
+                                        Finance
+                                    </div>
+                                )}
+                                <div className="space-y-1">
+                                    <SidebarItem
+                                        href={route('admin.invoices.index')}
+                                        icon={InvoiceIcon}
+                                        label="Invoices"
+                                        active={url.startsWith('/admin/invoices')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.payments.index')}
+                                        icon={PaymentIcon}
+                                        label="Payments"
+                                        active={url.startsWith('/admin/payments')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.payrolls.index')}
+                                        icon={PayrollIcon}
+                                        label="Payrolls"
+                                        active={url.startsWith('/admin/payrolls')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.notifications.index')}
+                                        icon={NotificationIcon}
+                                        label="Notifications"
+                                        active={url.startsWith('/admin/notifications')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.announcements.index')}
+                                        icon={NotificationIcon}
+                                        label="Announcements"
+                                        active={url.startsWith('/admin/announcements')}
+                                        collapsed={collapsed}
+                                    />
+                                </div>
                             </div>
-                        )}
-                        <div className="space-y-1">
-                            <SidebarItem
-                                href={route('admin.invoices.index')}
-                                icon={InvoiceIcon}
-                                label="Invoices"
-                                active={url.startsWith('/admin/invoices')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.payments.index')}
-                                icon={PaymentIcon}
-                                label="Payments"
-                                active={url.startsWith('/admin/payments')}
-                                collapsed={collapsed}
-                            />
-                            <SidebarItem
-                                href={route('admin.payrolls.index')}
-                                icon={PayrollIcon}
-                                label="Payrolls"
-                                active={url.startsWith('/admin/payrolls')}
-                                collapsed={collapsed}
-                            />
-                        </div>
-                    </div>
 
-                    {/* Reports Section */}
-                    <div>
-                        {!collapsed && (
-                            <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
-                                Analytics
+                            {/* Reports Section */}
+                            <div>
+                                {!collapsed && (
+                                    <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
+                                        Analytics
+                                    </div>
+                                )}
+                                <div className="space-y-1">
+                                    <SidebarItem
+                                        href={route('admin.reports.index')}
+                                        icon={ReportIcon}
+                                        label="Reports"
+                                        active={url.startsWith('/admin/reports')}
+                                        collapsed={collapsed}
+                                    />
+                                </div>
                             </div>
-                        )}
-                        <div className="space-y-1">
-                            <SidebarItem
-                                href={route('admin.reports.index')}
-                                icon={ReportIcon}
-                                label="Reports"
-                                active={url.startsWith('/admin/reports')}
-                                collapsed={collapsed}
-                            />
-                        </div>
-                    </div>
+
+                            {/* System & Settings Section */}
+                            <div>
+                                {!collapsed && (
+                                    <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
+                                        System & Settings
+                                    </div>
+                                )}
+                                <div className="space-y-1">
+                                    <SidebarItem
+                                        href={route('admin.settings.company')}
+                                        icon={SettingsIcon}
+                                        label="Company Profile"
+                                        active={url.startsWith('/admin/settings/company')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.settings.services')}
+                                        icon={SettingsIcon}
+                                        label="External Services"
+                                        active={url.startsWith('/admin/settings/services')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.activity-logs.index')}
+                                        icon={ActivityIcon}
+                                        label="Activity Logs"
+                                        active={url.startsWith('/admin/activity-logs')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('admin.system-logs.index')}
+                                        icon={LogIcon}
+                                        label="System Logs"
+                                        active={url.startsWith('/admin/system-logs')}
+                                        collapsed={collapsed}
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {user?.role === 'Coach' && (
+                        <>
+                            {/* Coach Section */}
+                            <div>
+                                {!collapsed && (
+                                    <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
+                                        My Portal
+                                    </div>
+                                )}
+                                <div className="space-y-1">
+                                    <SidebarItem
+                                        href={user?.role === 'Coach' ? route('coach.schedule.index') : route('coach.schedule.index')}
+                                        icon={ScheduleIcon}
+                                        label="My Schedule"
+                                        active={url.startsWith('/coach/schedule')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={user?.role === 'Coach' ? route('coach.classes.index') : route('coach.classes.index')}
+                                        icon={ClassesIcon}
+                                        label="My Classes"
+                                        active={url.startsWith('/coach/classes')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={user?.role === 'Coach' ? route('coach.students.index') : route('coach.students.index')}
+                                        icon={UsersIcon}
+                                        label="My Students"
+                                        active={url.startsWith('/coach/students')}
+                                        collapsed={collapsed}
+                                    />
+                                    <SidebarItem
+                                        href={route('coach.payrolls.index')}
+                                        icon={PayrollIcon}
+                                        label="My Payroll"
+                                        active={url.startsWith('/coach/payrolls')}
+                                        collapsed={collapsed}
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* User Profile at Bottom (Optional, based on first request, but Image shows it top right.
@@ -452,6 +592,18 @@ export default function AuthenticatedLayout({ user, header, children }) {
 
                     {/* Right Actions */}
                     <div className="flex items-center gap-4">
+                        {user?.role === 'Admin' && (user?.is_coach || user?.coach_profile) && (
+                            url.startsWith('/coach') ? (
+                                <Button size="sm" color="primary" variant="flat" as={Link} href={route('dashboard')}>
+                                    Switch to Admin View
+                                </Button>
+                            ) : (
+                                <Button size="sm" color="secondary" variant="flat" as={Link} href={route('coach.dashboard')}>
+                                    Switch to Coach View
+                                </Button>
+                            )
+                        )}
+
                         <Button isIconOnly variant="light" radius="full">
                             <Badge content="" color="danger" shape="circle" size="sm">
                                 <NotificationIcon className="text-default-500 text-xl" />

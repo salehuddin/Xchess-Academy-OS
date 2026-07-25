@@ -44,7 +44,7 @@ return new class extends Migration
                 'sessions_per_month',
                 'zoom_link',
                 'meeting_id',
-                'link_expiry'
+                'link_expiry',
             ]);
         });
     }

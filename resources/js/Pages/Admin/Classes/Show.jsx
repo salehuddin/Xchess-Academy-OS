@@ -18,9 +18,16 @@ import {
     User as HeroUser,
     Tooltip,
     Chip,
-    Snippet
+    Snippet,
+    Input,
+    Switch,
+    Dropdown,
+    DropdownTrigger,
+    DropdownMenu,
+    DropdownItem,
 } from "@heroui/react";
-import { useCallback } from 'react';
+import { useCallback, useState, useMemo } from 'react';
+import AttendanceModal from '../Attendance/AttendanceModal';
 
 // Icons
 const DeleteIcon = (props) => (
@@ -42,11 +49,66 @@ const PlusIcon = (props) => (
   </svg>
 );
 
-export default function Show({ chessClass, availableStudents, allClasses }) {
+const AttendanceIcon = (props) => (
+  <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+    <path d="M7.5 18C8.32843 18 9 17.3284 9 16.5C9 15.6716 8.32843 15 7.5 15C6.67157 15 6 15.6716 6 16.5C6 17.3284 6.67157 18 7.5 18Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+    <path d="M16.5 18C17.3284 18 18 17.3284 18 16.5C18 15.6716 17.3284 15 16.5 15C15.6716 15 15 15.6716 15 16.5C15 17.3284 15.6716 18 16.5 18Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+    <path d="M2 11V16.5C2 19.5376 4.46243 22 7.5 22H16.5C19.5376 22 22 19.5376 22 16.5V11" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+    <path d="M2 11L12 2L22 11" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+  </svg>
+);
+
+export default function Show({ chessClass, availableStudents, allClasses, attendanceCounts }) {
     const { auth } = usePage().props;
     const { data, setData, post, processing, reset, errors } = useForm({
         student_id: '',
     });
+
+    const [newScheduleDate, setNewScheduleDate] = useState('');
+    const [isUpdatingSchedule, setIsUpdatingSchedule] = useState(false);
+    const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
+    const [selectedSession, setSelectedSession] = useState(null);
+    const [showPastSchedules, setShowPastSchedules] = useState(false);
+    const [sortOrder, setSortOrder] = useState('asc'); // 'asc' or 'desc'
+
+    const handleAttendanceClick = (date) => {
+        setSelectedSession({ id: chessClass.id, date });
+        setIsAttendanceModalOpen(true);
+    };
+
+    const onAddSchedule = () => {
+        if (!newScheduleDate) return;
+        const currentSchedules = chessClass.schedules || [];
+        if (currentSchedules.includes(newScheduleDate)) return;
+
+        const updated = [...currentSchedules, newScheduleDate].sort();
+
+        router.put(route('admin.classes.schedules.update', chessClass.id), {
+            schedules: updated
+        }, {
+            preserveScroll: true,
+            onStart: () => setIsUpdatingSchedule(true),
+            onFinish: () => {
+                setIsUpdatingSchedule(false);
+                setNewScheduleDate('');
+            }
+        });
+    };
+
+    const onRemoveSchedule = (dateToRemove) => {
+        if (!confirm('Are you sure you want to remove this schedule?')) return;
+
+        const currentSchedules = chessClass.schedules || [];
+        const updated = currentSchedules.filter(d => d !== dateToRemove);
+
+        router.put(route('admin.classes.schedules.update', chessClass.id), {
+            schedules: updated
+        }, {
+            preserveScroll: true,
+            onStart: () => setIsUpdatingSchedule(true),
+            onFinish: () => setIsUpdatingSchedule(false)
+        });
+    };
 
     const onClassSelect = (key) => {
         if (key) {
@@ -94,23 +156,130 @@ export default function Show({ chessClass, availableStudents, allClasses }) {
         }
     }, [chessClass.id]);
 
-    const renderScheduleCell = useCallback((schedule, columnKey) => {
+    const scheduleItems = useMemo(() => {
+        // Current date info for filtering
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth(); // 0-indexed
+
+        // Start of current month
+        const startOfCurrentMonth = new Date(currentYear, currentMonth, 1);
+        const startOfCurrentMonthString = startOfCurrentMonth.toISOString().slice(0, 10);
+
+        let schedules = (chessClass.schedules || []);
+
+        // Filter out past schedules unless showPastSchedules is true
+        // "This month" means dates >= 1st of current month
+        if (!showPastSchedules) {
+            schedules = schedules.filter(date => date >= startOfCurrentMonthString);
+        }
+
+        // Sort schedules
+        schedules = [...schedules].sort((a, b) => {
+            if (sortOrder === 'asc') {
+                return a.localeCompare(b);
+            } else {
+                return b.localeCompare(a);
+            }
+        });
+
+        return schedules.map((date, i) => ({ id: i, date }));
+    }, [chessClass.schedules, showPastSchedules, sortOrder]);
+
+    const sessionMap = useMemo(() => {
+        const map = new Map();
+        (chessClass.class_sessions || []).forEach(session => {
+            map.set(session.session_date, session);
+        });
+        return map;
+    }, [chessClass.class_sessions]);
+
+    const renderScheduleCell = useCallback((item, columnKey) => {
+        // Safe date comparison using YYYY-MM-DD strings
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayString = `${year}-${month}-${day}`;
+
+        const isPastOrToday = item.date <= todayString;
+        const session = sessionMap.get(item.date);
+        const attendeeCount = attendanceCounts && attendanceCounts[item.date] ? attendanceCounts[item.date] : 0;
+
         switch (columnKey) {
             case "date":
-                return new Date(schedule.start_time).toLocaleDateString();
-            case "time":
                 return (
                     <div className="flex flex-col">
-                        <span className="text-small">{new Date(schedule.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        <span className="text-tiny text-default-400">to {new Date(schedule.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <span className="font-medium">
+                            {new Date(item.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </span>
                     </div>
                 );
-            case "room":
-                return schedule.room?.name || 'N/A';
+            case "attendance":
+                if (session) {
+                    return (
+                        <div className="flex gap-2 items-center">
+                            <span className="text-tiny text-success-600 font-medium">
+                                Attended
+                            </span>
+                            <span className="text-tiny text-default-500">
+                                ({attendeeCount}/{chessClass.students ? chessClass.students.length : 0} present)
+                            </span>
+                        </div>
+                    );
+                } else if (isPastOrToday) {
+                    return <span className="text-tiny text-warning-600">Pending Attendance</span>;
+                }
+                return <span className="text-tiny text-default-300">-</span>;
+            case "topic":
+                return session ? (
+                    <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium truncate max-w-[200px]">{session.topic || 'No Topic'}</span>
+                        {session.coach && <span className="text-tiny text-default-400">Coach: {session.coach.name}</span>}
+                    </div>
+                ) : (
+                    <span className="text-default-300">-</span>
+                );
+            case "notes":
+                const plainNotes = session?.notes ? session.notes.replace(/<[^>]+>/g, '') : '';
+                return plainNotes ? (
+                    <Tooltip content={<div className="max-w-xs text-tiny p-2">{plainNotes}</div>}>
+                        <span className="text-tiny text-default-500 truncate max-w-[200px] cursor-help italic block">
+                            "{plainNotes.length > 40 ? plainNotes.substring(0, 40) + '...' : plainNotes}"
+                        </span>
+                    </Tooltip>
+                ) : (
+                    <span className="text-default-300">-</span>
+                );
+            case "actions":
+                const hasSession = sessionMap.has(item.date);
+                return (
+                    <div className="relative flex items-center gap-2 justify-end">
+                        <Tooltip content="Take Attendance" color="primary">
+                            <span
+                                onClick={() => isPastOrToday && handleAttendanceClick(item.date)}
+                                className={`text-lg text-primary cursor-pointer active:opacity-50 ${!isPastOrToday ? 'opacity-30 pointer-events-none' : ''}`}
+                            >
+                                <AttendanceIcon />
+                            </span>
+                        </Tooltip>
+                        <Tooltip
+                            content={hasSession ? "Cannot remove schedule with attendance records" : "Remove Schedule"}
+                            color={hasSession ? "default" : "danger"}
+                        >
+                            <span
+                                className={`text-lg ${hasSession ? 'text-default-300 cursor-not-allowed' : 'text-danger cursor-pointer active:opacity-50'}`}
+                                onClick={() => !hasSession && onRemoveSchedule(item.date)}
+                            >
+                                <DeleteIcon />
+                            </span>
+                        </Tooltip>
+                    </div>
+                );
             default:
-                return schedule[columnKey];
+                return item[columnKey];
         }
-    }, []);
+    }, [onRemoveSchedule, chessClass.id]);
 
     return (
         <AuthenticatedLayout
@@ -123,7 +292,7 @@ export default function Show({ chessClass, availableStudents, allClasses }) {
                         </h2>
                         <p className="text-sm text-gray-500">Manage class students and schedules</p>
                     </div>
-                    <div className="w-full md:w-64">
+                    <div className="w-full md:w-96">
                         <Autocomplete
                             labelPlacement="outside"
                             placeholder="Go to Class..."
@@ -132,7 +301,39 @@ export default function Show({ chessClass, availableStudents, allClasses }) {
                             size="sm"
                             aria-label="Select Class"
                         >
-                            {(item) => <AutocompleteItem key={item.id} textValue={item.name}>{item.name}</AutocompleteItem>}
+                            {(item) => {
+                                const startTime = item.start_time ? item.start_time.substring(0, 5) : '--:--';
+                                const endTime = item.end_time ? item.end_time.substring(0, 5) : '--:--';
+                                const coachLabel = item.coach ? `Coach: ${item.coach}` : 'Coach: Unassigned';
+                                const scheduleLabel = item.day ? `${item.day} ${startTime}-${endTime}` : 'Schedule N/A';
+                                const studentsLabel = `${item.students_count || 0} students`;
+                                const nameLabel = item.name || `Class #${item.uid || item.id}`;
+
+                                return (
+                                    <AutocompleteItem key={item.id} textValue={nameLabel}>
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-medium">{nameLabel}</span>
+                                                <Chip
+                                                    size="sm"
+                                                    variant="flat"
+                                                    color={
+                                                        item.status === 'Active' ? 'success' :
+                                                        item.status === 'Pending' ? 'warning' :
+                                                        item.status === 'Paused' ? 'default' : 'danger'
+                                                    }
+                                                    className="h-5 text-tiny px-1 min-w-0"
+                                                >
+                                                    {item.status}
+                                                </Chip>
+                                            </div>
+                                            <span className="text-tiny text-default-500">
+                                                {coachLabel} · {scheduleLabel} · {studentsLabel}
+                                            </span>
+                                        </div>
+                                    </AutocompleteItem>
+                                );
+                            }}
                         </Autocomplete>
                     </div>
                 </div>
@@ -266,26 +467,73 @@ export default function Show({ chessClass, availableStudents, allClasses }) {
 
                 {/* Schedules Section */}
                 <Card className="shadow-sm border border-gray-100">
-                    <CardHeader className="flex justify-between items-center">
-                        <p className="text-md font-semibold">Schedules</p>
-                        <Button
-                            as={Link}
-                            href={route('admin.schedules.create', { class_id: chessClass.id })}
-                            color="primary"
-                            size="sm"
-                            startContent={<PlusIcon />}
-                        >
-                            Add Schedule
-                        </Button>
+                    <CardHeader className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-3">
+                                <p className="text-md font-semibold">Schedules</p>
+                                <Chip size="sm" variant="flat" color="primary">
+                                    {scheduleItems.length}
+                                </Chip>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Switch
+                                    size="sm"
+                                    isSelected={showPastSchedules}
+                                    onValueChange={setShowPastSchedules}
+                                >
+                                    <span className="text-tiny text-default-500">Show Past History</span>
+                                </Switch>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 items-center w-full md:w-auto">
+                            <Dropdown>
+                                <DropdownTrigger>
+                                    <Button variant="flat" size="sm" className="min-w-[100px]">
+                                        Sort: {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
+                                    </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu
+                                    aria-label="Sort Order"
+                                    onAction={(key) => setSortOrder(key)}
+                                    selectedKeys={[sortOrder]}
+                                    selectionMode="single"
+                                >
+                                    <DropdownItem key="asc">Oldest First</DropdownItem>
+                                    <DropdownItem key="desc">Newest First</DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+
+                            <Input
+                                type="date"
+                                size="sm"
+                                className="w-36"
+                                value={newScheduleDate}
+                                onChange={(e) => setNewScheduleDate(e.target.value)}
+                                aria-label="New Schedule Date"
+                            />
+                            <Button
+                                onPress={onAddSchedule}
+                                color="primary"
+                                size="sm"
+                                isLoading={isUpdatingSchedule}
+                                isDisabled={!newScheduleDate}
+                                startContent={!isUpdatingSchedule && <PlusIcon />}
+                            >
+                                Add
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardBody>
                         <Table aria-label="Schedules table">
                             <TableHeader>
                                 <TableColumn key="date">DATE</TableColumn>
-                                <TableColumn key="time">TIME</TableColumn>
-                                <TableColumn key="room">ROOM</TableColumn>
+                                <TableColumn key="attendance">ATTENDANCE</TableColumn>
+                                <TableColumn key="topic">TOPIC / COACH</TableColumn>
+                                <TableColumn key="notes">NOTES</TableColumn>
+                                <TableColumn key="actions" align="end">ACTIONS</TableColumn>
                             </TableHeader>
-                            <TableBody items={chessClass.schedules || []} emptyContent="No schedules found.">
+                            <TableBody items={scheduleItems} emptyContent="No schedules found.">
                                 {(item) => (
                                     <TableRow key={item.id}>
                                         {(columnKey) => <TableCell>{renderScheduleCell(item, columnKey)}</TableCell>}
@@ -296,6 +544,13 @@ export default function Show({ chessClass, availableStudents, allClasses }) {
                     </CardBody>
                 </Card>
             </div>
+            {isAttendanceModalOpen && (
+                <AttendanceModal
+                    isOpen={isAttendanceModalOpen}
+                    onClose={() => setIsAttendanceModalOpen(false)}
+                    session={selectedSession}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

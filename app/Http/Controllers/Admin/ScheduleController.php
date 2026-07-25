@@ -3,206 +3,330 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attendance;
 use App\Models\ChessClass;
-use App\Models\ClassSchedule;
-use App\Models\Room;
-use Illuminate\Http\RedirectResponse;
+use App\Models\ClassSession;
+use App\Models\Package;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
-use App\Models\Package;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-
 class ScheduleController extends Controller
 {
-    public function index(): Response
+    /**
+     * Display the schedule management page.
+     */
+    public function index()
     {
-        $schedules = ClassSchedule::with(['class.package', 'room'])
-            ->orderBy('start_time', 'desc')
-            ->paginate(10)
-            ->through(fn ($schedule) => [
-                'id' => $schedule->id,
-                'class_name' => $schedule->class->name ?? $schedule->class->package->title ?? 'N/A',
-                'room_name' => $schedule->room->name ?? 'N/A',
-                'start_time' => $schedule->start_time->format('Y-m-d H:i'),
-                'end_time' => $schedule->end_time->format('H:i'),
-                'status' => $schedule->is_delivered ? 'Delivered' : 'Pending',
-            ]);
-
-        return Inertia::render('Admin/Schedules/Index', [
-            'schedules' => $schedules
-        ]);
+        return redirect()->route('admin.schedules.generator');
     }
 
-    public function create(Request $request): Response
+    /**
+     * Show the Schedule Generator page.
+     */
+    public function generator(): Response
     {
-        return Inertia::render('Admin/Schedules/Create', [
-            'classes' => ChessClass::with('package')->get()->map(fn($c) => [
-                'id' => $c->id,
-                'name' => $c->package->title . ' (' . $c->day . ' ' . $c->start_time . ')',
-            ]),
-            'rooms' => Room::all(),
-            'preselectedClassId' => $request->input('class_id'),
-        ]);
-    }
-
-    public function bulkCreate(): Response
-    {
-        return Inertia::render('Admin/Schedules/BulkCreate', [
+        return Inertia::render('Admin/Schedules/Generator', [
             'packages' => Package::select('id', 'title')->get(),
-            'days' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
         ]);
     }
 
+    /**
+     * Preview the schedule for a given month and packages.
+     */
     public function preview(Request $request)
     {
         $request->validate([
-            'package_id' => 'required|exists:packages,id',
-            'day' => 'required|string',
             'month' => 'required|date_format:Y-m',
+            'package_ids' => 'array|exists:packages,id',
         ]);
 
         $startOfMonth = Carbon::parse($request->month)->startOfMonth();
         $endOfMonth = Carbon::parse($request->month)->endOfMonth();
 
-        // 1. Find all matching classes
-        $classes = ChessClass::where('package_id', $request->package_id)
-            ->where('day', $request->day)
-            ->with(['room', 'coach']) // Load related data for display if needed
-            ->get();
+        // 1. Fetch Classes
+        $query = ChessClass::query()->with('package');
+        if ($request->filled('package_ids')) {
+            $query->whereIn('package_id', $request->package_ids);
+        }
+        $classes = $query->get();
 
-        if ($classes->isEmpty()) {
-            return response()->json([
-                'dates' => [],
-                'classes_count' => 0,
-                'classes_preview' => []
-            ]);
+        // 2. Calculate potential dates for each class
+        // We want to aggregate this to show "Busy Days" on the calendar
+        $calendarData = [];
+
+        foreach ($classes as $class) {
+            if (! $class->day) {
+                continue;
+            }
+
+            $dates = $this->getPotentialDatesForClass($class, $startOfMonth, $endOfMonth);
+
+            foreach ($dates as $date) {
+                if (! isset($calendarData[$date])) {
+                    $calendarData[$date] = [
+                        'date' => $date,
+                        'count' => 0,
+                        'classes' => [],
+                    ];
+                }
+                $calendarData[$date]['count']++;
+                // Limit the number of classes sent to frontend to avoid payload bloat
+                if ($calendarData[$date]['count'] <= 5) {
+                    $calendarData[$date]['classes'][] = $class->name ?? $class->uid;
+                }
+            }
         }
 
-        // 2. Calculate all dates for this day in the month
-        $dates = [];
-        $date = $startOfMonth->copy();
+        return response()->json([
+            'calendar' => array_values($calendarData),
+            'total_classes' => $classes->count(),
+        ]);
+    }
 
-        // Find first occurrence of the day
-        while ($date->format('l') !== $request->day) {
+    /**
+     * Generate and save schedules for the month.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'package_ids' => 'array|exists:packages,id',
+            'excluded_dates' => 'array', // Dates to skip (Academy Closed)
+            'excluded_dates.*' => 'date_format:Y-m-d',
+        ]);
+
+        $startOfMonth = Carbon::parse($request->month)->startOfMonth();
+        $endOfMonth = Carbon::parse($request->month)->endOfMonth();
+        $excludedDates = collect($request->excluded_dates)->map(fn ($d) => Carbon::parse($d)->format('Y-m-d'))->flip();
+
+        $query = ChessClass::query()->with('package');
+        if ($request->filled('package_ids')) {
+            $query->whereIn('package_id', $request->package_ids);
+        }
+        $classes = $query->get();
+        $updatedCount = 0;
+
+        DB::transaction(function () use ($classes, $startOfMonth, $endOfMonth, $excludedDates, &$updatedCount) {
+            foreach ($classes as $class) {
+                if (! $class->day) {
+                    continue;
+                }
+
+                // 1. Get existing schedules
+                $currentSchedules = collect($class->schedules ?? []);
+
+                // 2. Remove dates belonging to this month (we are regenerating)
+                $keptSchedules = $currentSchedules->filter(function ($date) use ($startOfMonth, $endOfMonth) {
+                    $d = Carbon::parse($date);
+
+                    return $d->lt($startOfMonth) || $d->gt($endOfMonth);
+                });
+
+                // 3. Calculate new dates
+                $potentialDates = $this->getPotentialDatesForClass($class, $startOfMonth, $endOfMonth);
+
+                // 4. Filter excluded dates
+                $validDates = collect($potentialDates)->filter(function ($date) use ($excludedDates) {
+                    return ! $excludedDates->has($date);
+                });
+
+                // 5. Apply Package Limits (sessions per month)
+                // If package defines sessions_per_month, limit the number of sessions
+                $limit = $class->package->sessions_per_month ?? $class->sessions_per_month;
+                if ($limit && $limit > 0) {
+                    $validDates = $validDates->take($limit);
+                }
+
+                // 6. Merge and Save
+                $finalSchedules = $keptSchedules->merge($validDates)
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->all();
+
+                $class->update(['schedules' => $finalSchedules]);
+                $updatedCount++;
+            }
+        });
+
+        return redirect()->back()->with('success', "Schedules generated for $updatedCount classes.");
+    }
+
+    /**
+     * Helper to get all dates for a class in a range based on its day of week.
+     */
+    private function getPotentialDatesForClass($class, $start, $end)
+    {
+        $dates = [];
+        $date = $start->copy();
+
+        // Find first occurrence
+        // $class->day is like "Monday", "Tuesday"
+        while ($date->format('l') !== $class->day && $date->lte($end)) {
             $date->addDay();
         }
 
+        if ($date->gt($end)) {
+            return [];
+        }
+
         // Add all occurrences
-        while ($date->lte($endOfMonth)) {
+        while ($date->lte($end)) {
             $dates[] = $date->format('Y-m-d');
             $date->addWeek();
         }
 
+        return $dates;
+    }
+
+    /**
+     * Preview schedule deletion.
+     */
+    public function previewClear(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'package_ids' => 'array|exists:packages,id',
+        ]);
+
+        $startOfMonth = Carbon::parse($request->month)->startOfMonth();
+        $endOfMonth = Carbon::parse($request->month)->endOfMonth();
+
+        $query = ChessClass::query();
+        if ($request->filled('package_ids')) {
+            $query->whereIn('package_id', $request->package_ids);
+        }
+        $classes = $query->get();
+
+        $totalSchedules = 0;
+        $protectedSchedules = 0;
+        $deletableSchedules = 0;
+
+        foreach ($classes as $class) {
+            $schedules = $class->schedules ?? [];
+            $datesInRange = [];
+
+            foreach ($schedules as $date) {
+                $d = Carbon::parse($date);
+                if ($d->between($startOfMonth, $endOfMonth)) {
+                    $datesInRange[] = $date;
+                }
+            }
+
+            if (empty($datesInRange)) {
+                continue;
+            }
+
+            $totalSchedules += count($datesInRange);
+
+            // Fetch protected dates in bulk for this class
+            $protectedDates = collect();
+
+            $attendanceDates = Attendance::where('class_id', $class->id)
+                ->whereIn('attendance_date', $datesInRange)
+                ->pluck('attendance_date');
+
+            $sessionDates = ClassSession::where('class_id', $class->id)
+                ->whereIn('session_date', $datesInRange)
+                ->pluck('session_date');
+
+            $protectedDates = $protectedDates->merge($attendanceDates)->merge($sessionDates)
+                ->map(fn ($date) => is_string($date) ? $date : $date->format('Y-m-d'))
+                ->unique();
+
+            $protectedCount = $protectedDates->count();
+            $protectedSchedules += $protectedCount;
+            $deletableSchedules += (count($datesInRange) - $protectedCount);
+        }
+
         return response()->json([
-            'dates' => $dates,
-            'classes_count' => $classes->count(),
-            'classes_preview' => $classes->map(fn($c) => [
-                'id' => $c->id,
-                'time' => $c->start_time . ' - ' . $c->end_time,
-                'room' => $c->room?->name ?? 'No Default Room',
-                'coach' => $c->coach?->name ?? 'No Coach',
-            ])
+            'total_classes' => $classes->count(),
+            'total_schedules' => $totalSchedules,
+            'protected_schedules' => $protectedSchedules,
+            'deletable_schedules' => $deletableSchedules,
         ]);
     }
 
-    public function bulkStore(Request $request): RedirectResponse
+    /**
+     * Clear schedules.
+     */
+    public function clear(Request $request)
     {
         $request->validate([
-            'package_id' => 'required|exists:packages,id',
-            'day' => 'required|string',
-            'dates' => 'required|array',
-            'dates.*' => 'date',
+            'month' => 'required|date_format:Y-m',
+            'package_ids' => 'array|exists:packages,id',
         ]);
 
-        $classes = ChessClass::where('package_id', $request->package_id)
-            ->where('day', $request->day)
-            ->get();
+        $startOfMonth = Carbon::parse($request->month)->startOfMonth();
+        $endOfMonth = Carbon::parse($request->month)->endOfMonth();
 
-        if ($classes->isEmpty()) {
-            return back()->withErrors(['package_id' => 'No classes found for this selection.']);
+        $query = ChessClass::query();
+        if ($request->filled('package_ids')) {
+            $query->whereIn('package_id', $request->package_ids);
         }
+        $classes = $query->get();
+        $deletedCount = 0;
 
-        $createdCount = 0;
-        $skippedCount = 0;
-        $conflictCount = 0;
-
-        DB::transaction(function () use ($classes, $request, &$createdCount, &$skippedCount, &$conflictCount) {
+        DB::transaction(function () use ($classes, $startOfMonth, $endOfMonth, &$deletedCount) {
             foreach ($classes as $class) {
-                foreach ($request->dates as $dateStr) {
-                    // Combine date with class start/end times
-                    $startDateTime = Carbon::parse($dateStr . ' ' . $class->start_time);
-                    $endDateTime = Carbon::parse($dateStr . ' ' . $class->end_time);
+                $currentSchedules = collect($class->schedules ?? []);
 
-                    // Skip if exists
-                    $exists = ClassSchedule::where('class_id', $class->id)
-                        ->where('start_time', $startDateTime)
-                        ->exists();
+                // Identify dates in range
+                $datesInRange = $currentSchedules->filter(function ($date) use ($startOfMonth, $endOfMonth) {
+                    $d = Carbon::parse($date);
 
-                    if ($exists) {
-                        $skippedCount++;
-                        continue;
+                    return $d->between($startOfMonth, $endOfMonth);
+                })->values()->all();
+
+                if (empty($datesInRange)) {
+                    continue;
+                }
+
+                // Find protected dates
+                $protectedDates = collect();
+
+                $attendanceDates = Attendance::where('class_id', $class->id)
+                    ->whereIn('attendance_date', $datesInRange)
+                    ->pluck('attendance_date');
+
+                $sessionDates = ClassSession::where('class_id', $class->id)
+                    ->whereIn('session_date', $datesInRange)
+                    ->pluck('session_date');
+
+                $protectedDates = $protectedDates
+                    ->merge($attendanceDates)
+                    ->merge($sessionDates)
+                    ->map(fn ($date) => is_string($date) ? $date : $date->format('Y-m-d'))
+                    ->unique()
+                    ->flip(); // Flip for fast lookup
+
+                // Filter schedules
+                $newSchedules = $currentSchedules->filter(function ($date) use ($datesInRange, $protectedDates, &$deletedCount) {
+                    // If date is NOT in the target range, keep it
+                    if (! in_array($date, $datesInRange)) {
+                        return true;
                     }
 
-                    // Check for room conflict if room is assigned
-                    if ($class->room_id) {
-                        $conflict = ClassSchedule::where('room_id', $class->room_id)
-                            ->where('start_time', '<', $endDateTime)
-                            ->where('end_time', '>', $startDateTime)
-                            ->exists();
-
-                        if ($conflict) {
-                            $conflictCount++;
-                            continue;
-                        }
+                    // If date IS in range, check if protected
+                    if ($protectedDates->has($date)) {
+                        return true;
                     }
 
-                    ClassSchedule::create([
-                        'class_id' => $class->id,
-                        'room_id' => $class->room_id,
-                        'start_time' => $startDateTime,
-                        'end_time' => $endDateTime,
-                        'is_delivered' => false,
-                    ]);
-                    $createdCount++;
+                    // Otherwise delete
+                    $deletedCount++;
+
+                    return false;
+                })->values()->all();
+
+                if (count($newSchedules) !== count($currentSchedules)) {
+                    $class->update(['schedules' => $newSchedules]);
                 }
             }
         });
 
-        $message = "Generated $createdCount schedules.";
-        if ($skippedCount > 0) $message .= " Skipped $skippedCount duplicates.";
-        if ($conflictCount > 0) $message .= " Skipped $conflictCount due to room conflicts.";
-
-        return redirect()->route('admin.schedules.bulk-create')->with('success', $message);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'class_id' => 'required|exists:classes,id',
-            'room_id' => 'required|exists:rooms,id',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-        ]);
-
-        // Check for room conflict
-        // Overlap logic: (StartA < EndB) and (EndA > StartB)
-        $conflict = ClassSchedule::where('room_id', $request->room_id)
-            ->where('start_time', '<', $request->end_time)
-            ->where('end_time', '>', $request->start_time)
-            ->exists();
-
-        if ($conflict) {
-            throw ValidationException::withMessages([
-                'room_id' => ['The room is already booked for this time slot.'],
-            ]);
-        }
-
-        ClassSchedule::create($request->only(['class_id', 'room_id', 'start_time', 'end_time']));
-
-        return redirect()->back()->with('success', 'Schedule created successfully.');
+        return redirect()->back()->with('success', "Cleared $deletedCount schedules.");
     }
 }

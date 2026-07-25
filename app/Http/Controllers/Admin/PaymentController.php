@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
 use App\Models\Invoice;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -39,14 +39,14 @@ class PaymentController extends Controller
         ]);
 
         $payment = Payment::create($validated);
-        
+
         // Check if invoice is fully paid
         $invoice = Invoice::find($validated['invoice_id']);
         $totalPaid = $invoice->payments()->sum('amount');
-        
+
         if ($totalPaid >= $invoice->amount) {
             $invoice->update(['status' => 'Paid']);
-        } else if ($totalPaid > 0) {
+        } elseif ($totalPaid > 0) {
             $invoice->update(['status' => 'Partial']);
         }
 
@@ -60,12 +60,12 @@ class PaymentController extends Controller
     {
         $invoice = $payment->invoice;
         $payment->delete();
-        
+
         // Recalculate invoice status
         $totalPaid = $invoice->payments()->sum('amount');
         if ($totalPaid >= $invoice->amount) {
             $invoice->update(['status' => 'Paid']);
-        } else if ($totalPaid > 0) {
+        } elseif ($totalPaid > 0) {
             $invoice->update(['status' => 'Partial']);
         } else {
             $invoice->update(['status' => 'Unpaid']);

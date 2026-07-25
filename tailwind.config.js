@@ -1,5 +1,5 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
-import { heroui } from "@heroui/react";
+import { heroui } from "@heroui/theme";
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -9,7 +9,6 @@ export default {
         './resources/views/**/*.blade.php',
         './resources/js/**/*.jsx',
         "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
-        "./node_modules/@heroui/react/node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
     ],
 
     theme: {
@@ -41,22 +40,22 @@ export default {
                             foreground: "#ffffff",
                         },
                         content1: {
-                            DEFAULT: "#ffffff", // card
+                            DEFAULT: "#ffffff",
                             foreground: "#333333",
                         },
                         content2: {
-                            DEFAULT: "#ffffff", // popover
+                            DEFAULT: "#ffffff",
                             foreground: "#333333",
                         },
                         content3: {
-                            DEFAULT: "#f9fafb", // muted
+                            DEFAULT: "#f9fafb",
                             foreground: "#6b7280",
                         },
                         content4: {
-                            DEFAULT: "#f4f5f7", // input
+                            DEFAULT: "#f4f5f7",
                             foreground: "#333333",
                         },
-                        focus: "#e05d38", // ring
+                        focus: "#e05d38",
                     },
                 },
                 dark: {
@@ -76,22 +75,22 @@ export default {
                             foreground: "#ffffff",
                         },
                         content1: {
-                            DEFAULT: "#2a3040", // card
+                            DEFAULT: "#2a3040",
                             foreground: "#e5e5e5",
                         },
                         content2: {
-                            DEFAULT: "#262b38", // popover
+                            DEFAULT: "#262b38",
                             foreground: "#e5e5e5",
                         },
                         content3: {
-                            DEFAULT: "#2a303e", // muted
+                            DEFAULT: "#2a303e",
                             foreground: "#a3a3a3",
                         },
                         content4: {
-                            DEFAULT: "#3d4354", // input
+                            DEFAULT: "#3d4354",
                             foreground: "#e5e5e5",
                         },
-                        focus: "#e05d38", // ring
+                        focus: "#e05d38",
                     },
                 },
             },

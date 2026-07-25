@@ -22,12 +22,12 @@ class RoomController extends Controller
 
         if ($request->has('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%")
-                  ->orWhere('platform', 'like', "%{$search}%")
-                  ->orWhere('account_email', 'like', "%{$search}%")
-                  ->orWhere('mode', 'like', "%{$search}%");
+                    ->orWhere('location', 'like', "%{$search}%")
+                    ->orWhere('platform', 'like', "%{$search}%")
+                    ->orWhere('account_email', 'like', "%{$search}%")
+                    ->orWhere('mode', 'like', "%{$search}%");
             });
         }
 
@@ -37,11 +37,16 @@ class RoomController extends Controller
             $query->latest();
         }
 
-        $rooms = $query->paginate(10)->withQueryString();
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
+        $rooms = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Rooms/Index', [
             'rooms' => $rooms,
-            'filters' => $request->only(['search', 'sort', 'direction']),
+            'filters' => $request->only(['search', 'sort', 'direction', 'per_page']),
         ]);
     }
 
@@ -103,8 +108,8 @@ class RoomController extends Controller
     {
         $room->load(['classes' => function ($query) {
             $query->select('id', 'uid', 'name', 'room_id', 'day', 'start_time', 'end_time', 'package_id', 'coach_id')
-                  ->with(['package:id,title', 'coach:id,name'])
-                  ->where('status', '!=', 'Stopped'); // Only show active/pending classes
+                ->with(['package:id,title', 'coach:id,name'])
+                ->where('status', '!=', 'Stopped'); // Only show active/pending classes
         }]);
 
         return Inertia::render('Admin/Rooms/Schedule', [
@@ -126,7 +131,7 @@ class RoomController extends Controller
         };
 
         $rules = [
-            'name' => 'required|string|max:255|unique:rooms,name,' . $room->id,
+            'name' => 'required|string|max:255|unique:rooms,name,'.$room->id,
             'capacity' => 'required|integer|min:1',
             'mode' => ['required', Rule::in(['physical', 'online'])],
             'location' => ['nullable', 'string', 'max:255'],
