@@ -69,7 +69,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/parents/search', [StudentController::class, 'searchParents'])->name('parents.search');
         Route::get('/parents/{parent}/details', [StudentController::class, 'getParentDetails'])->name('parents.details');
-        Route::put('/parents/{parent}', [StudentController::class, 'updateParent'])->name('parents.update');
+        Route::put('/parents/{parent}', [StudentController::class, 'updateParent'])->name('parents.update-parent');
 
         Route::get('/students/bulk-create', [StudentController::class, 'bulkCreate'])->name('students.bulk-create');
         Route::post('/students/bulk-store', [StudentController::class, 'bulkStore'])->name('students.bulk-store');

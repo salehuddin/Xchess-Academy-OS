@@ -61,7 +61,7 @@ export default function ParentDetailsModal({ isOpen, onClose, parentId, onStuden
     const handleSave = async () => {
         setSaving(true);
         try {
-            await axios.put(route('admin.parents.update', parent.id), editForm);
+            await axios.put(route('admin.parents.update-parent', parent.id), editForm);
             setParent({ ...parent, ...editForm });
             setIsEditing(false);
         } catch (error) {
