@@ -77,8 +77,7 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-autoloader
 
 COPY . .
 RUN npm install --legacy-peer-deps && npm run build
-RUN composer dump-autoload --optimize --no-dev --no-scripts \
-    && php artisan package:discover --ansi
+RUN composer dump-autoload --optimize --no-dev --no-scripts
 
 RUN mkdir -p /app/storage/framework/cache \
              /app/storage/framework/sessions \

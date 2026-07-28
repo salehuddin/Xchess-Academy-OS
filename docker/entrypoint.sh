@@ -11,6 +11,9 @@ mkdir -p /app/bootstrap/cache
 chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
 if [ -f /app/vendor/autoload.php ]; then
+    echo "Discovering packages..."
+    php artisan package:discover --ansi || true
+
     echo "Running migrations..."
     php artisan migrate --force || true
 
