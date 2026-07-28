@@ -23,8 +23,7 @@ if [ -f /app/vendor/autoload.php ]; then
     echo "Seeding database..."
     php artisan db:seed --force || true
 
-    echo "Caching config, routes, views..."
-    php artisan config:cache || true
+    echo "Caching routes and views..."
     php artisan route:cache || true
     php artisan view:cache || true
 fi
