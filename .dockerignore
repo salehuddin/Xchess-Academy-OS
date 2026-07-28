@@ -1,0 +1,12 @@
+.git
+.github
+.gemini
+.vscode
+.agents
+node_modules
+vendor
+.env
+.env.local
+.phpunit.result.cache
+tests
+boost.json
