@@ -76,7 +76,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-autoloader
 
 COPY . .
-RUN npm ci --legacy-peer-deps && npm run build
+RUN npm install --legacy-peer-deps && npm run build
 RUN composer dump-autoload --optimize --no-dev --no-scripts \
     && php artisan package:discover --ansi
 
