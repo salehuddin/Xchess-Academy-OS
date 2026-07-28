@@ -146,7 +146,7 @@ class DatabaseSeeder extends Seeder
                 ['email' => $email],
                 [
                     'name' => $pName,
-                    'phone' => '+601'.fake()->numberBetween(10000000, 99999999),
+                    'phone' => '+601'.rand(10000000, 99999999),
                     'unique_access_token' => Str::uuid()->toString(),
                 ]
             );
