@@ -34,10 +34,26 @@ class MailConfig
             'mail.mailers.smtp.port' => Setting::get('mail_port', 587),
             'mail.mailers.smtp.username' => Setting::get('mail_username'),
             'mail.mailers.smtp.password' => Setting::get('mail_password'),
-            'mail.mailers.smtp.scheme' => $encryption === 'none' ? null : $encryption,
+            'mail.mailers.smtp.scheme' => self::schemeFor($encryption),
             'mail.from.address' => $fromAddress,
             'mail.from.name' => Setting::get('mail_from_name', config('app.name')),
         ]);
+    }
+
+    /**
+     * Translate the UI "encryption" value into a Symfony Mailer "scheme".
+     *
+     * Symfony's SMTP transport only accepts "smtp", "smtps", or null —
+     * NOT "tls"/"ssl" (those throw "scheme is not supported"). STARTTLS is
+     * auto-negotiated by the "smtp" scheme when the server supports it.
+     */
+    protected static function schemeFor(string $encryption): ?string
+    {
+        return match ($encryption) {
+            'ssl' => 'smtps',
+            'none' => null,
+            default => 'smtp',
+        };
     }
 
     protected static function settingsTableExists(): bool
