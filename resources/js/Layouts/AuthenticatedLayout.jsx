@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import Logo from '@/Components/Logo';
 import {
     Navbar,
     NavbarContent,
@@ -289,9 +290,8 @@ export default function AuthenticatedLayout({ user: userProp, header, children }
             >
                 <div className={`h-16 flex items-center ${collapsed ? 'justify-center px-0' : 'justify-between px-6'} border-b border-divider`}>
                     <div className="flex items-center gap-2 overflow-hidden">
-                         {/* Placeholder Logo */}
-                        <div className="w-8 h-8 min-w-[2rem] bg-foreground rounded-full flex items-center justify-center text-background font-bold">A</div>
-                        {!collapsed && <span className="text-xl font-bold text-foreground whitespace-nowrap">Academy</span>}
+                        <Logo size="sm" />
+                        {!collapsed && <span className="text-xl font-bold text-foreground whitespace-nowrap">Portal</span>}
                     </div>
                     {!collapsed && (
                         <Button isIconOnly variant="light" size="sm" onPress={toggleSidebar}>

@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,6 +26,8 @@ class SettingController extends Controller
             'company_phone' => Setting::get('company_phone', '+60 12-345 6789'),
             'company_address' => Setting::get('company_address', "Suite 10-2, Level 10, Chess Tower\nKuala Lumpur, Malaysia"),
             'company_bank_details' => Setting::get('company_bank_details', "Maybank: 5140 1234 5678\nAccount Name: X Chess Academy Sdn Bhd"),
+            'company_website' => Setting::get('company_website', 'https://xchessacademy.com'),
+            'company_logo' => Setting::get('company_logo'),
 
             'support_email' => Setting::get('support_email', 'support@xchess-academy.com'),
             'support_phone' => Setting::get('support_phone', '+60 12-345 6789'),
@@ -71,6 +74,7 @@ class SettingController extends Controller
             'company_phone' => 'required|string|max:255',
             'company_address' => 'required|string',
             'company_bank_details' => 'nullable|string',
+            'company_website' => 'nullable|url|max:255',
             'support_email' => 'nullable|email|max:255',
             'support_phone' => 'nullable|string|max:255',
             'support_hours' => 'nullable|string|max:255',
@@ -82,6 +86,7 @@ class SettingController extends Controller
         Setting::set('company_phone', $validated['company_phone'], 'company');
         Setting::set('company_address', $validated['company_address'], 'company');
         Setting::set('company_bank_details', $validated['company_bank_details'] ?? '', 'company');
+        Setting::set('company_website', $validated['company_website'] ?? '', 'company');
         Setting::set('support_email', $validated['support_email'] ?? '', 'company');
         Setting::set('support_phone', $validated['support_phone'] ?? '', 'company');
         Setting::set('support_hours', $validated['support_hours'] ?? '', 'company');
@@ -243,5 +248,47 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'WhatsApp Test Failed: '.$e->getMessage());
         }
+    }
+
+    public function uploadLogo(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:jpg,jpeg,png,svg,webp|max:2048',
+        ]);
+
+        $disk = Storage::disk('public');
+
+        $previous = Setting::get('company_logo');
+        if ($previous && $disk->exists($previous)) {
+            $disk->delete($previous);
+        }
+
+        $path = $request->file('logo')->store('logos', 'public');
+        Setting::set('company_logo', $path, 'company');
+
+        activity()
+            ->causedBy($request->user())
+            ->log('Uploaded academy logo');
+
+        return back()->with('success', 'Logo uploaded successfully.');
+    }
+
+    public function removeLogo(Request $request): RedirectResponse
+    {
+        $logo = Setting::get('company_logo');
+
+        if ($logo) {
+            $disk = Storage::disk('public');
+            if ($disk->exists($logo)) {
+                $disk->delete($logo);
+            }
+            Setting::set('company_logo', '', 'company');
+        }
+
+        activity()
+            ->causedBy($request->user())
+            ->log('Removed academy logo');
+
+        return back()->with('success', 'Logo removed.');
     }
 }

@@ -3,8 +3,11 @@
 namespace Tests\Feature\Admin;
 
 use App\Enums\UserRole;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SettingsTest extends TestCase
@@ -62,6 +65,79 @@ class SettingsTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
+    }
+
+    public function test_admin_can_update_company_website_and_support_settings(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin->value]);
+
+        $response = $this->actingAs($admin)->post(route('admin.settings.company.update'), [
+            'company_name' => 'X Chess Academy',
+            'company_reg_no' => '202401012345',
+            'company_email' => 'info@xchessacademy.com',
+            'company_phone' => '+60 12-345 6789',
+            'company_address' => 'Chess Tower, KL',
+            'company_bank_details' => 'Maybank 1234',
+            'company_website' => 'https://xchessacademy.com',
+            'support_email' => 'support@xchessacademy.com',
+            'support_phone' => '+60 12-345 6789',
+            'support_hours' => 'Mon-Fri, 9am - 6pm',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertSame('https://xchessacademy.com', Setting::get('company_website'));
+        $this->assertSame('support@xchessacademy.com', Setting::get('support_email'));
+    }
+
+    public function test_admin_can_upload_academy_logo(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['role' => UserRole::Admin->value]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.settings.logo.upload'), [
+                'logo' => UploadedFile::fake()->image('logo.png', 200, 200),
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertNotNull(Setting::get('company_logo'));
+        Storage::disk('public')->assertExists(Setting::get('company_logo'));
+    }
+
+    public function test_logo_upload_rejects_non_image_files(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['role' => UserRole::Admin->value]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.settings.logo.upload'), [
+                'logo' => UploadedFile::fake()->create('document.pdf', 100, 'application/pdf'),
+            ]);
+
+        $response->assertSessionHasErrors(['logo']);
+    }
+
+    public function test_admin_can_remove_existing_logo(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['role' => UserRole::Admin->value]);
+
+        $path = UploadedFile::fake()->image('logo.png', 100, 100)->store('logos', 'public');
+        Setting::set('company_logo', $path, 'company');
+        Storage::disk('public')->assertExists($path);
+
+        $response = $this->actingAs($admin)
+            ->delete(route('admin.settings.logo.remove'));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        Storage::disk('public')->assertMissing($path);
+        $this->assertEmpty(Setting::get('company_logo'));
     }
 
     public function test_admin_can_view_user_activity_logs(): void

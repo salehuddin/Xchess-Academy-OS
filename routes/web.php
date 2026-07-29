@@ -111,6 +111,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/settings/test-smtp', [SettingController::class, 'testSmtp'])->name('settings.test-smtp');
         Route::post('/settings/test-chip', [SettingController::class, 'testChip'])->name('settings.test-chip');
         Route::post('/settings/test-whatsapp', [SettingController::class, 'testWhatsApp'])->name('settings.test-whatsapp');
+        Route::post('/settings/logo', [SettingController::class, 'uploadLogo'])->name('settings.logo.upload');
+        Route::delete('/settings/logo', [SettingController::class, 'removeLogo'])->name('settings.logo.remove');
 
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 

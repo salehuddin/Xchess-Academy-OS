@@ -2,8 +2,14 @@ import { Input, Button } from "@heroui/react";
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 
+const ExternalIcon = (props) => (
+    <svg aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="1em" height="1em" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+    </svg>
+);
+
 export default function ParentAccess() {
-    const { flash } = usePage().props;
+    const { flash, academy } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
     });
@@ -14,6 +20,9 @@ export default function ParentAccess() {
             onFinish: () => reset('email'),
         });
     };
+
+    const website = academy?.website || 'https://xchessacademy.com';
+    const websiteDisplay = website.replace(/^https?:\/\//, '');
 
     return (
         <GuestLayout>
@@ -51,10 +60,18 @@ export default function ParentAccess() {
                     Send Access Link
                 </Button>
 
-                <div className="text-center text-sm text-default-500">
-                    <Link href={route('home')} className="text-primary hover:underline">
-                        Back to home
-                    </Link>
+                <div className="text-center text-sm text-default-500 space-y-1.5">
+                    <div>
+                        <Link href={route('home')} className="text-primary hover:underline">
+                            Back to home
+                        </Link>
+                    </div>
+                    <div>
+                        Want to enroll your child?{' '}
+                        <a href={website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                            {websiteDisplay} <ExternalIcon />
+                        </a>
+                    </div>
                 </div>
             </form>
         </GuestLayout>

@@ -1,5 +1,5 @@
 import { Input, Button, Checkbox } from "@heroui/react";
-import GuestLayout from '@/Layouts/GuestLayout';
+import AuthLayout from '@/Layouts/AuthLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
@@ -17,7 +17,10 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
-        <GuestLayout>
+        <AuthLayout
+            title="Sign in to your account"
+            subtitle="Access the XChess Academy Portal as a coach or admin."
+        >
             <Head title="Log in" />
 
             {status && (
@@ -37,6 +40,7 @@ export default function Login({ status, canResetPassword }) {
                     isInvalid={!!errors.email}
                     autoComplete="username"
                     variant="bordered"
+                    isRequired
                 />
 
                 <Input
@@ -49,16 +53,17 @@ export default function Login({ status, canResetPassword }) {
                     isInvalid={!!errors.password}
                     autoComplete="current-password"
                     variant="bordered"
+                    isRequired
                 />
 
-                <Checkbox
-                    isSelected={data.remember}
-                    onValueChange={(val) => setData('remember', val)}
-                >
-                    Remember me
-                </Checkbox>
-
                 <div className="flex items-center justify-between mt-2">
+                    <Checkbox
+                        isSelected={data.remember}
+                        onValueChange={(val) => setData('remember', val)}
+                    >
+                        Remember me
+                    </Checkbox>
+
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
@@ -67,12 +72,12 @@ export default function Login({ status, canResetPassword }) {
                             Forgot your password?
                         </Link>
                     )}
-
-                    <Button color="primary" type="submit" isLoading={processing}>
-                        Log in
-                    </Button>
                 </div>
+
+                <Button color="primary" type="submit" isLoading={processing} className="mt-2">
+                    Sign In
+                </Button>
             </form>
-        </GuestLayout>
+        </AuthLayout>
     );
 }

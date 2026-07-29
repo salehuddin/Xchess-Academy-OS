@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -33,6 +35,20 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+            ],
+            'academy' => fn () => [
+                'name' => Setting::get('company_name', 'X Chess Academy'),
+                'website' => Setting::get('company_website', 'https://xchessacademy.com'),
+                'logo_url' => (function () {
+                    $path = Setting::get('company_logo');
+                    if (! $path) {
+                        return null;
+                    }
+
+                    return Storage::disk('public')->url($path);
+                })(),
+                'support_email' => Setting::get('support_email', 'support@xchess-academy.com'),
+                'support_phone' => Setting::get('support_phone'),
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

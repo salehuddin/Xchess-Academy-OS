@@ -25,6 +25,29 @@ class WelcomeTest extends TestCase
             );
     }
 
+    public function test_home_page_displays_portal_welcome_header_and_not_marketing_hero(): void
+    {
+        $response = $this->get(route('home'));
+
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Welcome')
+                ->has('company.website')
+            );
+    }
+
+    public function test_home_page_shows_external_website_link_and_help_text(): void
+    {
+        $response = $this->get(route('home'));
+
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Welcome')
+                ->has('company.website')
+                ->has('support.email')
+            );
+    }
+
     public function test_home_page_surfaces_active_published_announcements(): void
     {
         SiteAnnouncement::factory()->create([

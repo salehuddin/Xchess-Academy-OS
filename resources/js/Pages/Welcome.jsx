@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
   Navbar,
   NavbarBrand,
@@ -10,6 +10,7 @@ import {
   CardBody,
   Chip
 } from "@heroui/react";
+import Logo from '@/Components/Logo';
 
 const InfoIcon = (props) => (
   <svg aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="1em" height="1em" {...props}>
@@ -65,6 +66,12 @@ const PinIcon = (props) => (
   </svg>
 );
 
+const ExternalIcon = (props) => (
+  <svg aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="1em" height="1em" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+  </svg>
+);
+
 const typeColor = (t) => (t === 'warning' ? 'warning' : t === 'success' ? 'success' : 'primary');
 
 const fmtRelative = (iso) => {
@@ -80,15 +87,22 @@ const fmtRelative = (iso) => {
 
 export default function Welcome({ auth, announcements = [], company = {}, support = {} }) {
   const hasAnnouncements = announcements && announcements.length > 0;
+  const { academy } = usePage().props;
+  const website = company.website || academy?.website || 'https://xchessacademy.com';
+  const websiteDisplay = website.replace(/^https?:\/\//, '');
+  const supportEmail = support.email || academy?.support_email || 'support@xchess-academy.com';
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Head title="XChess Academy" />
+      <Head title="XChess Academy Portal" />
 
       {/* Navbar */}
       <Navbar maxWidth="xl" position="static" className="bg-background/70 backdrop-blur-md border-b border-divider">
         <NavbarBrand>
-          <Link href={route('home')} className="font-bold text-inherit text-2xl tracking-tighter">XCHESS ACADEMY</Link>
+          <Link href={route('home')} className="flex items-center gap-2">
+            <Logo size="sm" />
+            <span className="font-bold text-inherit text-xl tracking-tight">XCHESS ACADEMY</span>
+          </Link>
         </NavbarBrand>
         <NavbarContent justify="end">
           {auth.user ? (
@@ -115,25 +129,24 @@ export default function Welcome({ auth, announcements = [], company = {}, suppor
       </Navbar>
 
       <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="py-20 px-6 text-center relative overflow-hidden">
+        {/* Portal Welcome Header */}
+        <section className="py-16 px-6 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary/5 to-transparent -z-10"></div>
-          <div className="max-w-4xl mx-auto space-y-6">
-            <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 pb-2 leading-tight">
-              Master the Game of Kings
+          <div className="max-w-3xl mx-auto space-y-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground leading-tight">
+              Welcome to the XChess Academy Portal
             </h1>
-            <p className="text-xl md:text-2xl text-default-600 max-w-2xl mx-auto">
-              Join XChess Academy to elevate your chess skills with expert coaching,
-              structured lessons, and a vibrant community.
+            <p className="text-lg text-default-600 max-w-2xl mx-auto">
+              Sign in to manage classes, schedules, invoices, attendance, and student records.
             </p>
-            <div className="flex justify-center gap-4 pt-8">
+            <div className="flex justify-center gap-4 pt-6">
               {!auth.user && (
-                <Button as={Link} href={route('register')} size="lg" color="primary" className="font-semibold shadow-lg shadow-primary/40">
-                  Get Started
+                <Button as={Link} href={route('login')} size="lg" color="primary" className="font-semibold shadow-lg shadow-primary/40">
+                  Sign In
                 </Button>
               )}
               <Button as={Link} href="#portals" size="lg" variant="bordered">
-                Portals
+                View Portals
               </Button>
             </div>
           </div>
@@ -173,39 +186,6 @@ export default function Welcome({ auth, announcements = [], company = {}, suppor
             </div>
           </section>
         )}
-
-        {/* Features Section */}
-        <section className="py-20 px-6">
-          <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
-            <Card className="p-4 border-none shadow-md hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
-                <p className="text-tiny uppercase font-bold text-primary">Expert Coaching</p>
-                <h4 className="font-bold text-large mt-1">Grandmaster Lessons</h4>
-              </CardHeader>
-              <CardBody className="overflow-visible py-2">
-                <p className="text-default-500">Learn from the best with our structured curriculum designed for all skill levels.</p>
-              </CardBody>
-            </Card>
-            <Card className="p-4 border-none shadow-md hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
-                <p className="text-tiny uppercase font-bold text-secondary">Tournaments</p>
-                <h4 className="font-bold text-large mt-1">Weekly Competitions</h4>
-              </CardHeader>
-              <CardBody className="overflow-visible py-2">
-                <p className="text-default-500">Test your skills in our regular tournaments and climb the academy rankings.</p>
-              </CardBody>
-            </Card>
-            <Card className="p-4 border-none shadow-md hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
-                <p className="text-tiny uppercase font-bold text-success">Community</p>
-                <h4 className="font-bold text-large mt-1">Vibrant Community</h4>
-              </CardHeader>
-              <CardBody className="overflow-visible py-2">
-                <p className="text-default-500">Connect with fellow chess enthusiasts, analyze games, and grow together.</p>
-              </CardBody>
-            </Card>
-          </div>
-        </section>
 
         {/* Portals Section */}
         <section id="portals" className="py-16 px-6 bg-content1/40 border-y border-divider">
@@ -263,6 +243,33 @@ export default function Welcome({ auth, announcements = [], company = {}, suppor
           </div>
         </section>
 
+        {/* Help / Info Card */}
+        <section className="py-12 px-6">
+          <div className="max-w-3xl mx-auto">
+            <Card className="p-6 border border-divider shadow-sm bg-content1/50">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                  <InfoIcon className="text-xl" />
+                </div>
+                <div className="space-y-2 text-sm text-default-600">
+                  <h3 className="text-base font-semibold text-foreground">Who is this portal for?</h3>
+                  <p>
+                    This portal is for <strong>parents</strong>, <strong>coaches</strong>, and <strong>admins</strong> of XChess Academy.
+                    If you&apos;re having trouble accessing your account, please{' '}
+                    <a href={`mailto:${supportEmail}`} className="text-primary hover:underline">contact support</a>.
+                  </p>
+                  <p>
+                    Want to learn about our chess classes or enroll your child? Visit our main website:{' '}
+                    <a href={website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                      {websiteDisplay} <ExternalIcon />
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </section>
+
         {/* Contact Section */}
         <section id="contact" className="py-16 px-6">
           <div className="max-w-5xl mx-auto">
@@ -294,6 +301,12 @@ export default function Welcome({ auth, announcements = [], company = {}, suppor
                     <li className="flex items-center gap-3">
                       <PhoneIcon className="text-default-400" />
                       <a href={`tel:${company.phone}`} className="hover:text-primary hover:underline">{company.phone}</a>
+                    </li>
+                  )}
+                  {websiteDisplay && (
+                    <li className="flex items-center gap-3">
+                      <ExternalIcon className="text-default-400" />
+                      <a href={website} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">{websiteDisplay}</a>
                     </li>
                   )}
                 </ul>
@@ -332,7 +345,7 @@ export default function Welcome({ auth, announcements = [], company = {}, suppor
       </main>
 
       <footer className="py-10 text-center text-default-400 text-sm border-t border-divider">
-        &copy; {new Date().getFullYear()} {company.name || 'XChess Academy'}. All rights reserved.
+        &copy; {new Date().getFullYear()} {company.name || 'XChess Academy'} Portal. All rights reserved.
       </footer>
     </div>
   );

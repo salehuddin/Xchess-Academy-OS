@@ -40,6 +40,7 @@ class WelcomeController extends Controller
             'email' => Setting::get('company_email'),
             'phone' => Setting::get('company_phone'),
             'address' => Setting::get('company_address'),
+            'website' => Setting::get('company_website', 'https://xchessacademy.com'),
         ];
 
         $support = [

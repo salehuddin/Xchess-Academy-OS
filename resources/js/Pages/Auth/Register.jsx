@@ -1,5 +1,5 @@
 import { Input, Button } from "@heroui/react";
-import GuestLayout from '@/Layouts/GuestLayout';
+import AuthLayout from '@/Layouts/AuthLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Register() {
@@ -18,7 +18,10 @@ export default function Register() {
     };
 
     return (
-        <GuestLayout>
+        <AuthLayout
+            title="Create your account"
+            subtitle="Sign up for a portal account as a coach or admin."
+        >
             <Head title="Register" />
 
             <form onSubmit={submit} className="flex flex-col gap-4">
@@ -90,6 +93,6 @@ export default function Register() {
                     </Button>
                 </div>
             </form>
-        </GuestLayout>
+        </AuthLayout>
     );
 }

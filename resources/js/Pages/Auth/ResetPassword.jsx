@@ -1,5 +1,5 @@
 import { Input, Button } from "@heroui/react";
-import GuestLayout from '@/Layouts/GuestLayout';
+import AuthLayout from '@/Layouts/AuthLayout';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function ResetPassword({ token, email }) {
@@ -18,7 +18,10 @@ export default function ResetPassword({ token, email }) {
     };
 
     return (
-        <GuestLayout>
+        <AuthLayout
+            title="Reset your password"
+            subtitle="Choose a new password for your portal account."
+        >
             <Head title="Reset Password" />
 
             <form onSubmit={submit} className="flex flex-col gap-4">
@@ -33,6 +36,7 @@ export default function ResetPassword({ token, email }) {
                     isInvalid={!!errors.email}
                     autoComplete="username"
                     variant="bordered"
+                    isRequired
                 />
 
                 <Input
@@ -47,6 +51,7 @@ export default function ResetPassword({ token, email }) {
                     autoComplete="new-password"
                     variant="bordered"
                     autoFocus
+                    isRequired
                 />
 
                 <Input
@@ -60,14 +65,13 @@ export default function ResetPassword({ token, email }) {
                     isInvalid={!!errors.password_confirmation}
                     autoComplete="new-password"
                     variant="bordered"
+                    isRequired
                 />
 
-                <div className="flex items-center justify-end mt-2">
-                    <Button color="primary" type="submit" isLoading={processing}>
-                        Reset Password
-                    </Button>
-                </div>
+                <Button color="primary" type="submit" isLoading={processing} className="mt-2">
+                    Reset Password
+                </Button>
             </form>
-        </GuestLayout>
+        </AuthLayout>
     );
 }

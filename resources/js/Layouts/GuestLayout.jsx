@@ -1,5 +1,5 @@
 import { Card, CardBody } from "@heroui/react";
-import ApplicationLogo from '@/Components/ApplicationLogo';
+import Logo from '@/Components/Logo';
 import { Link } from '@inertiajs/react';
 
 export default function GuestLayout({ children, variant = "card", title }) {
@@ -9,8 +9,8 @@ export default function GuestLayout({ children, variant = "card", title }) {
                 <div className="border-b border-divider">
                     <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4">
                         <Link href="/" className="flex items-center gap-3">
-                            <ApplicationLogo className="h-10 w-10 fill-current text-primary" />
-                            <span className="text-lg font-semibold text-foreground">X Chess Academy</span>
+                            <Logo size="md" />
+                            <span className="text-lg font-semibold text-foreground">XChess Academy Portal</span>
                         </Link>
                         {title ? (
                             <div className="ml-auto text-sm text-default-500">
@@ -30,7 +30,7 @@ export default function GuestLayout({ children, variant = "card", title }) {
         <div className="flex min-h-screen flex-col items-center bg-background pt-6 sm:justify-center sm:pt-0">
             <div className="mb-6">
                 <Link href="/">
-                    <ApplicationLogo className="h-20 w-20 fill-current text-primary" />
+                    <Logo size="lg" />
                 </Link>
             </div>
 

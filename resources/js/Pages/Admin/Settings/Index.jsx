@@ -27,6 +27,7 @@ export default function Index({ settings }) {
         company_phone: settings.company_phone || '',
         company_address: settings.company_address || '',
         company_bank_details: settings.company_bank_details || '',
+        company_website: settings.company_website || '',
         support_email: settings.support_email || '',
         support_phone: settings.support_phone || '',
         support_hours: settings.support_hours || '',
@@ -67,6 +68,35 @@ export default function Index({ settings }) {
     const [testingSmtp, setTestingSmtp] = useState(false);
     const [testingChip, setTestingChip] = useState(false);
     const [testingWhatsApp, setTestingWhatsApp] = useState(false);
+
+    const logoForm = useForm({ logo: null });
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+
+    const logoUrl = settings.company_logo
+        ? `/storage/${settings.company_logo}`
+        : null;
+
+    const handleLogoUpload = (e) => {
+        e.preventDefault();
+        if (!logoForm.data.logo) return;
+        setUploadingLogo(true);
+        logoForm.post(route('admin.settings.logo.upload'), {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                logoForm.reset('logo');
+                setUploadingLogo(false);
+            },
+            onError: () => setUploadingLogo(false),
+            onFinish: () => setUploadingLogo(false),
+        });
+    };
+
+    const handleLogoRemove = () => {
+        router.delete(route('admin.settings.logo.remove'), {
+            preserveScroll: true,
+        });
+    };
 
     const handleCompanySubmit = (e) => {
         e.preventDefault();
@@ -156,6 +186,40 @@ export default function Index({ settings }) {
                             <Divider />
                             <CardBody className="p-6">
                                 <form onSubmit={handleCompanySubmit} className="space-y-6">
+                                    {/* Logo Upload */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-lg border border-divider bg-content2/30">
+                                        <div className="w-16 h-16 rounded-lg bg-background border border-divider flex items-center justify-center overflow-hidden flex-shrink-0">
+                                            {logoUrl ? (
+                                                <img src={logoUrl} alt="Academy logo" className="w-full h-full object-contain" />
+                                            ) : (
+                                                <div className="w-full h-full bg-primary text-white flex items-center justify-center font-bold text-2xl">X</div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <h4 className="text-sm font-semibold text-foreground">Academy Logo</h4>
+                                            <p className="text-xs text-default-500">Shown in the portal sidebar, auth pages, and home page. JPG, PNG, SVG, or WebP up to 2 MB.</p>
+                                            <form onSubmit={handleLogoUpload} className="flex flex-wrap items-center gap-2">
+                                                <input
+                                                    type="file"
+                                                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                                                    onChange={(e) => logoForm.setData('logo', e.target.files[0])}
+                                                    className="text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-primary file:text-white file:cursor-pointer"
+                                                />
+                                                <Button size="sm" color="primary" type="submit" isLoading={uploadingLogo} isDisabled={!logoForm.data.logo}>
+                                                    Upload
+                                                </Button>
+                                                {logoUrl && (
+                                                    <Button size="sm" color="danger" variant="flat" type="button" onPress={handleLogoRemove}>
+                                                        Remove
+                                                    </Button>
+                                                )}
+                                            </form>
+                                            {logoForm.errors.logo && (
+                                                <p className="text-xs text-danger">{logoForm.errors.logo}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <Input
                                             label="Company / Academy Name"
@@ -208,6 +272,15 @@ export default function Index({ settings }) {
                                         onChange={(e) => companyForm.setData('company_bank_details', e.target.value)}
                                         isInvalid={!!companyForm.errors.company_bank_details}
                                         errorMessage={companyForm.errors.company_bank_details}
+                                    />
+                                    <Input
+                                        type="url"
+                                        label="Main Website"
+                                        value={companyForm.data.company_website}
+                                        onChange={(e) => companyForm.setData('company_website', e.target.value)}
+                                        isInvalid={!!companyForm.errors.company_website}
+                                        errorMessage={companyForm.errors.company_website}
+                                        placeholder="https://xchessacademy.com"
                                     />
                                     <Divider />
                                     <div>

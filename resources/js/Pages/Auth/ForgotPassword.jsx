@@ -1,5 +1,5 @@
 import { Input, Button } from "@heroui/react";
-import GuestLayout from '@/Layouts/GuestLayout';
+import AuthLayout from '@/Layouts/AuthLayout';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function ForgotPassword({ status }) {
@@ -13,14 +13,11 @@ export default function ForgotPassword({ status }) {
     };
 
     return (
-        <GuestLayout>
+        <AuthLayout
+            title="Forgot your password?"
+            subtitle="Enter your email and we'll send you a password reset link."
+        >
             <Head title="Forgot Password" />
-
-            <div className="mb-4 text-sm text-gray-600">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
-            </div>
 
             {status && (
                 <div className="mb-4 text-sm font-medium text-success">
@@ -40,14 +37,13 @@ export default function ForgotPassword({ status }) {
                     isInvalid={!!errors.email}
                     variant="bordered"
                     autoFocus
+                    isRequired
                 />
 
-                <div className="flex items-center justify-end mt-2">
-                    <Button color="primary" type="submit" isLoading={processing}>
-                        Email Password Reset Link
-                    </Button>
-                </div>
+                <Button color="primary" type="submit" isLoading={processing} className="mt-2">
+                    Email Password Reset Link
+                </Button>
             </form>
-        </GuestLayout>
+        </AuthLayout>
     );
 }
