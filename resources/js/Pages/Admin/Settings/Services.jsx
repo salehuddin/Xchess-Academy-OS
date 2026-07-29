@@ -54,28 +54,37 @@ export default function Services({ auth, settings }) {
         });
     };
 
-    const handleTestSmtp = () => {
+    const handleTestSmtp = (e) => {
+        e?.preventDefault();
         if (!testRecipient) return;
         setTestingSmtp(true);
         post(route('admin.settings.test-smtp'), { recipient: testRecipient }, {
             preserveScroll: true,
+            onSuccess: () => setTestingSmtp(false),
+            onError: () => setTestingSmtp(false),
             onFinish: () => setTestingSmtp(false),
         });
     };
 
-    const handleTestChip = () => {
+    const handleTestChip = (e) => {
+        e?.preventDefault();
         setTestingChip(true);
         post(route('admin.settings.test-chip'), {}, {
             preserveScroll: true,
+            onSuccess: () => setTestingChip(false),
+            onError: () => setTestingChip(false),
             onFinish: () => setTestingChip(false),
         });
     };
 
-    const handleTestWhatsApp = () => {
+    const handleTestWhatsApp = (e) => {
+        e?.preventDefault();
         if (!testPhone) return;
         setTestingWhatsApp(true);
         post(route('admin.settings.test-whatsapp'), { phone: testPhone }, {
             preserveScroll: true,
+            onSuccess: () => setTestingWhatsApp(false),
+            onError: () => setTestingWhatsApp(false),
             onFinish: () => setTestingWhatsApp(false),
         });
     };
@@ -159,6 +168,7 @@ export default function Services({ auth, settings }) {
 
                                     <div className="flex justify-between items-center pt-2">
                                         <Button
+                                            type="button"
                                             color="secondary"
                                             variant="flat"
                                             onPress={handleTestChip}
@@ -258,6 +268,7 @@ export default function Services({ auth, settings }) {
                                                 className="w-64"
                                             />
                                             <Button
+                                                type="button"
                                                 color="secondary"
                                                 variant="flat"
                                                 size="sm"
@@ -337,6 +348,7 @@ export default function Services({ auth, settings }) {
                                                 className="w-64"
                                             />
                                             <Button
+                                                type="button"
                                                 color="secondary"
                                                 variant="flat"
                                                 size="sm"
