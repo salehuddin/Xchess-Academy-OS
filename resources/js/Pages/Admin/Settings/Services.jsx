@@ -54,8 +54,7 @@ export default function Services({ auth, settings }) {
         });
     };
 
-    const handleTestSmtp = (e) => {
-        e?.preventDefault();
+    const handleTestSmtp = () => {
         if (!testRecipient) return;
         setTestingSmtp(true);
         post(route('admin.settings.test-smtp'), { recipient: testRecipient }, {
@@ -66,8 +65,7 @@ export default function Services({ auth, settings }) {
         });
     };
 
-    const handleTestChip = (e) => {
-        e?.preventDefault();
+    const handleTestChip = () => {
         setTestingChip(true);
         post(route('admin.settings.test-chip'), {}, {
             preserveScroll: true,
@@ -77,8 +75,7 @@ export default function Services({ auth, settings }) {
         });
     };
 
-    const handleTestWhatsApp = (e) => {
-        e?.preventDefault();
+    const handleTestWhatsApp = () => {
         if (!testPhone) return;
         setTestingWhatsApp(true);
         post(route('admin.settings.test-whatsapp'), { phone: testPhone }, {
