@@ -26,6 +26,14 @@ RUN printf '%s\n' \
     'stderr_logfile=/dev/stderr' \
     'stderr_logfile_maxbytes=0' \
     '' \
+    '[program:queue-worker]' \
+    'command=php /app/artisan queue:work --tries=3 --max-time=3600' \
+    'autorestart=true' \
+    'stdout_logfile=/dev/stdout' \
+    'stdout_logfile_maxbytes=0' \
+    'stderr_logfile=/dev/stderr' \
+    'stderr_logfile_maxbytes=0' \
+    '' \
     '[program:nginx]' \
     'command=nginx -g "daemon off;"' \
     'stdout_logfile=/dev/stdout' \
