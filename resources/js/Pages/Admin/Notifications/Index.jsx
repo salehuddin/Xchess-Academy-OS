@@ -62,10 +62,10 @@ export default function Index({ notifications }) {
                     <div className="flex items-center gap-3">
                         <Button
                             as={Link}
-                            href={route('admin.notifications.settings')}
+                            href={route('admin.settings.index')}
                             variant="flat"
                         >
-                            Channel Settings
+                            Settings
                         </Button>
                         <Button
                             as={Link}

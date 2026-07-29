@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use App\Services\MailConfig;
+use App\Services\WhatsAppConfig;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         MailConfig::apply();
+        WhatsAppConfig::apply();
 
         Gate::policy(User::class, UserPolicy::class);
 

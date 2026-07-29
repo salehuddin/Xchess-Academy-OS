@@ -490,17 +490,10 @@ export default function AuthenticatedLayout({ user: userProp, header, children }
                                 )}
                                 <div className="space-y-1">
                                     <SidebarItem
-                                        href={route('admin.settings.company')}
+                                        href={route('admin.settings.index')}
                                         icon={SettingsIcon}
-                                        label="Company Profile"
-                                        active={url.startsWith('/admin/settings/company')}
-                                        collapsed={collapsed}
-                                    />
-                                    <SidebarItem
-                                        href={route('admin.settings.services')}
-                                        icon={SettingsIcon}
-                                        label="External Services"
-                                        active={url.startsWith('/admin/settings/services')}
+                                        label="Settings"
+                                        active={url.startsWith('/admin/settings')}
                                         collapsed={collapsed}
                                     />
                                     <SidebarItem

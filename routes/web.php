@@ -93,7 +93,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('tasks', TaskController::class);
         Route::resource('payments', PaymentController::class);
         Route::get('notifications/dispatches', [NotificationController::class, 'dispatches'])->name('notifications.dispatches');
-        Route::get('notifications/settings', [NotificationController::class, 'settings'])->name('notifications.settings');
         Route::resource('notifications', NotificationController::class)->except(['show']);
         Route::post('announcements/{announcement}/send', [AnnouncementController::class, 'send'])->name('announcements.send');
         Route::resource('announcements', AnnouncementController::class)->only(['index', 'create', 'store', 'show']);
@@ -105,13 +104,13 @@ Route::middleware('auth')->group(function () {
         Route::resource('packages', PackageController::class);
 
         // System Settings & Logs
-        Route::get('/settings/company', [SettingController::class, 'company'])->name('settings.company');
+        Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('/settings/company', [SettingController::class, 'updateCompany'])->name('settings.company.update');
-        Route::get('/settings/services', [SettingController::class, 'services'])->name('settings.services');
         Route::post('/settings/services', [SettingController::class, 'updateServices'])->name('settings.services.update');
-        Route::post('/settings/services/test-smtp', [SettingController::class, 'testSmtp'])->name('settings.test-smtp');
-        Route::post('/settings/services/test-chip', [SettingController::class, 'testChip'])->name('settings.test-chip');
-        Route::post('/settings/services/test-whatsapp', [SettingController::class, 'testWhatsApp'])->name('settings.test-whatsapp');
+        Route::post('/settings/notifications', [SettingController::class, 'updateNotificationSettings'])->name('settings.notifications.update');
+        Route::post('/settings/test-smtp', [SettingController::class, 'testSmtp'])->name('settings.test-smtp');
+        Route::post('/settings/test-chip', [SettingController::class, 'testChip'])->name('settings.test-chip');
+        Route::post('/settings/test-whatsapp', [SettingController::class, 'testWhatsApp'])->name('settings.test-whatsapp');
 
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 

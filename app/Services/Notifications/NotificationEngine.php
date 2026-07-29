@@ -6,8 +6,10 @@ use App\Models\Invoice;
 use App\Models\Notification;
 use App\Models\NotificationDispatch;
 use App\Models\StudentParent;
+use App\Models\Setting;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class NotificationEngine
 {
@@ -88,8 +90,15 @@ class NotificationEngine
         return $queued;
     }
 
-    public function sendDueDispatches(Carbon $now, ?int $limit = 250): int
+    public function sendDueDispatches(Carbon $now, ?int $limit = null): int
     {
+        if (! $this->notificationsEnabled()) {
+            return 0;
+        }
+
+        $limit ??= (int) Setting::get('notifications_daily_limit', 250);
+        $maxAttempts = (int) Setting::get('notifications_retry_attempts', 3);
+
         $query = NotificationDispatch::query()
             ->where('status', 'Pending')
             ->where('scheduled_for', '<=', $now)
@@ -106,6 +115,8 @@ class NotificationEngine
         }
 
         $sent = 0;
+        $consecutiveFailures = 0;
+
         foreach ($dispatches as $dispatch) {
             $notification = $dispatch->notification;
             if (! $notification || ! $notification->is_active) {
@@ -116,18 +127,67 @@ class NotificationEngine
 
             try {
                 $this->sendOne($dispatch);
-                $dispatch->update(['status' => 'Sent', 'sent_at' => $now]);
-                $sent++;
-            } catch (\Throwable $e) {
                 $dispatch->update([
-                    'status' => 'Failed',
+                    'status' => 'Sent',
                     'sent_at' => $now,
-                    'error' => mb_substr($e->getMessage(), 0, 1000),
+                    'attempts' => $dispatch->attempts + 1,
                 ]);
+                $sent++;
+                $consecutiveFailures = 0;
+            } catch (\Throwable $e) {
+                $attempts = $dispatch->attempts + 1;
+
+                if ($attempts < $maxAttempts) {
+                    $retryDelay = (int) Setting::get('notifications_retry_delay_minutes', 30);
+                    $dispatch->update([
+                        'status' => 'Pending',
+                        'attempts' => $attempts,
+                        'error' => mb_substr($e->getMessage(), 0, 1000),
+                        'scheduled_for' => $now->copy()->addMinutes($retryDelay),
+                    ]);
+                } else {
+                    $dispatch->update([
+                        'status' => 'Failed',
+                        'sent_at' => $now,
+                        'attempts' => $attempts,
+                        'error' => mb_substr($e->getMessage(), 0, 1000),
+                    ]);
+                }
+
+                $consecutiveFailures++;
+                if ($consecutiveFailures >= 5) {
+                    $this->sendAdminAlert($consecutiveFailures);
+                    $consecutiveFailures = 0;
+                }
             }
         }
 
         return $sent;
+    }
+
+    protected function notificationsEnabled(): bool
+    {
+        return (bool) Setting::get('notifications_enabled', true);
+    }
+
+    protected function sendAdminAlert(int $failureCount): void
+    {
+        $alertEmail = Setting::get('notifications_admin_alert_email');
+
+        if (empty($alertEmail)) {
+            return;
+        }
+
+        try {
+            Mail::raw(
+                "Notification system alert: {$failureCount} consecutive dispatch failures detected. Please check the dispatch log and channel configuration.",
+                function ($message) use ($alertEmail) {
+                    $message->to($alertEmail)
+                        ->subject('Notification System Alert - Consecutive Failures');
+                }
+            );
+        } catch (\Throwable $e) {
+        }
     }
 
     public function markInvoicesOverdue(Carbon $today): int

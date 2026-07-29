@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\Notifications\NotificationEngine;
+use App\Models\Setting;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
@@ -30,6 +31,9 @@ class ProcessNotifications extends Command
         }
 
         $limit = (int) $this->option('limit');
+        if ($limit === 250) {
+            $limit = (int) Setting::get('notifications_daily_limit', 250);
+        }
         $sent = $engine->sendDueDispatches(Carbon::now(), $limit);
         $this->info("Sent {$sent} dispatch(es).");
 

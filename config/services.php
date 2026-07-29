@@ -37,6 +37,7 @@ return [
 
     'whatsapp' => [
         'driver' => env('WHATSAPP_DRIVER', 'log'),
+        'from' => env('WHATSAPP_FROM'),
         'twilio' => [
             'account_sid' => env('TWILIO_ACCOUNT_SID'),
             'auth_token' => env('TWILIO_AUTH_TOKEN'),
@@ -45,6 +46,10 @@ return [
         'meta_cloud' => [
             'access_token' => env('META_WHATSAPP_ACCESS_TOKEN'),
             'phone_number_id' => env('META_WHATSAPP_PHONE_NUMBER_ID'),
+        ],
+        'ultramsg' => [
+            'instance_id' => env('ULTRAMSG_INSTANCE_ID'),
+            'token' => env('ULTRAMSG_TOKEN'),
         ],
     ],
 

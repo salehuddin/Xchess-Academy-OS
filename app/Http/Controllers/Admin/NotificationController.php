@@ -59,57 +59,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function settings(): Response
-    {
-        $mailDefault = config('mail.default');
-        $smtp = config('mail.mailers.smtp');
-        $from = config('mail.from');
-
-        $whatsAppDriver = config('services.whatsapp.driver', 'log');
-        $twilio = config('services.whatsapp.twilio', []);
-        $meta = config('services.whatsapp.meta_cloud', []);
-
-        $settings = [
-            'mail' => [
-                'default' => $mailDefault,
-                'from' => [
-                    'address' => $from['address'] ?? null,
-                    'name' => $from['name'] ?? null,
-                ],
-                'smtp' => [
-                    'host' => $smtp['host'] ?? null,
-                    'port' => $smtp['port'] ?? null,
-                    'scheme' => $smtp['scheme'] ?? null,
-                    'username_set' => ! empty($smtp['username'] ?? null),
-                    'password_set' => ! empty($smtp['password'] ?? null),
-                ],
-                'providers' => [
-                    'postmark_key_set' => ! empty(config('services.postmark.key')),
-                    'resend_key_set' => ! empty(config('services.resend.key')),
-                    'ses_key_set' => ! empty(config('services.ses.key')),
-                    'ses_secret_set' => ! empty(config('services.ses.secret')),
-                ],
-            ],
-            'whatsapp' => [
-                'driver' => $whatsAppDriver,
-                'supported_drivers' => ['log', 'twilio', 'meta_cloud'],
-                'twilio' => [
-                    'account_sid_set' => ! empty($twilio['account_sid'] ?? null),
-                    'auth_token_set' => ! empty($twilio['auth_token'] ?? null),
-                    'from_set' => ! empty($twilio['from'] ?? null),
-                ],
-                'meta_cloud' => [
-                    'access_token_set' => ! empty($meta['access_token'] ?? null),
-                    'phone_number_id_set' => ! empty($meta['phone_number_id'] ?? null),
-                ],
-            ],
-        ];
-
-        return Inertia::render('Admin/Notifications/Settings', [
-            'settings' => $settings,
-        ]);
-    }
-
     public function create(): Response
     {
         return Inertia::render('Admin/Notifications/Create');

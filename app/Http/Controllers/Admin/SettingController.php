@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\Notifications\Channels\WhatsAppChannel;
+use App\Services\WhatsAppConfig;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -13,19 +15,21 @@ use Inertia\Response;
 
 class SettingController extends Controller
 {
-    /**
-     * Display the external services settings page.
-     */
-    public function services(): Response
+    public function index(): Response
     {
         $settings = [
-            // Chip Payment Gateway
+            'company_name' => Setting::get('company_name', 'X Chess Academy'),
+            'company_reg_no' => Setting::get('company_reg_no', '202401012345 (SSM)'),
+            'company_email' => Setting::get('company_email', 'info@xchess-academy.com'),
+            'company_phone' => Setting::get('company_phone', '+60 12-345 6789'),
+            'company_address' => Setting::get('company_address', "Suite 10-2, Level 10, Chess Tower\nKuala Lumpur, Malaysia"),
+            'company_bank_details' => Setting::get('company_bank_details', "Maybank: 5140 1234 5678\nAccount Name: X Chess Academy Sdn Bhd"),
+
             'chip_environment' => Setting::get('chip_environment', 'sandbox'),
             'chip_brand_id' => Setting::get('chip_brand_id', ''),
             'chip_api_key' => Setting::get('chip_api_key', ''),
             'chip_webhook_secret' => Setting::get('chip_webhook_secret', ''),
 
-            // SMTP Mailer
             'mail_host' => Setting::get('mail_host', config('mail.mailers.smtp.host', '127.0.0.1')),
             'mail_port' => Setting::get('mail_port', config('mail.mailers.smtp.port', '2525')),
             'mail_username' => Setting::get('mail_username', ''),
@@ -34,21 +38,50 @@ class SettingController extends Controller
             'mail_from_address' => Setting::get('mail_from_address', config('mail.from.address', 'hello@xchess-academy.test')),
             'mail_from_name' => Setting::get('mail_from_name', config('mail.from.name', 'X Chess Academy')),
 
-            // WhatsApp Gateway
             'whatsapp_provider' => Setting::get('whatsapp_provider', 'twilio'),
             'whatsapp_account_sid' => Setting::get('whatsapp_account_sid', ''),
             'whatsapp_auth_token' => Setting::get('whatsapp_auth_token', ''),
             'whatsapp_phone_number' => Setting::get('whatsapp_phone_number', ''),
+            'whatsapp_access_token' => Setting::get('whatsapp_access_token', ''),
+            'whatsapp_phone_number_id' => Setting::get('whatsapp_phone_number_id', ''),
+
+            'notifications_enabled' => Setting::get('notifications_enabled', true),
+            'notifications_daily_limit' => Setting::get('notifications_daily_limit', 250),
+            'notifications_retry_attempts' => Setting::get('notifications_retry_attempts', 3),
+            'notifications_retry_delay_minutes' => Setting::get('notifications_retry_delay_minutes', 30),
+            'notifications_admin_alert_email' => Setting::get('notifications_admin_alert_email', ''),
         ];
 
-        return Inertia::render('Admin/Settings/Services', [
+        return Inertia::render('Admin/Settings/Index', [
             'settings' => $settings,
         ]);
     }
 
-    /**
-     * Update external services settings.
-     */
+    public function updateCompany(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'company_name' => 'required|string|max:255',
+            'company_reg_no' => 'nullable|string|max:255',
+            'company_email' => 'required|email|max:255',
+            'company_phone' => 'required|string|max:255',
+            'company_address' => 'required|string',
+            'company_bank_details' => 'nullable|string',
+        ]);
+
+        Setting::set('company_name', $validated['company_name'], 'company');
+        Setting::set('company_reg_no', $validated['company_reg_no'] ?? '', 'company');
+        Setting::set('company_email', $validated['company_email'], 'company');
+        Setting::set('company_phone', $validated['company_phone'], 'company');
+        Setting::set('company_address', $validated['company_address'], 'company');
+        Setting::set('company_bank_details', $validated['company_bank_details'] ?? '', 'company');
+
+        activity()
+            ->causedBy($request->user())
+            ->log('Updated Company / Academy Profile Settings');
+
+        return back()->with('success', 'Company profile settings updated successfully.');
+    }
+
     public function updateServices(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -69,15 +102,15 @@ class SettingController extends Controller
             'whatsapp_account_sid' => 'nullable|string|max:255',
             'whatsapp_auth_token' => 'nullable|string|max:255',
             'whatsapp_phone_number' => 'nullable|string|max:255',
+            'whatsapp_access_token' => 'nullable|string|max:255',
+            'whatsapp_phone_number_id' => 'nullable|string|max:255',
         ]);
 
-        // Save Chip Settings
         Setting::set('chip_environment', $validated['chip_environment'], 'chip');
         Setting::set('chip_brand_id', $validated['chip_brand_id'] ?? '', 'chip');
         Setting::set('chip_api_key', $validated['chip_api_key'] ?? '', 'chip', true);
         Setting::set('chip_webhook_secret', $validated['chip_webhook_secret'] ?? '', 'chip', true);
 
-        // Save SMTP Settings
         Setting::set('mail_host', $validated['mail_host'], 'smtp');
         Setting::set('mail_port', $validated['mail_port'], 'smtp');
         Setting::set('mail_username', $validated['mail_username'] ?? '', 'smtp');
@@ -86,13 +119,16 @@ class SettingController extends Controller
         Setting::set('mail_from_address', $validated['mail_from_address'], 'smtp');
         Setting::set('mail_from_name', $validated['mail_from_name'], 'smtp');
 
-        $this->applySmtpConfig();
+        \App\Services\MailConfig::apply();
 
-        // Save WhatsApp Settings
         Setting::set('whatsapp_provider', $validated['whatsapp_provider'], 'whatsapp');
         Setting::set('whatsapp_account_sid', $validated['whatsapp_account_sid'] ?? '', 'whatsapp');
         Setting::set('whatsapp_auth_token', $validated['whatsapp_auth_token'] ?? '', 'whatsapp', true);
         Setting::set('whatsapp_phone_number', $validated['whatsapp_phone_number'] ?? '', 'whatsapp');
+        Setting::set('whatsapp_access_token', $validated['whatsapp_access_token'] ?? '', 'whatsapp', true);
+        Setting::set('whatsapp_phone_number_id', $validated['whatsapp_phone_number_id'] ?? '', 'whatsapp');
+
+        WhatsAppConfig::apply();
 
         activity()
             ->causedBy($request->user())
@@ -101,14 +137,34 @@ class SettingController extends Controller
         return back()->with('success', 'External services settings updated successfully.');
     }
 
-    /**
-     * Test SMTP Connection.
-     */
+    public function updateNotificationSettings(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'notifications_enabled' => 'boolean',
+            'notifications_daily_limit' => 'required|integer|min:1|max:10000',
+            'notifications_retry_attempts' => 'required|integer|min:0|max:10',
+            'notifications_retry_delay_minutes' => 'required|integer|min:1|max:1440',
+            'notifications_admin_alert_email' => 'nullable|email|max:255',
+        ]);
+
+        Setting::set('notifications_enabled', $validated['notifications_enabled'], 'notifications');
+        Setting::set('notifications_daily_limit', $validated['notifications_daily_limit'], 'notifications');
+        Setting::set('notifications_retry_attempts', $validated['notifications_retry_attempts'], 'notifications');
+        Setting::set('notifications_retry_delay_minutes', $validated['notifications_retry_delay_minutes'], 'notifications');
+        Setting::set('notifications_admin_alert_email', $validated['notifications_admin_alert_email'] ?? '', 'notifications');
+
+        activity()
+            ->causedBy($request->user())
+            ->log('Updated Notification System Settings');
+
+        return back()->with('success', 'Notification system settings updated successfully.');
+    }
+
     public function testSmtp(Request $request): RedirectResponse
     {
         $request->validate(['recipient' => 'required|email']);
 
-        $this->applySmtpConfig();
+        \App\Services\MailConfig::apply();
 
         try {
             Mail::raw('This is a test email from X Chess Academy OS settings panel.', function ($message) use ($request) {
@@ -122,9 +178,6 @@ class SettingController extends Controller
         }
     }
 
-    /**
-     * Test Chip Gateway Connection.
-     */
     public function testChip(): RedirectResponse
     {
         $brandId = Setting::get('chip_brand_id');
@@ -151,75 +204,33 @@ class SettingController extends Controller
         }
     }
 
-    /**
-     * Test WhatsApp Gateway Connection.
-     */
     public function testWhatsApp(Request $request): RedirectResponse
     {
         $request->validate(['phone' => 'required|string']);
 
-        $provider = Setting::get('whatsapp_provider', 'twilio');
-        $authToken = Setting::get('whatsapp_auth_token');
+        WhatsAppConfig::apply();
 
-        if (empty($authToken)) {
+        $provider = Setting::get('whatsapp_provider', 'log');
+        $authToken = Setting::get('whatsapp_auth_token');
+        $accessToken = Setting::get('whatsapp_access_token');
+
+        if ($provider === 'waba' && empty($accessToken)) {
+            return back()->with('error', 'WhatsApp Cloud API access token is required.');
+        }
+
+        if ($provider !== 'waba' && empty($authToken)) {
             return back()->with('error', 'WhatsApp Auth Token / API Key is required.');
         }
 
-        return back()->with('success', 'WhatsApp connection simulation triggered for provider ['.$provider.'] to '.$request->phone);
-    }
+        try {
+            (new WhatsAppChannel)->send(
+                $request->phone,
+                'This is a test WhatsApp message from X Chess Academy OS settings panel.'
+            );
 
-    /**
-     * Apply SMTP settings from the database into Laravel's runtime mail config.
-     */
-    protected function applySmtpConfig(): void
-    {
-        \App\Services\MailConfig::apply();
-    }
-
-    /**
-     * Display Company Profile settings page.
-     */
-    public function company(): Response
-    {
-        $settings = [
-            'company_name' => Setting::get('company_name', 'X Chess Academy'),
-            'company_reg_no' => Setting::get('company_reg_no', '202401012345 (SSM)'),
-            'company_email' => Setting::get('company_email', 'info@xchess-academy.com'),
-            'company_phone' => Setting::get('company_phone', '+60 12-345 6789'),
-            'company_address' => Setting::get('company_address', "Suite 10-2, Level 10, Chess Tower\nKuala Lumpur, Malaysia"),
-            'company_bank_details' => Setting::get('company_bank_details', "Maybank: 5140 1234 5678\nAccount Name: X Chess Academy Sdn Bhd"),
-        ];
-
-        return Inertia::render('Admin/Settings/Company', [
-            'settings' => $settings,
-        ]);
-    }
-
-    /**
-     * Update Company Profile settings.
-     */
-    public function updateCompany(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'company_reg_no' => 'nullable|string|max:255',
-            'company_email' => 'required|email|max:255',
-            'company_phone' => 'required|string|max:255',
-            'company_address' => 'required|string',
-            'company_bank_details' => 'nullable|string',
-        ]);
-
-        Setting::set('company_name', $validated['company_name'], 'company');
-        Setting::set('company_reg_no', $validated['company_reg_no'] ?? '', 'company');
-        Setting::set('company_email', $validated['company_email'], 'company');
-        Setting::set('company_phone', $validated['company_phone'], 'company');
-        Setting::set('company_address', $validated['company_address'], 'company');
-        Setting::set('company_bank_details', $validated['company_bank_details'] ?? '', 'company');
-
-        activity()
-            ->causedBy($request->user())
-            ->log('Updated Company / Academy Profile Settings');
-
-        return back()->with('success', 'Company profile settings updated successfully.');
+            return back()->with('success', 'Test WhatsApp message sent to '.$request->phone.' via '.$provider.'.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'WhatsApp Test Failed: '.$e->getMessage());
+        }
     }
 }
