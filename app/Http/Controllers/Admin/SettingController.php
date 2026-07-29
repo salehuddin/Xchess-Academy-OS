@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\MailConfig;
 use App\Services\Notifications\Channels\WhatsAppChannel;
 use App\Services\WhatsAppConfig;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,10 @@ class SettingController extends Controller
             'company_phone' => Setting::get('company_phone', '+60 12-345 6789'),
             'company_address' => Setting::get('company_address', "Suite 10-2, Level 10, Chess Tower\nKuala Lumpur, Malaysia"),
             'company_bank_details' => Setting::get('company_bank_details', "Maybank: 5140 1234 5678\nAccount Name: X Chess Academy Sdn Bhd"),
+
+            'support_email' => Setting::get('support_email', 'support@xchess-academy.com'),
+            'support_phone' => Setting::get('support_phone', '+60 12-345 6789'),
+            'support_hours' => Setting::get('support_hours', 'Mon-Fri, 9am - 6pm'),
 
             'chip_environment' => Setting::get('chip_environment', 'sandbox'),
             'chip_brand_id' => Setting::get('chip_brand_id', ''),
@@ -66,6 +71,9 @@ class SettingController extends Controller
             'company_phone' => 'required|string|max:255',
             'company_address' => 'required|string',
             'company_bank_details' => 'nullable|string',
+            'support_email' => 'nullable|email|max:255',
+            'support_phone' => 'nullable|string|max:255',
+            'support_hours' => 'nullable|string|max:255',
         ]);
 
         Setting::set('company_name', $validated['company_name'], 'company');
@@ -74,6 +82,9 @@ class SettingController extends Controller
         Setting::set('company_phone', $validated['company_phone'], 'company');
         Setting::set('company_address', $validated['company_address'], 'company');
         Setting::set('company_bank_details', $validated['company_bank_details'] ?? '', 'company');
+        Setting::set('support_email', $validated['support_email'] ?? '', 'company');
+        Setting::set('support_phone', $validated['support_phone'] ?? '', 'company');
+        Setting::set('support_hours', $validated['support_hours'] ?? '', 'company');
 
         activity()
             ->causedBy($request->user())
@@ -119,7 +130,7 @@ class SettingController extends Controller
         Setting::set('mail_from_address', $validated['mail_from_address'], 'smtp');
         Setting::set('mail_from_name', $validated['mail_from_name'], 'smtp');
 
-        \App\Services\MailConfig::apply();
+        MailConfig::apply();
 
         Setting::set('whatsapp_provider', $validated['whatsapp_provider'], 'whatsapp');
         Setting::set('whatsapp_account_sid', $validated['whatsapp_account_sid'] ?? '', 'whatsapp');
@@ -164,7 +175,7 @@ class SettingController extends Controller
     {
         $request->validate(['recipient' => 'required|email']);
 
-        \App\Services\MailConfig::apply();
+        MailConfig::apply();
 
         try {
             Mail::raw('This is a test email from X Chess Academy OS settings panel.', function ($message) use ($request) {

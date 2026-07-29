@@ -27,6 +27,9 @@ export default function Index({ settings }) {
         company_phone: settings.company_phone || '',
         company_address: settings.company_address || '',
         company_bank_details: settings.company_bank_details || '',
+        support_email: settings.support_email || '',
+        support_phone: settings.support_phone || '',
+        support_hours: settings.support_hours || '',
     });
 
     const servicesForm = useForm({
@@ -205,6 +208,35 @@ export default function Index({ settings }) {
                                         onChange={(e) => companyForm.setData('company_bank_details', e.target.value)}
                                         isInvalid={!!companyForm.errors.company_bank_details}
                                         errorMessage={companyForm.errors.company_bank_details}
+                                    />
+                                    <Divider />
+                                    <div>
+                                        <h4 className="text-base font-semibold text-foreground">Support Contact</h4>
+                                        <p className="text-sm text-default-500">Shown publicly on the home page contact section.</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <Input
+                                            type="email"
+                                            label="Support Email"
+                                            value={companyForm.data.support_email}
+                                            onChange={(e) => companyForm.setData('support_email', e.target.value)}
+                                            isInvalid={!!companyForm.errors.support_email}
+                                            errorMessage={companyForm.errors.support_email}
+                                        />
+                                        <Input
+                                            label="Support Phone Number"
+                                            value={companyForm.data.support_phone}
+                                            onChange={(e) => companyForm.setData('support_phone', e.target.value)}
+                                            isInvalid={!!companyForm.errors.support_phone}
+                                            errorMessage={companyForm.errors.support_phone}
+                                        />
+                                    </div>
+                                    <Input
+                                        label="Support Hours"
+                                        value={companyForm.data.support_hours}
+                                        onChange={(e) => companyForm.setData('support_hours', e.target.value)}
+                                        isInvalid={!!companyForm.errors.support_hours}
+                                        errorMessage={companyForm.errors.support_hours}
                                     />
                                     <div className="flex justify-end">
                                         <Button color="primary" type="submit" isLoading={companyForm.processing}>

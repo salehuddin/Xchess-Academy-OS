@@ -17,24 +17,23 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SiteAnnouncementController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Portal\AccessLinkController;
 use App\Http\Controllers\Portal\ParentPortalController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+Route::get('/', [WelcomeController::class, 'index'])->name('home');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/parent-access', [AccessLinkController::class, 'create'])->name('parent.access');
+    Route::post('/parent-access', [AccessLinkController::class, 'store'])->name('parent.access.store')->middleware('throttle:5,1');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -96,6 +95,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('notifications', NotificationController::class)->except(['show']);
         Route::post('announcements/{announcement}/send', [AnnouncementController::class, 'send'])->name('announcements.send');
         Route::resource('announcements', AnnouncementController::class)->only(['index', 'create', 'store', 'show']);
+        Route::resource('site-announcements', SiteAnnouncementController::class)->except(['show']);
         Route::get('docs', [DocsController::class, 'index'])->name('docs.index');
         Route::get('docs/{path}', [DocsController::class, 'show'])->where('path', '.*')->name('docs.show');
 

@@ -223,6 +223,14 @@ const LogIcon = (props) => (
     </svg>
 );
 
+const MegaphoneIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <path d="M3 11v2a1 1 0 001 1h2l4 3V7L6 10H4a1 1 0 00-1 1z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M15 8a4 4 0 010 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M10 19l-2-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
 const SidebarItem = ({ href, icon: Icon, label, active, badge, collapsed }) => (
     <Link
         href={href}
@@ -476,6 +484,24 @@ export default function AuthenticatedLayout({ user: userProp, header, children }
                                         icon={ReportIcon}
                                         label="Reports"
                                         active={url.startsWith('/admin/reports')}
+                                        collapsed={collapsed}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Public Site Section */}
+                            <div>
+                                {!collapsed && (
+                                    <div className="px-4 mb-2 text-xs font-semibold text-default-400 uppercase tracking-wider whitespace-nowrap">
+                                        Public Site
+                                    </div>
+                                )}
+                                <div className="space-y-1">
+                                    <SidebarItem
+                                        href={route('admin.site-announcements.index')}
+                                        icon={MegaphoneIcon}
+                                        label="Site Announcements"
+                                        active={url.startsWith('/admin/site-announcements')}
                                         collapsed={collapsed}
                                     />
                                 </div>
