@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /dashboard` (`dashboard`)
-- Backend: [DashboardController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/DashboardController.php#L16-L36)
-- UI: [Dashboard.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Dashboard.jsx)
+- Backend: [DashboardController@index](app/Http/Controllers/DashboardController.php#L16-L36)
+- UI: [Dashboard.jsx](resources/js/Pages/Dashboard.jsx)
 
 ## Features
 - Admin KPI cards:

@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/attendances` (`admin.attendances.index`)
-- Backend: [AttendanceController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/AttendanceController.php#L16-L186)
-- UI: [Admin/Attendance/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Attendance/Index.jsx)
+- Backend: [AttendanceController@index](app/Http/Controllers/Admin/AttendanceController.php#L16-L186)
+- UI: [Admin/Attendance/Index.jsx](resources/js/Pages/Admin/Attendance/Index.jsx)
 
 ## Features
 - Lists attendance sessions derived from:

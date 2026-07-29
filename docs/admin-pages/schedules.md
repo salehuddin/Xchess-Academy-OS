@@ -10,10 +10,10 @@
   - `POST /admin/schedules/preview-clear` (`admin.schedules.preview-clear`) (JSON)
   - `POST /admin/schedules/clear` (`admin.schedules.clear`)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/ScheduleController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ScheduleController.php)
+- Backend controller: [Admin/ScheduleController](app/Http/Controllers/Admin/ScheduleController.php)
 
 ## UI
-- Page: [Admin/Schedules/Generator.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Schedules/Generator.jsx)
+- Page: [Admin/Schedules/Generator.jsx](resources/js/Pages/Admin/Schedules/Generator.jsx)
 
 ## Features Built
 ### Schedule Preview (Calendar Busy Days)
@@ -23,7 +23,7 @@
 - Output:
   - list of dates with the number of classes scheduled that day
   - up to 5 class names per date (payload protection)
-- Backend: [preview](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ScheduleController.php#L34-L83)
+- Backend: [preview](app/Http/Controllers/Admin/ScheduleController.php#L34-L83)
 
 ### Generate Monthly Schedules (Persist to classes.schedules)
 - Writes per-class `classes.schedules` JSON array for the selected month.
@@ -31,7 +31,7 @@
   - excluding dates (academy closed)
   - package filter
   - session count limit based on `package.sessions_per_month` (or `class.sessions_per_month`)
-- Backend: [store](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ScheduleController.php#L85-L149)
+- Backend: [store](app/Http/Controllers/Admin/ScheduleController.php#L85-L149)
 
 ### Clear Monthly Schedules (with Protection)
 - Preview Clear shows:
@@ -42,8 +42,8 @@
   - `attendances` on that date for that class, or
   - `class_sessions` on that date for that class
 - Backend:
-  - [previewClear](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ScheduleController.php#L176-L240)
-  - [clear](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ScheduleController.php#L242-L312)
+  - [previewClear](app/Http/Controllers/Admin/ScheduleController.php#L176-L240)
+  - [clear](app/Http/Controllers/Admin/ScheduleController.php#L242-L312)
 
 ## Technical Specs
 ### Schedule Date Generation
@@ -55,7 +55,7 @@
 
 ### Persistence Format
 - Stored in `classes.schedules` as a sorted unique list of date strings.
-- Class model casts `schedules` to array: [ChessClass.php](file:///c:/laragon/www/xchess-academy-os/app/Models/ChessClass.php#L21-L25)
+- Class model casts `schedules` to array: [ChessClass.php](app/Models/ChessClass.php#L21-L25)
 
 ## Notes / Constraints
 - Generator does not validate room conflicts across classes during generation (conflict checks exist in Class create/update by room/day/time).

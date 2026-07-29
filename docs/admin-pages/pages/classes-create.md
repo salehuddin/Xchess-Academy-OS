@@ -3,8 +3,8 @@
 ## Route
 - `GET /admin/classes/create` (`admin.classes.create`)
 - `POST /admin/classes` (`admin.classes.store`)
-- Backend: [ClassController@create/store](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ClassController.php#L60-L198)
-- UI: [Admin/Classes/Create.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Classes/Create.jsx)
+- Backend: [ClassController@create/store](app/Http/Controllers/Admin/ClassController.php#L60-L198)
+- UI: [Admin/Classes/Create.jsx](resources/js/Pages/Admin/Classes/Create.jsx)
 
 ## Features
 - Create a class with:

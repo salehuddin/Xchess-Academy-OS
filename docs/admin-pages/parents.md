@@ -2,15 +2,15 @@
 
 ## Routes & Access
 - Base prefix: `/admin/parents/*`
-- Resource routes: `admin.parents.*` via [web.php](file:///c:/laragon/www/xchess-academy-os/routes/web.php#L55-L64)
+- Resource routes: `admin.parents.*` via [web.php](routes/web.php#L55-L64)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/ParentController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ParentController.php)
+- Backend controller: [Admin/ParentController](app/Http/Controllers/Admin/ParentController.php)
 
 ## UI
-- Page: [Admin/Parents/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Parents/Index.jsx)
+- Page: [Admin/Parents/Index.jsx](resources/js/Pages/Admin/Parents/Index.jsx)
 - Uses modals shared with Students:
-  - [ParentDetailsModal.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/ParentDetailsModal.jsx)
-  - [StudentDetailsModal.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/StudentDetailsModal.jsx)
+  - [ParentDetailsModal.jsx](resources/js/Pages/Admin/Students/ParentDetailsModal.jsx)
+  - [StudentDetailsModal.jsx](resources/js/Pages/Admin/Students/StudentDetailsModal.jsx)
 
 ## Features Built
 ### Parent Listing
@@ -31,7 +31,7 @@
 
 ## Technical Specs
 ### Data Model
-- Parent model uses `parents` table: [StudentParent.php](file:///c:/laragon/www/xchess-academy-os/app/Models/StudentParent.php)
+- Parent model uses `parents` table: [StudentParent.php](app/Models/StudentParent.php)
 - Relationship: `StudentParent hasMany Student` via `parent_id`
 
 ### Backend Mechanics
@@ -50,5 +50,5 @@
   - Search: `GET /admin/parents/search`
   - Details: `GET /admin/parents/{parent}/details`
   - Update (JSON): `PUT /admin/parents/{parent}`
-  - Routes: [web.php](file:///c:/laragon/www/xchess-academy-os/routes/web.php#L54-L57)
-  - Controller: [Admin/StudentController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/StudentController.php#L270-L347)
+  - Routes: [web.php](routes/web.php#L54-L57)
+  - Controller: [Admin/StudentController](app/Http/Controllers/Admin/StudentController.php#L270-L347)

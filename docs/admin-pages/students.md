@@ -2,20 +2,20 @@
 
 ## Routes & Access
 - Base prefix: `/admin/students/*`
-- Resource routes: `admin.students.*` (index/create/store/show/edit/update/destroy) via [web.php](file:///c:/laragon/www/xchess-academy-os/routes/web.php#L33-L84)
+- Resource routes: `admin.students.*` (index/create/store/show/edit/update/destroy) via [web.php](routes/web.php#L33-L84)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/StudentController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/StudentController.php)
+- Backend controller: [Admin/StudentController](app/Http/Controllers/Admin/StudentController.php)
 
 ## UI
-- Index: [Admin/Students/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/Index.jsx)
-- Create: [Admin/Students/Create.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/Create.jsx)
-- Bulk Create: [Admin/Students/BulkCreate.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/BulkCreate.jsx)
-- Edit: [Admin/Students/Edit.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/Edit.jsx)
-- Show: [Admin/Students/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/Show.jsx)
+- Index: [Admin/Students/Index.jsx](resources/js/Pages/Admin/Students/Index.jsx)
+- Create: [Admin/Students/Create.jsx](resources/js/Pages/Admin/Students/Create.jsx)
+- Bulk Create: [Admin/Students/BulkCreate.jsx](resources/js/Pages/Admin/Students/BulkCreate.jsx)
+- Edit: [Admin/Students/Edit.jsx](resources/js/Pages/Admin/Students/Edit.jsx)
+- Show: [Admin/Students/Show.jsx](resources/js/Pages/Admin/Students/Show.jsx)
 - Modals:
-  - Parent: [ParentDetailsModal.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/ParentDetailsModal.jsx)
-  - Student: [StudentDetailsModal.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/StudentDetailsModal.jsx)
-- Layout: [AuthenticatedLayout.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Layouts/AuthenticatedLayout.jsx)
+  - Parent: [ParentDetailsModal.jsx](resources/js/Pages/Admin/Students/ParentDetailsModal.jsx)
+  - Student: [StudentDetailsModal.jsx](resources/js/Pages/Admin/Students/StudentDetailsModal.jsx)
+- Layout: [AuthenticatedLayout.jsx](resources/js/Layouts/AuthenticatedLayout.jsx)
 
 ## Features Built
 ### Student Listing (Index)
@@ -61,8 +61,8 @@
 
 ## Technical Specs
 ### Data Model
-- Student model: [Student.php](file:///c:/laragon/www/xchess-academy-os/app/Models/Student.php)
-- Parent model (table `parents`): [StudentParent.php](file:///c:/laragon/www/xchess-academy-os/app/Models/StudentParent.php)
+- Student model: [Student.php](app/Models/Student.php)
+- Parent model (table `parents`): [StudentParent.php](app/Models/StudentParent.php)
 
 ### Backend Mechanics
 - Listing: query uses `Student::with('parent')` and optional `whereHas('parent', ...)` search.
@@ -80,5 +80,5 @@
 
 ## Related Endpoints / Integrations
 - Enrollment routes live under Classes:
-  - `POST /admin/classes/{class}/enroll` and `DELETE /admin/classes/{class}/enroll/{student}` in [web.php](file:///c:/laragon/www/xchess-academy-os/routes/web.php#L44-L47)
-  - Controller: [EnrollmentController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/EnrollmentController.php)
+  - `POST /admin/classes/{class}/enroll` and `DELETE /admin/classes/{class}/enroll/{student}` in [web.php](routes/web.php#L44-L47)
+  - Controller: [EnrollmentController](app/Http/Controllers/Admin/EnrollmentController.php)

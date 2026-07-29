@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/invoices` (`admin.invoices.index`)
-- Backend: [InvoiceController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/InvoiceController.php#L16-L25)
-- UI: [Admin/Invoices/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Invoices/Index.jsx)
+- Backend: [InvoiceController@index](app/Http/Controllers/Admin/InvoiceController.php#L16-L25)
+- UI: [Admin/Invoices/Index.jsx](resources/js/Pages/Admin/Invoices/Index.jsx)
 
 ## Features
 - Lists invoices with student relation.

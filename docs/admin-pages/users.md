@@ -8,10 +8,10 @@
   - `PUT /admin/users/{user}` (`admin.users.update`)
   - `DELETE /admin/users/{user}` (`admin.users.destroy`)
 - Access: `auth` + `role:Admin` + `UserPolicy`
-- Backend controller: [Admin/UserController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/UserController.php)
+- Backend controller: [Admin/UserController](app/Http/Controllers/Admin/UserController.php)
 
 ## UI Component
-- Page: [Admin/Users/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Users/Index.jsx)
+- Page: [Admin/Users/Index.jsx](resources/js/Pages/Admin/Users/Index.jsx)
 
 ## Features Built
 
@@ -32,6 +32,6 @@
 - Role badges (`Admin`, `Ops`, `Finance`, `Coach`) plus secondary `+ Coach` chip for dual-role staff.
 
 ## Technical Specs
-- Policy: [UserPolicy.php](file:///c:/laragon/www/xchess-academy-os/app/Policies/UserPolicy.php)
-- Migration: [2026_07_25_235000_add_is_coach_to_users_table.php](file:///c:/laragon/www/xchess-academy-os/database/migrations/2026_07_25_235000_add_is_coach_to_users_table.php)
-- Feature Tests: [UserManagementTest.php](file:///c:/laragon/www/xchess-academy-os/tests/Feature/Admin/UserManagementTest.php) & [DualRoleUserTest.php](file:///c:/laragon/www/xchess-academy-os/tests/Feature/Admin/DualRoleUserTest.php)
+- Policy: [UserPolicy.php](app/Policies/UserPolicy.php)
+- Migration: [2026_07_25_235000_add_is_coach_to_users_table.php](database/migrations/2026_07_25_235000_add_is_coach_to_users_table.php)
+- Feature Tests: [UserManagementTest.php](tests/Feature/Admin/UserManagementTest.php) & [DualRoleUserTest.php](tests/Feature/Admin/DualRoleUserTest.php)

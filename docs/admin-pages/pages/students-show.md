@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/students/{student}` (`admin.students.show`)
-- Backend: [StudentController@show](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/StudentController.php#L250-L268)
-- UI: [Admin/Students/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/Show.jsx)
+- Backend: [StudentController@show](app/Http/Controllers/Admin/StudentController.php#L250-L268)
+- UI: [Admin/Students/Show.jsx](resources/js/Pages/Admin/Students/Show.jsx)
 
 ## Features
 - Student profile page with:

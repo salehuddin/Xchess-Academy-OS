@@ -4,8 +4,8 @@
 - `GET /admin/attendances/{class}/{date}` (`admin.attendances.show`)
 - `POST /admin/attendances/{class}/{date}` (`admin.attendances.store`)
 - `DELETE /admin/attendances/{class}/{date}` (`admin.attendances.destroy`)
-- Backend: [AttendanceController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/AttendanceController.php#L188-L273)
-- UI: [Admin/Attendance/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Attendance/Show.jsx), [AttendanceModal.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Attendance/AttendanceModal.jsx)
+- Backend: [AttendanceController](app/Http/Controllers/Admin/AttendanceController.php#L188-L273)
+- UI: [Admin/Attendance/Show.jsx](resources/js/Pages/Admin/Attendance/Show.jsx), [AttendanceModal.jsx](resources/js/Pages/Admin/Attendance/AttendanceModal.jsx)
 
 ## Features
 - Takes attendance for a given class/date.

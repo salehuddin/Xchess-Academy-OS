@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/schedules/generator` (`admin.schedules.generator`)
-- Backend: [ScheduleController@generator](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ScheduleController.php#L25-L32)
-- UI: [Admin/Schedules/Generator.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Schedules/Generator.jsx)
+- Backend: [ScheduleController@generator](app/Http/Controllers/Admin/ScheduleController.php#L25-L32)
+- UI: [Admin/Schedules/Generator.jsx](resources/js/Pages/Admin/Schedules/Generator.jsx)
 
 ## Features
 - Preview monthly schedule load (calendar “busy days”) by month and optional package filter.

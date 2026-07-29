@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/classes/{class}` (`admin.classes.show`)
-- Backend: [ClassController@show](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ClassController.php#L234-L273)
-- UI: [Admin/Classes/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Classes/Show.jsx)
+- Backend: [ClassController@show](app/Http/Controllers/Admin/ClassController.php#L234-L273)
+- UI: [Admin/Classes/Show.jsx](resources/js/Pages/Admin/Classes/Show.jsx)
 
 ## Features
 - Class details and configuration view.
@@ -22,5 +22,5 @@
 - Schedule update endpoint blocks removal of “protected” dates:
   - if any `Attendance` exists for class+date
   - if any `ClassSession` exists for class+date
-- Schedule update logic: [updateSchedules](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ClassController.php#L200-L232)
+- Schedule update logic: [updateSchedules](app/Http/Controllers/Admin/ClassController.php#L200-L232)
 

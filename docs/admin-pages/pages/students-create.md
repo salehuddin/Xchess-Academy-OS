@@ -3,8 +3,8 @@
 ## Route
 - `GET /admin/students/create` (`admin.students.create`)
 - `POST /admin/students` (`admin.students.store`)
-- Backend: [StudentController@create/store](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/StudentController.php#L82-L136)
-- UI: [Admin/Students/Create.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/Create.jsx)
+- Backend: [StudentController@create/store](app/Http/Controllers/Admin/StudentController.php#L82-L136)
+- UI: [Admin/Students/Create.jsx](resources/js/Pages/Admin/Students/Create.jsx)
 
 ## Features
 - Create a student and link to a parent:

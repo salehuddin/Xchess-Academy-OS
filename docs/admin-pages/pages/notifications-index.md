@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/notifications` (`admin.notifications.index`)
-- Backend: [NotificationController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/NotificationController.php#L15-L24)
-- UI: [Admin/Notifications/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Notifications/Index.jsx)
+- Backend: [NotificationController@index](app/Http/Controllers/Admin/NotificationController.php#L15-L24)
+- UI: [Admin/Notifications/Index.jsx](resources/js/Pages/Admin/Notifications/Index.jsx)
 
 ## Features
 - Lists notification templates (email/whatsapp) and their triggers.

@@ -3,8 +3,8 @@
 ## Route
 - `GET /admin/students/bulk-create` (`admin.students.bulk-create`)
 - `POST /admin/students/bulk-store` (`admin.students.bulk-store`)
-- Backend: [StudentController@bulkCreate/bulkStore](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/StudentController.php#L90-L137)
-- UI: [Admin/Students/BulkCreate.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/BulkCreate.jsx)
+- Backend: [StudentController@bulkCreate/bulkStore](app/Http/Controllers/Admin/StudentController.php#L90-L137)
+- UI: [Admin/Students/BulkCreate.jsx](resources/js/Pages/Admin/Students/BulkCreate.jsx)
 
 ## Features
 - Create multiple students in one submission.

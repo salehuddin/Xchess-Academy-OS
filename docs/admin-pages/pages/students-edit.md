@@ -3,8 +3,8 @@
 ## Route
 - `GET /admin/students/{student}/edit` (`admin.students.edit`)
 - `PUT/PATCH /admin/students/{student}` (`admin.students.update`)
-- Backend: [StudentController@edit/update](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/StudentController.php#L211-L248)
-- UI: [Admin/Students/Edit.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/Edit.jsx)
+- Backend: [StudentController@edit/update](app/Http/Controllers/Admin/StudentController.php#L211-L248)
+- UI: [Admin/Students/Edit.jsx](resources/js/Pages/Admin/Students/Edit.jsx)
 
 ## Features
 - Edit student information:

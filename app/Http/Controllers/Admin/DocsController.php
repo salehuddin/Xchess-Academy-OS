@@ -44,7 +44,9 @@ class DocsController extends Controller
                 abort(404);
             }
 
-            $html = Str::markdown($markdown, [
+            $sanitized = preg_replace('#\]\(file:/{2,3}[^)]+#i', '](#', $markdown) ?: $markdown;
+
+            $html = Str::markdown($sanitized, [
                 'html_input' => 'strip',
                 'allow_unsafe_links' => false,
             ]);

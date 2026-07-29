@@ -4,11 +4,11 @@
 - Route: `GET /dashboard`
 - Route name: `dashboard`
 - Access: `auth` + `verified` middleware; Admin users see the Admin dashboard view.
-- Backend entry: [DashboardController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/DashboardController.php#L16-L36)
+- Backend entry: [DashboardController@index](app/Http/Controllers/DashboardController.php#L16-L36)
 
 ## UI
-- Inertia page: [Dashboard.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Dashboard.jsx)
-- Layout: [AuthenticatedLayout.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Layouts/AuthenticatedLayout.jsx)
+- Inertia page: [Dashboard.jsx](resources/js/Pages/Dashboard.jsx)
+- Layout: [AuthenticatedLayout.jsx](resources/js/Layouts/AuthenticatedLayout.jsx)
 - Tech stack: Laravel 12 + Inertia (React) + HeroUI + Tailwind + Ziggy routes.
 
 ## Features Built

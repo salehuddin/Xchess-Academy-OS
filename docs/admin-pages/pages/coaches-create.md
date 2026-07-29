@@ -3,8 +3,8 @@
 ## Route
 - `GET /admin/coaches/create` (`admin.coaches.create`)
 - `POST /admin/coaches` (`admin.coaches.store`)
-- Backend: [CoachController@create/store](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/CoachController.php#L49-L94)
-- UI: [Admin/Coaches/Create.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Coaches/Create.jsx)
+- Backend: [CoachController@create/store](app/Http/Controllers/Admin/CoachController.php#L49-L94)
+- UI: [Admin/Coaches/Create.jsx](resources/js/Pages/Admin/Coaches/Create.jsx)
 
 ## Features
 - Create a coach (user + coach profile) in one form.

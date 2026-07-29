@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/rooms/{room}/schedule` (`admin.rooms.schedule`)
-- Backend: [RoomController@schedule](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/RoomController.php#L57-L120)
-- UI: [Admin/Rooms/Schedule.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Rooms/Schedule.jsx)
+- Backend: [RoomController@schedule](app/Http/Controllers/Admin/RoomController.php#L57-L120)
+- UI: [Admin/Rooms/Schedule.jsx](resources/js/Pages/Admin/Rooms/Schedule.jsx)
 
 ## Features
 - Visual room utilization view:

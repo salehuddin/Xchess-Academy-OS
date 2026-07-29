@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/tasks` (`admin.tasks.index`)
-- Backend: [TaskController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/TaskController.php#L16-L25)
-- UI: [Admin/Tasks/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Tasks/Index.jsx)
+- Backend: [TaskController@index](app/Http/Controllers/Admin/TaskController.php#L16-L25)
+- UI: [Admin/Tasks/Index.jsx](resources/js/Pages/Admin/Tasks/Index.jsx)
 
 ## Features
 - Internal task tracker for Ops/Finance/Coaching.

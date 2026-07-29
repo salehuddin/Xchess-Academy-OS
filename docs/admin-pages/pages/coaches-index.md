@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/coaches` (`admin.coaches.index`)
-- Backend: [CoachController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/CoachController.php#L21-L47)
-- UI: [Admin/Coaches/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Coaches/Index.jsx)
+- Backend: [CoachController@index](app/Http/Controllers/Admin/CoachController.php#L21-L47)
+- UI: [Admin/Coaches/Index.jsx](resources/js/Pages/Admin/Coaches/Index.jsx)
 
 ## Features
 - Paginated list of coaches (users with role Coach or with a coachProfile).

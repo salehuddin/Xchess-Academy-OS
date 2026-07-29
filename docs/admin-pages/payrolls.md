@@ -5,10 +5,10 @@
 - Mark processed: `POST /admin/payrolls/{payroll}/approve` (`admin.payrolls.approve`)
 - Mark paid: `POST /admin/payrolls/{payroll}/mark-paid` (`admin.payrolls.markPaid`)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/PayrollController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/PayrollController.php)
+- Backend controller: [Admin/PayrollController](app/Http/Controllers/Admin/PayrollController.php)
 
 ## UI
-- Page: [Admin/Payrolls/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Payrolls/Index.jsx)
+- Page: [Admin/Payrolls/Index.jsx](resources/js/Pages/Admin/Payrolls/Index.jsx)
 
 ## Features Built
 ### Payroll Listing
@@ -20,7 +20,7 @@
 
 ## Technical Specs
 ### Data Model
-- Payroll model: [Payroll.php](file:///c:/laragon/www/xchess-academy-os/app/Models/Payroll.php)
+- Payroll model: [Payroll.php](app/Models/Payroll.php)
 - Fields:
   - `month_year` (`YYYY-MM`)
   - `total_sessions` (int)
@@ -32,7 +32,7 @@
 ### How Payroll Is Generated
 - Payroll records are generated via Artisan command:
   - `php artisan payroll:generate-monthly {month?}`
-- Implementation: [GenerateMonthlyPayroll](file:///c:/laragon/www/xchess-academy-os/app/Console/Commands/GenerateMonthlyPayroll.php)
+- Implementation: [GenerateMonthlyPayroll](app/Console/Commands/GenerateMonthlyPayroll.php)
 - Calculation:
   - Delivered sessions are counted as distinct `(class_id, attendance_date)` pairs
   - Filtered by classes where `classes.coach_id = coach.id`

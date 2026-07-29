@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/coaches/{coach}` (`admin.coaches.show`)
-- Backend: [CoachController@show](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/CoachController.php#L109-L172)
-- UI: [Admin/Coaches/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Coaches/Show.jsx)
+- Backend: [CoachController@show](app/Http/Controllers/Admin/CoachController.php#L109-L172)
+- UI: [Admin/Coaches/Show.jsx](resources/js/Pages/Admin/Coaches/Show.jsx)
 
 ## Features
 - Coach profile overview.

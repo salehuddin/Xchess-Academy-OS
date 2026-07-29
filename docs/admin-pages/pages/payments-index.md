@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/payments` (`admin.payments.index`)
-- Backend: [PaymentController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/PaymentController.php#L16-L25)
-- UI: [Admin/Payments/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Payments/Index.jsx)
+- Backend: [PaymentController@index](app/Http/Controllers/Admin/PaymentController.php#L16-L25)
+- UI: [Admin/Payments/Index.jsx](resources/js/Pages/Admin/Payments/Index.jsx)
 
 ## Features
 - Record a payment against an invoice.

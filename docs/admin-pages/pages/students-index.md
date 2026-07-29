@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/students` (`admin.students.index`)
-- Backend: [StudentController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/StudentController.php#L27-L80)
-- UI: [Admin/Students/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Students/Index.jsx)
+- Backend: [StudentController@index](app/Http/Controllers/Admin/StudentController.php#L27-L80)
+- UI: [Admin/Students/Index.jsx](resources/js/Pages/Admin/Students/Index.jsx)
 
 ## Features
 - Student directory with server-side:
@@ -23,5 +23,5 @@
   - status filter supports comma-separated list (except `all`)
 - Bulk action endpoint:
   - `POST /admin/students/bulk-action` (`admin.students.bulk-action`)
-  - Backend: [bulkAction](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/StudentController.php#L138-L209)
+  - Backend: [bulkAction](app/Http/Controllers/Admin/StudentController.php#L138-L209)
 

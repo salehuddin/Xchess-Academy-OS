@@ -3,8 +3,8 @@
 ## Routes & Access
 - Route: `GET /admin/activity-logs` (`admin.activity-logs.index`)
 - Access: `auth` + `role:Admin`
-- Controller: [ActivityLogController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ActivityLogController.php)
-- View: [Admin/ActivityLogs/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/ActivityLogs/Index.jsx)
+- Controller: [ActivityLogController](app/Http/Controllers/Admin/ActivityLogController.php)
+- View: [Admin/ActivityLogs/Index.jsx](resources/js/Pages/Admin/ActivityLogs/Index.jsx)
 
 ## Features Built
 - Audits critical administrative actions across the application using `spatie/laravel-activitylog`.

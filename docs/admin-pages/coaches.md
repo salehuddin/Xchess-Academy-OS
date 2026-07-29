@@ -2,15 +2,15 @@
 
 ## Routes & Access
 - Base prefix: `/admin/coaches/*`
-- Resource routes: `admin.coaches.*` via [web.php](file:///c:/laragon/www/xchess-academy-os/routes/web.php)
+- Resource routes: `admin.coaches.*` via [web.php](routes/web.php)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/CoachController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/CoachController.php)
+- Backend controller: [Admin/CoachController](app/Http/Controllers/Admin/CoachController.php)
 
 ## UI
-- Index: [Admin/Coaches/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Coaches/Index.jsx)
-- Create: [Admin/Coaches/Create.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Coaches/Create.jsx)
-- Edit: [Admin/Coaches/Edit.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Coaches/Edit.jsx)
-- Show: [Admin/Coaches/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Coaches/Show.jsx)
+- Index: [Admin/Coaches/Index.jsx](resources/js/Pages/Admin/Coaches/Index.jsx)
+- Create: [Admin/Coaches/Create.jsx](resources/js/Pages/Admin/Coaches/Create.jsx)
+- Edit: [Admin/Coaches/Edit.jsx](resources/js/Pages/Admin/Coaches/Edit.jsx)
+- Show: [Admin/Coaches/Show.jsx](resources/js/Pages/Admin/Coaches/Show.jsx)
 
 ## Features Built
 ### 1. Coach Listing & Query Scope
@@ -33,5 +33,5 @@
 - Displays profile data, assigned classes, and proof-of-delivery attendance history.
 
 ## Technical Specs
-- Data Model: [User.php](file:///c:/laragon/www/xchess-academy-os/app/Models/User.php) & [CoachProfile.php](file:///c:/laragon/www/xchess-academy-os/app/Models/CoachProfile.php)
+- Data Model: [User.php](app/Models/User.php) & [CoachProfile.php](app/Models/CoachProfile.php)
 - Query Scope: `User::coaches()`

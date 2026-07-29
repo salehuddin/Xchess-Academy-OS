@@ -6,8 +6,8 @@
 - Chip Webhook: `POST /webhooks/chip` (CSRF-Exempt)
 - Access: `auth` + `role:Admin` for Admin panel; Tokenized access for Parent Portal
 - Controllers:
-  - Admin: [Admin/PaymentController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/PaymentController.php)
-  - Portal & Webhook: [Portal/ChipPaymentController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Portal/ChipPaymentController.php)
+  - Admin: [Admin/PaymentController](app/Http/Controllers/Admin/PaymentController.php)
+  - Portal & Webhook: [Portal/ChipPaymentController](app/Http/Controllers/Portal/ChipPaymentController.php)
 
 ## Features Built
 
@@ -25,5 +25,5 @@
 - Recalculates total paid vs invoice `total_amount` to set status (`Paid`, `Partial`, or `Pending`).
 
 ## Technical Specs
-- Controller: [ChipPaymentController.php](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Portal/ChipPaymentController.php)
-- Feature Test: [ChipPaymentTest.php](file:///c:/laragon/www/xchess-academy-os/tests/Feature/Portal/ChipPaymentTest.php)
+- Controller: [ChipPaymentController.php](app/Http/Controllers/Portal/ChipPaymentController.php)
+- Feature Test: [ChipPaymentTest.php](tests/Feature/Portal/ChipPaymentTest.php)

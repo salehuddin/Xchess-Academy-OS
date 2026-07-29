@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/notifications/dispatches` (`admin.notifications.dispatches`)
-- Backend: [NotificationController@dispatches](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/NotificationController.php#L26-L55)
-- UI: [Admin/Notifications/Dispatches.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Notifications/Dispatches.jsx)
+- Backend: [NotificationController@dispatches](app/Http/Controllers/Admin/NotificationController.php#L26-L55)
+- UI: [Admin/Notifications/Dispatches.jsx](resources/js/Pages/Admin/Notifications/Dispatches.jsx)
 
 ## Features
 - History of queued/sent notification dispatches.

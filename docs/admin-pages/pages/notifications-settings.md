@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/notifications/settings` (`admin.notifications.settings`)
-- Backend: [NotificationController@settings](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/NotificationController.php#L57-L106)
-- UI: [Admin/Notifications/Settings.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Notifications/Settings.jsx)
+- Backend: [NotificationController@settings](app/Http/Controllers/Admin/NotificationController.php#L57-L106)
+- UI: [Admin/Notifications/Settings.jsx](resources/js/Pages/Admin/Notifications/Settings.jsx)
 
 ## Features
 - Read-only visibility into notification channel configuration:
@@ -13,7 +13,7 @@
 
 ## How It Works (Technical)
 - Reads configuration from:
-  - [config/mail.php](file:///c:/laragon/www/xchess-academy-os/config/mail.php)
-  - [config/services.php](file:///c:/laragon/www/xchess-academy-os/config/services.php)
+  - [config/mail.php](config/mail.php)
+  - [config/services.php](config/services.php)
 - Only exposes “is set” booleans for secrets (never the secret values).
 

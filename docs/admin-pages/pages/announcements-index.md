@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/announcements` (`admin.announcements.index`)
-- Backend: [AnnouncementController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/AnnouncementController.php#L17-L42)
-- UI: [Admin/Announcements/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Announcements/Index.jsx)
+- Backend: [AnnouncementController@index](app/Http/Controllers/Admin/AnnouncementController.php#L17-L42)
+- UI: [Admin/Announcements/Index.jsx](resources/js/Pages/Admin/Announcements/Index.jsx)
 
 ## Features
 - Announcement history list with:

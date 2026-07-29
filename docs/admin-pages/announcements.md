@@ -7,12 +7,12 @@
 - Show: `GET /admin/announcements/{announcement}` (`admin.announcements.show`)
 - Send now: `POST /admin/announcements/{announcement}/send` (`admin.announcements.send`)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/AnnouncementController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/AnnouncementController.php)
+- Backend controller: [Admin/AnnouncementController](app/Http/Controllers/Admin/AnnouncementController.php)
 
 ## UI
-- Index/history: [Admin/Announcements/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Announcements/Index.jsx)
-- Create: [Admin/Announcements/Create.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Announcements/Create.jsx)
-- Show + dispatch history: [Admin/Announcements/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Announcements/Show.jsx)
+- Index/history: [Admin/Announcements/Index.jsx](resources/js/Pages/Admin/Announcements/Index.jsx)
+- Create: [Admin/Announcements/Create.jsx](resources/js/Pages/Admin/Announcements/Create.jsx)
+- Show + dispatch history: [Admin/Announcements/Show.jsx](resources/js/Pages/Admin/Announcements/Show.jsx)
 
 ## Features Built
 ### Broadcast Announcement Builder
@@ -37,9 +37,9 @@
 
 ## Technical Specs
 ### Data Model
-- Announcement: [Announcement.php](file:///c:/laragon/www/xchess-academy-os/app/Models/Announcement.php)
-- Dispatch log: [AnnouncementDispatch.php](file:///c:/laragon/www/xchess-academy-os/app/Models/AnnouncementDispatch.php)
-- Migration: [create_announcements_tables](file:///c:/laragon/www/xchess-academy-os/database/migrations/2026_05_18_000001_create_announcements_tables.php)
+- Announcement: [Announcement.php](app/Models/Announcement.php)
+- Dispatch log: [AnnouncementDispatch.php](app/Models/AnnouncementDispatch.php)
+- Migration: [create_announcements_tables](database/migrations/2026_05_18_000001_create_announcements_tables.php)
 
 ### Recipient Resolution
 - Recipients are resolved from `parents` table (`StudentParent` model):
@@ -47,12 +47,12 @@
   - WhatsApp channel requires parent phone
 - Audience “class” filters parents by student enrollment:
   - `parent -> students -> classes` relationship chain
-- Engine: [AnnouncementEngine@resolveRecipients](file:///c:/laragon/www/xchess-academy-os/app/Services/Announcements/AnnouncementEngine.php#L79-L119)
+- Engine: [AnnouncementEngine@resolveRecipients](app/Services/Announcements/AnnouncementEngine.php#L79-L119)
 
 ### Dispatching & Sending
 - Sending creates one dispatch per recipient at `scheduled_for = now()` and immediately sends.
 - Deduplication key: `(announcement_id, channel, recipient, scheduled_for)` unique index.
-- Engine: [AnnouncementEngine](file:///c:/laragon/www/xchess-academy-os/app/Services/Announcements/AnnouncementEngine.php)
+- Engine: [AnnouncementEngine](app/Services/Announcements/AnnouncementEngine.php)
 
 ### Template Rendering
 - Uses the same renderer class as the notification builder to substitute variables.

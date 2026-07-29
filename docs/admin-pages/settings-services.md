@@ -8,8 +8,8 @@
   - `POST /admin/settings/services/test-smtp` (`admin.settings.test-smtp`)
   - `POST /admin/settings/services/test-whatsapp` (`admin.settings.test-whatsapp`)
 - Access: `auth` + `role:Admin`
-- Controller: [SettingController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/SettingController.php)
-- UI Component: [Admin/Settings/Services.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Settings/Services.jsx)
+- Controller: [SettingController](app/Http/Controllers/Admin/SettingController.php)
+- UI Component: [Admin/Settings/Services.jsx](resources/js/Pages/Admin/Settings/Services.jsx)
 
 ## Service Integrations & Credentials
 

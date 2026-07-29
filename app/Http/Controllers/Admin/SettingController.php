@@ -86,6 +86,8 @@ class SettingController extends Controller
         Setting::set('mail_from_address', $validated['mail_from_address'], 'smtp');
         Setting::set('mail_from_name', $validated['mail_from_name'], 'smtp');
 
+        $this->applySmtpConfig();
+
         // Save WhatsApp Settings
         Setting::set('whatsapp_provider', $validated['whatsapp_provider'], 'whatsapp');
         Setting::set('whatsapp_account_sid', $validated['whatsapp_account_sid'] ?? '', 'whatsapp');
@@ -105,6 +107,8 @@ class SettingController extends Controller
     public function testSmtp(Request $request): RedirectResponse
     {
         $request->validate(['recipient' => 'required|email']);
+
+        $this->applySmtpConfig();
 
         try {
             Mail::raw('This is a test email from X Chess Academy OS settings panel.', function ($message) use ($request) {
@@ -162,6 +166,14 @@ class SettingController extends Controller
         }
 
         return back()->with('success', 'WhatsApp connection simulation triggered for provider ['.$provider.'] to '.$request->phone);
+    }
+
+    /**
+     * Apply SMTP settings from the database into Laravel's runtime mail config.
+     */
+    protected function applySmtpConfig(): void
+    {
+        \App\Services\MailConfig::apply();
     }
 
     /**

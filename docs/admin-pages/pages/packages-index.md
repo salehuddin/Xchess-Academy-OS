@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/packages` (`admin.packages.index`)
-- Backend: [PackageController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/PackageController.php#L15-L37)
-- UI: [Admin/Packages/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Packages/Index.jsx)
+- Backend: [PackageController@index](app/Http/Controllers/Admin/PackageController.php#L15-L37)
+- UI: [Admin/Packages/Index.jsx](resources/js/Pages/Admin/Packages/Index.jsx)
 
 ## Features
 - Package listing with:

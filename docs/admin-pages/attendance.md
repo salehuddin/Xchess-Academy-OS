@@ -6,12 +6,12 @@
 - Store: `POST /admin/attendances/{class}/{date}` (`admin.attendances.store`)
 - Delete: `DELETE /admin/attendances/{class}/{date}` (`admin.attendances.destroy`)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/AttendanceController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/AttendanceController.php)
+- Backend controller: [Admin/AttendanceController](app/Http/Controllers/Admin/AttendanceController.php)
 
 ## UI
-- Index: [Admin/Attendance/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Attendance/Index.jsx)
-- Show: [Admin/Attendance/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Attendance/Show.jsx)
-- Reusable modal: [AttendanceModal.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Attendance/AttendanceModal.jsx)
+- Index: [Admin/Attendance/Index.jsx](resources/js/Pages/Admin/Attendance/Index.jsx)
+- Show: [Admin/Attendance/Show.jsx](resources/js/Pages/Admin/Attendance/Show.jsx)
+- Reusable modal: [AttendanceModal.jsx](resources/js/Pages/Admin/Attendance/AttendanceModal.jsx)
 
 ## Features Built
 ### Attendance Schedule Index
@@ -42,8 +42,8 @@
 
 ## Technical Specs
 ### Data Model
-- Attendance: [Attendance.php](file:///c:/laragon/www/xchess-academy-os/app/Models/Attendance.php)
-- Session overrides: [ClassSession.php](file:///c:/laragon/www/xchess-academy-os/app/Models/ClassSession.php)
+- Attendance: [Attendance.php](app/Models/Attendance.php)
+- Session overrides: [ClassSession.php](app/Models/ClassSession.php)
 - Class schedules: `classes.schedules` JSON array
 
 ### “Effective Coach” Resolution

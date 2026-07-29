@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/parents` (`admin.parents.index`)
-- Backend: [ParentController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ParentController.php#L15-L54)
-- UI: [Admin/Parents/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Parents/Index.jsx)
+- Backend: [ParentController@index](app/Http/Controllers/Admin/ParentController.php#L15-L54)
+- UI: [Admin/Parents/Index.jsx](resources/js/Pages/Admin/Parents/Index.jsx)
 
 ## Features
 - Parent listing with:

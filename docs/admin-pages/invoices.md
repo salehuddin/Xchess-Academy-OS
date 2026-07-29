@@ -9,14 +9,14 @@
   - `PUT /admin/invoices/{invoice}` (`admin.invoices.update`)
   - `POST /admin/invoices/{invoice}/send` (`admin.invoices.send`)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/InvoiceController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/InvoiceController.php)
+- Backend controller: [Admin/InvoiceController](app/Http/Controllers/Admin/InvoiceController.php)
 
 ## UI
-- Index: [Admin/Invoices/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Invoices/Index.jsx)
-- Show: [Admin/Invoices/Show.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Invoices/Show.jsx)
+- Index: [Admin/Invoices/Index.jsx](resources/js/Pages/Admin/Invoices/Index.jsx)
+- Show: [Admin/Invoices/Show.jsx](resources/js/Pages/Admin/Invoices/Show.jsx)
 - PDF Templates:
-  - Invoice: [pdf/invoice.blade.php](file:///c:/laragon/www/xchess-academy-os/resources/views/pdf/invoice.blade.php)
-  - Official Receipt: [pdf/receipt.blade.php](file:///c:/laragon/www/xchess-academy-os/resources/views/pdf/receipt.blade.php)
+  - Invoice: [pdf/invoice.blade.php](resources/views/pdf/invoice.blade.php)
+  - Official Receipt: [pdf/receipt.blade.php](resources/views/pdf/receipt.blade.php)
 
 ## Features Built
 

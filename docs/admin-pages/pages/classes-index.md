@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/classes` (`admin.classes.index`)
-- Backend: [ClassController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ClassController.php#L24-L58)
-- UI: [Admin/Classes/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Classes/Index.jsx)
+- Backend: [ClassController@index](app/Http/Controllers/Admin/ClassController.php#L24-L58)
+- UI: [Admin/Classes/Index.jsx](resources/js/Pages/Admin/Classes/Index.jsx)
 
 ## Features
 - Paginated list of classes with package/room/coach.

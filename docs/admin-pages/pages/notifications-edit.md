@@ -3,8 +3,8 @@
 ## Route
 - `GET /admin/notifications/{notification}/edit` (`admin.notifications.edit`)
 - `PUT /admin/notifications/{notification}` (`admin.notifications.update`)
-- Backend: [NotificationController@edit/update](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/NotificationController.php#L123-L136)
-- UI: [Admin/Notifications/Edit.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Notifications/Edit.jsx)
+- Backend: [NotificationController@edit/update](app/Http/Controllers/Admin/NotificationController.php#L123-L136)
+- UI: [Admin/Notifications/Edit.jsx](resources/js/Pages/Admin/Notifications/Edit.jsx)
 
 ## Features
 - Edit template fields:
@@ -16,6 +16,6 @@
 
 ## How It Works (Technical)
 - Uses the same validation builder as create:
-  - [validateNotification](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/NotificationController.php#L145-L189)
+  - [validateNotification](app/Http/Controllers/Admin/NotificationController.php#L145-L189)
 - Updates the `notifications` record; dispatch history is stored separately.
 

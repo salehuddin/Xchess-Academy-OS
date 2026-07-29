@@ -2,8 +2,8 @@
 
 ## Route
 - `GET /admin/reports` (`admin.reports.index`)
-- Backend: [ReportController@index](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ReportController.php#L14-L31)
-- UI: [Admin/Reports/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Reports/Index.jsx)
+- Backend: [ReportController@index](app/Http/Controllers/Admin/ReportController.php#L14-L31)
+- UI: [Admin/Reports/Index.jsx](resources/js/Pages/Admin/Reports/Index.jsx)
 
 ## Features
 - High-level financial KPIs:

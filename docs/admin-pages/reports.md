@@ -3,10 +3,10 @@
 ## Routes & Access
 - Page: `GET /admin/reports` (`admin.reports.index`)
 - Access: `auth` + `role:Admin`
-- Backend controller: [Admin/ReportController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ReportController.php)
+- Backend controller: [Admin/ReportController](app/Http/Controllers/Admin/ReportController.php)
 
 ## UI
-- Page: [Admin/Reports/Index.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Reports/Index.jsx)
+- Page: [Admin/Reports/Index.jsx](resources/js/Pages/Admin/Reports/Index.jsx)
 
 ## Features Built
 ### Financial Overview
@@ -31,7 +31,7 @@
   - `Payroll::where('status', 'Paid')->sum('total_amount')`
 - Monthly stats:
   - collects distinct months from both sources and computes month-by-month sums
-- Implementation: [ReportController](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/ReportController.php#L14-L70)
+- Implementation: [ReportController](app/Http/Controllers/Admin/ReportController.php#L14-L70)
 
 ## Notes / Constraints
 - Monthly breakdown is based only on months present in paid invoices/payrolls; there is no “fill missing months” behavior.

@@ -3,8 +3,8 @@
 ## Route
 - `GET /admin/coaches/{coach}/edit` (`admin.coaches.edit`)
 - `PUT/PATCH /admin/coaches/{coach}` (`admin.coaches.update`)
-- Backend: [CoachController@edit/update](file:///c:/laragon/www/xchess-academy-os/app/Http/Controllers/Admin/CoachController.php#L95-L213)
-- UI: [Admin/Coaches/Edit.jsx](file:///c:/laragon/www/xchess-academy-os/resources/js/Pages/Admin/Coaches/Edit.jsx)
+- Backend: [CoachController@edit/update](app/Http/Controllers/Admin/CoachController.php#L95-L213)
+- UI: [Admin/Coaches/Edit.jsx](resources/js/Pages/Admin/Coaches/Edit.jsx)
 
 ## Features
 - Edit coach user fields (name/email/hourly_rate).
