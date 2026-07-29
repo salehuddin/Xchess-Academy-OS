@@ -37,7 +37,7 @@ export default function Edit({ auth, coach }) {
         bank_account_name: coach.coach_profile?.bank_account_name || '',
         bank_account_number: coach.coach_profile?.bank_account_number || '',
         level: coach.coach_profile?.level || '',
-        hourly_rate: coach.coach_profile?.hourly_rate || coach.hourly_rate || '',
+        hourly_rate: coach.coach_profile?.hourly_rate || '',
         availability: coach.coach_profile?.availability || [],
     });
 
@@ -148,16 +148,6 @@ export default function Edit({ auth, coach }) {
                                         </SelectItem>
                                     ))}
                                 </Select>
-                                <Input
-                                    label="Hourly Rate (RM)"
-                                    placeholder="0.00"
-                                    type="number"
-                                    startContent={<div className="pointer-events-none flex items-center"><span className="text-default-400 text-small">RM</span></div>}
-                                    value={data.hourly_rate}
-                                    onChange={(e) => setData('hourly_rate', e.target.value)}
-                                    errorMessage={errors.hourly_rate}
-                                    isInvalid={!!errors.hourly_rate}
-                                />
                             </div>
                         </CardBody>
                     </Card>

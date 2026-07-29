@@ -34,7 +34,6 @@ class UserManagementTest extends TestCase
             'email' => 'sarah@xchess.test',
             'password' => 'password123',
             'role' => UserRole::Ops->value,
-            'hourly_rate' => 35.00,
         ]);
 
         $response->assertRedirect();
@@ -43,7 +42,6 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'sarah@xchess.test',
             'role' => UserRole::Ops->value,
-            'hourly_rate' => 35.00,
         ]);
     }
 
@@ -56,7 +54,6 @@ class UserManagementTest extends TestCase
             'name' => 'Updated Name',
             'email' => $user->email,
             'role' => UserRole::Finance->value,
-            'hourly_rate' => 45.00,
         ]);
 
         $response->assertRedirect();
@@ -66,7 +63,6 @@ class UserManagementTest extends TestCase
             'id' => $user->id,
             'name' => 'Updated Name',
             'role' => UserRole::Finance->value,
-            'hourly_rate' => 45.00,
         ]);
     }
 

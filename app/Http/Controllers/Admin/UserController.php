@@ -29,7 +29,7 @@ class UserController extends Controller
         }
 
         $query = User::query()
-            ->select(['id', 'name', 'email', 'role', 'is_coach', 'hourly_rate', 'created_at']);
+            ->select(['id', 'name', 'email', 'role', 'is_coach', 'created_at']);
 
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -70,7 +70,6 @@ class UserController extends Controller
             'password' => ['required', 'string', Password::defaults()],
             'role' => ['required', Rule::in(array_map(fn (UserRole $r) => $r->value, UserRole::cases()))],
             'is_coach' => ['nullable', 'boolean'],
-            'hourly_rate' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $isCoach = $validated['role'] === UserRole::Coach->value || ! empty($validated['is_coach']);
@@ -81,13 +80,11 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'is_coach' => $isCoach,
-            'hourly_rate' => $validated['hourly_rate'] ?? 0,
         ]);
 
         if ($isCoach) {
             CoachProfile::firstOrCreate(
                 ['user_id' => $user->id],
-                ['hourly_rate' => $user->hourly_rate ?? 0]
             );
         }
 
@@ -109,7 +106,6 @@ class UserController extends Controller
             'password' => ['nullable', 'string', Password::defaults()],
             'role' => ['required', Rule::in(array_map(fn (UserRole $r) => $r->value, UserRole::cases()))],
             'is_coach' => ['nullable', 'boolean'],
-            'hourly_rate' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $isCoach = $validated['role'] === UserRole::Coach->value || ! empty($validated['is_coach']);
@@ -119,7 +115,6 @@ class UserController extends Controller
             'email' => $validated['email'],
             'role' => $validated['role'],
             'is_coach' => $isCoach,
-            'hourly_rate' => $validated['hourly_rate'] ?? 0,
         ];
 
         if (! empty($validated['password'])) {
@@ -131,7 +126,6 @@ class UserController extends Controller
         if ($isCoach) {
             CoachProfile::firstOrCreate(
                 ['user_id' => $user->id],
-                ['hourly_rate' => $user->hourly_rate ?? 0]
             );
         }
 

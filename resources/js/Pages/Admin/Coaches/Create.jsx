@@ -162,16 +162,6 @@ export default function Create({ auth }) {
                                         </SelectItem>
                                     ))}
                                 </Select>
-                                <Input
-                                    label="Hourly Rate (RM)"
-                                    placeholder="0.00"
-                                    type="number"
-                                    startContent={<div className="pointer-events-none flex items-center"><span className="text-default-400 text-small">RM</span></div>}
-                                    value={data.hourly_rate}
-                                    onChange={(e) => setData('hourly_rate', e.target.value)}
-                                    errorMessage={errors.hourly_rate}
-                                    isInvalid={!!errors.hourly_rate}
-                                />
                             </div>
                         </CardBody>
                     </Card>
