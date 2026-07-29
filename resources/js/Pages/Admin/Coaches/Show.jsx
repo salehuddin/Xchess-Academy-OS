@@ -215,10 +215,6 @@ export default function Show({ coach, classes, attendances, coachOptions }) {
                                 <p className="text-md font-medium">{coach.coach_profile?.level || 'N/A'}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-default-500">Hourly Rate</p>
-                                <p className="text-md font-medium">RM {coach.coach_profile?.hourly_rate || coach.hourly_rate || '0.00'}</p>
-                            </div>
-                            <div>
                                 <p className="text-sm text-default-500">Bank Name</p>
                                 <p className="text-md font-medium">{coach.coach_profile?.bank_name || 'N/A'}</p>
                             </div>

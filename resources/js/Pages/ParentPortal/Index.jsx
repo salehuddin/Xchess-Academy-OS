@@ -88,7 +88,7 @@ export default function Index({ token, parent, students, invoices, schedule, ran
                                                 <TableCell>
                                                     <StatusChip status={inv.status} />
                                                 </TableCell>
-                                                <TableCell>${inv.total_amount}</TableCell>
+                                                <TableCell>RM {Number(inv.total_amount).toFixed(2)}</TableCell>
                                                 <TableCell>{inv.due_date ?? '-'}</TableCell>
                                                 <TableCell>
                                                     <Link

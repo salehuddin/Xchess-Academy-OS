@@ -69,7 +69,6 @@ const columns = [
     {name: "ROLE", uid: "role"},
     {name: "PHONE", uid: "phone"},
     {name: "LEVEL", uid: "level"},
-    {name: "HOURLY RATE", uid: "hourly_rate"},
     {name: "ACTIONS", uid: "actions"},
 ];
 
@@ -163,14 +162,6 @@ export default function Index({ auth, coaches, filters }) {
                 return (
                      <div className="flex flex-col">
                         <p className="text-bold text-sm capitalize">{coach.coach_profile?.level || '-'}</p>
-                    </div>
-                );
-            case "hourly_rate":
-                return (
-                     <div className="flex flex-col">
-                        <p className="text-bold text-sm">
-                            RM {coach.coach_profile?.hourly_rate || coach.hourly_rate || '0.00'}
-                        </p>
                     </div>
                 );
             case "actions":

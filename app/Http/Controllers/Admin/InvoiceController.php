@@ -17,25 +17,60 @@ class InvoiceController extends Controller
 {
     public function index(Request $request): Response
     {
-        $perPage = (int) $request->input('per_page', 10);
-        if (! in_array($perPage, [10, 25, 50, 100], true)) {
-            $perPage = 10;
+        $perPage = (int) $request->input('per_page', 15);
+        if (! in_array($perPage, [15, 25, 50, 100], true)) {
+            $perPage = 15;
         }
 
-        $invoices = Invoice::with('student')
-            ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
+        $query = Invoice::with('student')->latest();
+
+        if ($request->filled('month')) {
+            $query->where('month_year', $request->month);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $query->whereHas('student', function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%');
+            });
+        }
+
+        $invoices = $query->paginate($perPage)->withQueryString();
+
+        // Summary stats over ALL invoices matching filters (before pagination)
+        $statsQuery = Invoice::query();
+        if ($request->filled('month')) {
+            $statsQuery->where('month_year', $request->month);
+        }
+
+        $summary = [
+            'total' => $statsQuery->count(),
+            'draft_count' => (clone $statsQuery)->where('status', 'Draft')->count(),
+            'pending_count' => (clone $statsQuery)->where('status', 'Pending')->count(),
+            'paid_count' => (clone $statsQuery)->where('status', 'Paid')->count(),
+            'total_billed' => (clone $statsQuery)->where('status', '!=', 'Draft')->sum('total_amount'),
+            'total_collected' => (clone $statsQuery)->where('status', 'Paid')->sum('total_amount'),
+        ];
+
+        $availableMonths = Invoice::select('month_year')
+            ->distinct()
+            ->orderBy('month_year', 'desc')
+            ->pluck('month_year');
 
         return Inertia::render('Admin/Invoices/Index', [
             'invoices' => $invoices,
-            'filters' => $request->only(['per_page']),
+            'summary' => $summary,
+            'availableMonths' => $availableMonths,
+            'filters' => $request->only(['per_page', 'month', 'status', 'search']),
         ]);
     }
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load(['student.parent', 'student.classes.package']);
+        $invoice->load(['student.parent', 'student.classes.package', 'payments']);
 
         return Inertia::render('Admin/Invoices/Show', [
             'invoice' => $invoice,
@@ -45,13 +80,12 @@ class InvoiceController extends Controller
     public function update(Request $request, Invoice $invoice)
     {
         $request->validate([
-            'manual_adjustment' => 'required|numeric',
+            'manual_adjustment' => 'required|numeric|min:0',
             'finance_remarks' => 'nullable|string',
         ]);
 
         $manualAdjustment = $request->manual_adjustment;
         $totalAmount = $invoice->base_amount + $invoice->tax_amount - $invoice->recurring_discount_val - $manualAdjustment;
-        // Ensure non-negative
         $totalAmount = max(0, $totalAmount);
 
         $invoice->update([
@@ -97,7 +131,7 @@ class InvoiceController extends Controller
             'bank_details' => Setting::get('company_bank_details', "Maybank: 5140 1234 5678\nAccount Name: X Chess Academy Sdn Bhd"),
         ];
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', [
+        $pdf = Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
             'company' => $company,
         ]);

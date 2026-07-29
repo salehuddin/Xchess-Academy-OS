@@ -30,6 +30,7 @@ class ParentPortalController extends Controller
 
         $invoices = Invoice::query()
             ->whereIn('student_id', $studentIds)
+            ->whereIn('status', ['Pending', 'Paid', 'Overdue'])
             ->with(['student:id,name,parent_id'])
             ->orderByDesc('month_year')
             ->orderByDesc('id')

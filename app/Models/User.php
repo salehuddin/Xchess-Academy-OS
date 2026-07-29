@@ -29,7 +29,6 @@ class User extends Authenticatable
         'password',
         'role',
         'is_coach',
-        'hourly_rate',
         'preferred_levels',
         'availability_slots',
     ];
@@ -56,7 +55,6 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_coach' => 'boolean',
-            'hourly_rate' => 'decimal:2',
         ];
     }
 

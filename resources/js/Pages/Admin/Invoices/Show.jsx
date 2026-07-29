@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import {
     Card,
     CardHeader,
@@ -8,14 +8,97 @@ import {
     Input,
     Textarea,
     Chip,
-    Divider
+    Divider,
+    Table,
+    TableHeader,
+    TableColumn,
+    TableBody,
+    TableRow,
+    TableCell,
 } from "@heroui/react";
 
+// ── Icons ──────────────────────────────────────────────────────────────────
+const ArrowLeftIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+    </svg>
+);
+
+const PdfIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+        <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+        <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+        <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+        <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+    </svg>
+);
+
+const SendIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+        <polygon points="22 2 15 22 11 13 2 9 22 2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+    </svg>
+);
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const statusColorMap = {
+    Draft: "default",
+    Pending: "warning",
+    Paid: "success",
+    Overdue: "danger",
+    Partial: "primary",
+};
+
+const formatRM = (amount) => `RM ${Number(amount ?? 0).toFixed(2)}`;
+
+const formatMonth = (yearMonth) => {
+    if (!yearMonth) return '—';
+    const [year, month] = yearMonth.split('-');
+    return new Date(Number(year), Number(month) - 1, 1)
+        .toLocaleDateString('en-MY', { year: 'numeric', month: 'long' });
+};
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+// ── Info Row ──────────────────────────────────────────────────────────────────
+function InfoRow({ label, value }) {
+    return (
+        <div className="flex justify-between items-start py-2.5 border-b border-default-100 last:border-0">
+            <span className="text-sm text-default-500">{label}</span>
+            <span className="text-sm font-medium text-default-800 text-right max-w-[60%]">{value ?? '—'}</span>
+        </div>
+    );
+}
+
+// ── Amount Row ────────────────────────────────────────────────────────────────
+function AmountRow({ label, value, isDeduction, isTotal, isMuted }) {
+    return (
+        <div className={`flex justify-between items-center py-2 ${isTotal ? 'pt-3 mt-1 border-t-2 border-default-200' : ''}`}>
+            <span className={`text-sm ${isTotal ? 'font-bold text-default-800' : isMuted ? 'text-default-400' : 'text-default-600'}`}>
+                {label}
+            </span>
+            <span className={`text-sm font-semibold ${
+                isTotal ? 'text-lg font-bold text-default-900' :
+                isDeduction ? 'text-success-600' :
+                isMuted ? 'text-default-400' : 'text-default-700'
+            }`}>
+                {isDeduction && value !== 'RM 0.00' ? `−${value}` : value}
+            </span>
+        </div>
+    );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function Show({ invoice }) {
     const { auth } = usePage().props;
-    const { data, setData, put, processing, errors } = useForm({
-        manual_adjustment: invoice.manual_adjustment,
-        finance_remarks: invoice.finance_remarks || '',
+
+    const { data, setData, put, processing, errors, wasSuccessful } = useForm({
+        manual_adjustment: invoice.manual_adjustment ?? 0,
+        finance_remarks: invoice.finance_remarks ?? '',
     });
 
     const handleSubmit = (e) => {
@@ -24,153 +107,355 @@ export default function Show({ invoice }) {
     };
 
     const handleSend = () => {
-        if (confirm('Are you sure you want to send this invoice to the parent?')) {
+        if (confirm('Send this invoice to the parent? It will move to Pending status.')) {
             router.post(route('admin.invoices.send', invoice.id));
         }
     };
 
-    const statusColorMap = {
-        Draft: "default",
-        Pending: "warning",
-        Paid: "success",
-        Overdue: "danger",
-    };
+    const isDraft = invoice.status === 'Draft';
+    const adjustedTotal = Math.max(
+        0,
+        Number(invoice.base_amount) +
+        Number(invoice.tax_amount) -
+        Number(invoice.recurring_discount_val) -
+        Number(data.manual_adjustment)
+    );
+
+    const enrolledClasses = invoice.student?.classes ?? [];
 
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl font-bold leading-tight text-gray-800">Invoice #{invoice.id}</h2>
-                        <p className="text-sm text-gray-500">Manage invoice details, manual adjustments, and PDF exports</p>
+                <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={route('admin.invoices.index')}
+                            className="text-default-400 hover:text-default-600 transition-colors"
+                            id="back-to-invoices"
+                        >
+                            <ArrowLeftIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                        </Link>
+                        <div>
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-2xl font-bold leading-tight text-gray-800">
+                                    INV-{String(invoice.id).padStart(4, '0')}
+                                </h2>
+                                <Chip
+                                    color={statusColorMap[invoice.status] ?? 'default'}
+                                    size="sm"
+                                    variant="flat"
+                                    className="capitalize"
+                                >
+                                    {invoice.status}
+                                </Chip>
+                                {invoice.notification_sent && (
+                                    <Chip color="primary" size="sm" variant="bordered">
+                                        Sent to parent
+                                    </Chip>
+                                )}
+                            </div>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                {formatMonth(invoice.month_year)} · {invoice.student?.name}
+                            </p>
+                        </div>
                     </div>
-                    <a href={route('admin.invoices.pdf', invoice.id)} target="_blank" rel="noreferrer">
-                        <Button color="secondary" variant="flat" className="font-bold">
-                            📄 Download PDF Invoice
+                    <a
+                        href={route('admin.invoices.pdf', invoice.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        id="download-invoice-pdf"
+                    >
+                        <Button
+                            color="secondary"
+                            variant="flat"
+                            className="font-semibold"
+                            startContent={<PdfIcon />}
+                        >
+                            Download PDF
                         </Button>
                     </a>
                 </div>
             }
         >
-            <Head title={`Invoice #${invoice.id}`} />
+            <Head title={`Invoice INV-${String(invoice.id).padStart(4, '0')}`} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Invoice Details */}
-                <Card className="shadow-sm border border-gray-100">
-                    <CardHeader>
-                        <p className="text-md font-semibold">Invoice Details</p>
-                    </CardHeader>
-                    <CardBody>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                            <div>
-                                <p className="text-sm text-gray-500">Month</p>
-                                <p className="text-md font-medium">{invoice.month_year}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Status</p>
-                                <Chip className="capitalize mt-1" color={statusColorMap[invoice.status] || "default"} size="sm" variant="flat">
-                                    {invoice.status}
-                                </Chip>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Student</p>
-                                <p className="text-md font-medium">{invoice.student?.name}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Parent</p>
-                                <p className="text-md font-medium">{invoice.student?.parent?.name}</p>
-                            </div>
-                        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                        <Divider className="my-4" />
+                {/* ── LEFT COLUMN (spans 2) ───────────────────────────── */}
+                <div className="lg:col-span-2 flex flex-col gap-6">
 
-                        <div>
-                            <p className="text-md font-semibold mb-4">Breakdown</p>
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Base Amount</span>
-                                    <span className="font-medium">${invoice.base_amount}</span>
+                    {/* Student & Invoice Info */}
+                    <Card shadow="none" className="border border-default-200">
+                        <CardHeader className="px-5 pt-5 pb-3">
+                            <p className="font-semibold text-default-700">Invoice Details</p>
+                        </CardHeader>
+                        <CardBody className="px-5 pt-0 pb-5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+                                <div>
+                                    <p className="text-xs text-default-400 uppercase tracking-wide font-medium mb-2">Student</p>
+                                    <InfoRow label="Name" value={invoice.student?.name} />
+                                    <InfoRow label="Parent" value={invoice.student?.parent?.name} />
+                                    <InfoRow label="Parent Email" value={invoice.student?.parent?.email} />
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Tax</span>
-                                    <span className="font-medium">${invoice.tax_amount}</span>
-                                </div>
-                                <div className="flex justify-between text-success">
-                                    <span>Recurring Discount</span>
-                                    <span>-${invoice.recurring_discount_val}</span>
-                                </div>
-                                <div className="flex justify-between text-danger">
-                                    <span>Manual Adjustment</span>
-                                    <span>-${data.manual_adjustment}</span>
-                                </div>
-                                <Divider className="my-2" />
-                                <div className="flex justify-between font-bold text-lg">
-                                    <span>Total Amount</span>
-                                    <span>${invoice.total_amount}</span>
+                                <div>
+                                    <p className="text-xs text-default-400 uppercase tracking-wide font-medium mb-2">Invoice</p>
+                                    <InfoRow label="Period" value={formatMonth(invoice.month_year)} />
+                                    <InfoRow label="Due Date" value={formatDate(invoice.due_date)} />
+                                    <InfoRow label="Generated" value={formatDate(invoice.created_at)} />
                                 </div>
                             </div>
-                        </div>
-                    </CardBody>
-                </Card>
+                        </CardBody>
+                    </Card>
 
-                {/* Actions / Manual Adjustment */}
-                <Card className="shadow-sm border border-gray-100">
-                    <CardHeader>
-                        <p className="text-md font-semibold">Manual Adjustment & Actions</p>
-                    </CardHeader>
-                    <CardBody>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <Input
-                                type="number"
-                                label="Manual Adjustment (Deduction)"
-                                placeholder="0.00"
-                                value={String(data.manual_adjustment)}
-                                onValueChange={(val) => setData('manual_adjustment', val)}
-                                description="Enter amount to deduct from total."
-                                errorMessage={errors.manual_adjustment}
-                                isInvalid={!!errors.manual_adjustment}
-                                step="0.01"
-                            />
-
-                            <Textarea
-                                label="Finance Remarks"
-                                placeholder="Reason for adjustment..."
-                                value={data.finance_remarks}
-                                onValueChange={(val) => setData('finance_remarks', val)}
-                                errorMessage={errors.finance_remarks}
-                                isInvalid={!!errors.finance_remarks}
-                            />
-
-                            <div className="flex justify-end">
-                                <Button
-                                    type="submit"
-                                    color="primary"
-                                    isLoading={processing}
+                    {/* Enrolled Classes */}
+                    {enrolledClasses.length > 0 && (
+                        <Card shadow="none" className="border border-default-200">
+                            <CardHeader className="px-5 pt-5 pb-3">
+                                <p className="font-semibold text-default-700">Enrolled Classes</p>
+                            </CardHeader>
+                            <CardBody className="px-0 pt-0 pb-0">
+                                <Table
+                                    aria-label="Enrolled classes"
+                                    shadow="none"
+                                    classNames={{
+                                        wrapper: "shadow-none rounded-none",
+                                        th: "bg-default-50 text-default-500 text-xs uppercase font-semibold tracking-wide",
+                                    }}
+                                    selectionMode="none"
                                 >
-                                    Save Adjustment
-                                </Button>
-                            </div>
-                        </form>
+                                    <TableHeader>
+                                        <TableColumn>CLASS</TableColumn>
+                                        <TableColumn>PACKAGE</TableColumn>
+                                        <TableColumn>DAY / TIME</TableColumn>
+                                        <TableColumn align="end">FEE</TableColumn>
+                                    </TableHeader>
+                                    <TableBody items={enrolledClasses}>
+                                        {(cls) => (
+                                            <TableRow key={cls.id}>
+                                                <TableCell>
+                                                    <p className="font-medium text-sm">{cls.name}</p>
+                                                    <p className="text-xs text-default-400">{cls.uid}</p>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <p className="text-sm">{cls.package?.title ?? '—'}</p>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <p className="text-sm">{cls.day}</p>
+                                                    <p className="text-xs text-default-400">
+                                                        {cls.start_time} – {cls.end_time}
+                                                    </p>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <p className="text-sm font-semibold text-right">
+                                                        {formatRM(cls.package?.monthly_fee)}
+                                                    </p>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardBody>
+                        </Card>
+                    )}
 
-                        <Divider className="my-6" />
+                    {/* Payments Received */}
+                    {invoice.payments?.length > 0 && (
+                        <Card shadow="none" className="border border-default-200">
+                            <CardHeader className="px-5 pt-5 pb-3">
+                                <p className="font-semibold text-default-700">Payments Received</p>
+                            </CardHeader>
+                            <CardBody className="px-0 pt-0 pb-0">
+                                <Table
+                                    aria-label="Payments received"
+                                    shadow="none"
+                                    classNames={{
+                                        wrapper: "shadow-none rounded-none",
+                                        th: "bg-default-50 text-default-500 text-xs uppercase font-semibold tracking-wide",
+                                    }}
+                                    selectionMode="none"
+                                >
+                                    <TableHeader>
+                                        <TableColumn>DATE</TableColumn>
+                                        <TableColumn>METHOD</TableColumn>
+                                        <TableColumn>REFERENCE</TableColumn>
+                                        <TableColumn align="end">AMOUNT</TableColumn>
+                                    </TableHeader>
+                                    <TableBody items={invoice.payments}>
+                                        {(payment) => (
+                                            <TableRow key={payment.id}>
+                                                <TableCell>{formatDate(payment.payment_date ?? payment.created_at)}</TableCell>
+                                                <TableCell>{payment.payment_method ?? '—'}</TableCell>
+                                                <TableCell>
+                                                    <p className="text-xs font-mono text-default-500">{payment.transaction_id ?? '—'}</p>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <p className="font-semibold text-success-600 text-right">
+                                                        {formatRM(payment.amount)}
+                                                    </p>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardBody>
+                        </Card>
+                    )}
+                </div>
 
-                        <div>
-                            <p className="text-md font-semibold mb-2">Finalize</p>
-                            <p className="text-sm text-gray-500 mb-4">
-                                Once finalized, the invoice will be marked as Pending and sent to the parent.
+                {/* ── RIGHT COLUMN ────────────────────────────────────── */}
+                <div className="flex flex-col gap-6">
+
+                    {/* Amount Breakdown */}
+                    <Card shadow="none" className="border border-default-200">
+                        <CardHeader className="px-5 pt-5 pb-3">
+                            <p className="font-semibold text-default-700">Amount Breakdown</p>
+                        </CardHeader>
+                        <CardBody className="px-5 pt-0 pb-5">
+                            <AmountRow label="Base Amount" value={formatRM(invoice.base_amount)} />
+                            {Number(invoice.tax_amount) > 0 && (
+                                <AmountRow label="Tax" value={formatRM(invoice.tax_amount)} />
+                            )}
+                            {Number(invoice.recurring_discount_val) > 0 && (
+                                <AmountRow
+                                    label="Recurring Discount"
+                                    value={formatRM(invoice.recurring_discount_val)}
+                                    isDeduction
+                                />
+                            )}
+                            {Number(data.manual_adjustment) > 0 && (
+                                <AmountRow
+                                    label="Manual Adjustment"
+                                    value={formatRM(data.manual_adjustment)}
+                                    isDeduction
+                                />
+                            )}
+                            <AmountRow
+                                label="Total"
+                                value={formatRM(isDraft ? adjustedTotal : invoice.total_amount)}
+                                isTotal
+                            />
+                            {invoice.finance_remarks && (
+                                <div className="mt-4 p-3 bg-default-50 rounded-lg">
+                                    <p className="text-xs text-default-400 font-medium uppercase tracking-wide mb-1">Remarks</p>
+                                    <p className="text-sm text-default-600">{invoice.finance_remarks}</p>
+                                </div>
+                            )}
+                        </CardBody>
+                    </Card>
+
+                    {/* Manual Adjustment — only for Draft invoices */}
+                    {isDraft && (
+                        <Card shadow="none" className="border border-warning-200 bg-warning-50/30">
+                            <CardHeader className="px-5 pt-5 pb-3">
+                                <p className="font-semibold text-default-700">Manual Adjustment</p>
+                            </CardHeader>
+                            <CardBody className="px-5 pt-0 pb-5">
+                                {wasSuccessful && (
+                                    <div className="mb-4 p-3 bg-success-50 border border-success-200 rounded-lg">
+                                        <p className="text-sm text-success-700 font-medium">✓ Adjustment saved</p>
+                                    </div>
+                                )}
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <Input
+                                        id="manual-adjustment-input"
+                                        type="number"
+                                        label="Deduction Amount (RM)"
+                                        placeholder="0.00"
+                                        min="0"
+                                        step="0.01"
+                                        value={String(data.manual_adjustment)}
+                                        onValueChange={(val) => setData('manual_adjustment', val)}
+                                        description="Amount to deduct — e.g. for a missed session."
+                                        errorMessage={errors.manual_adjustment}
+                                        isInvalid={!!errors.manual_adjustment}
+                                        startContent={
+                                            <span className="text-default-400 text-sm pointer-events-none">RM</span>
+                                        }
+                                    />
+
+                                    <Textarea
+                                        id="finance-remarks-input"
+                                        label="Finance Remarks"
+                                        placeholder="e.g. Deduction for missed session on 5 Jan..."
+                                        value={data.finance_remarks}
+                                        onValueChange={(val) => setData('finance_remarks', val)}
+                                        errorMessage={errors.finance_remarks}
+                                        isInvalid={!!errors.finance_remarks}
+                                        minRows={2}
+                                    />
+
+                                    <Button
+                                        id="save-adjustment-btn"
+                                        type="submit"
+                                        color="primary"
+                                        variant="flat"
+                                        isLoading={processing}
+                                        className="w-full font-semibold"
+                                    >
+                                        Save Adjustment
+                                    </Button>
+                                </form>
+                            </CardBody>
+                        </Card>
+                    )}
+
+                    {/* Send Invoice Action */}
+                    <Card shadow="none" className={`border ${isDraft ? 'border-success-200' : 'border-default-200'}`}>
+                        <CardHeader className="px-5 pt-5 pb-3">
+                            <p className="font-semibold text-default-700">
+                                {isDraft ? 'Finalize & Send' : 'Invoice Status'}
                             </p>
-                            <Button
-                                onPress={handleSend}
-                                isDisabled={invoice.status !== 'Draft'}
-                                color={invoice.status === 'Draft' ? "success" : "default"}
-                                className="w-full text-white"
-                            >
-                                {invoice.status === 'Draft' ? 'Send Invoice' : `Sent (${invoice.status})`}
-                            </Button>
-                        </div>
-                    </CardBody>
-                </Card>
+                        </CardHeader>
+                        <CardBody className="px-5 pt-0 pb-5">
+                            {isDraft ? (
+                                <>
+                                    <p className="text-sm text-default-500 mb-4">
+                                        Once sent, the invoice moves to <strong>Pending</strong> and an email notification
+                                        is dispatched to the parent. This cannot be undone.
+                                    </p>
+                                    <Button
+                                        id="send-invoice-btn"
+                                        color="success"
+                                        className="w-full font-semibold text-white"
+                                        startContent={<SendIcon />}
+                                        onPress={handleSend}
+                                    >
+                                        Send Invoice to Parent
+                                    </Button>
+                                </>
+                            ) : (
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-default-500">Current status</span>
+                                        <Chip
+                                            color={statusColorMap[invoice.status] ?? 'default'}
+                                            size="sm"
+                                            variant="flat"
+                                        >
+                                            {invoice.status}
+                                        </Chip>
+                                    </div>
+                                    {invoice.notification_sent && (
+                                        <p className="text-xs text-default-400">
+                                            ✓ Notification was sent to the parent.
+                                        </p>
+                                    )}
+                                    {invoice.status === 'Pending' && (
+                                        <p className="text-xs text-warning-600">
+                                            Awaiting payment from parent.
+                                        </p>
+                                    )}
+                                    {invoice.status === 'Paid' && (
+                                        <p className="text-xs text-success-600 font-medium">
+                                            Payment received. Invoice closed.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </CardBody>
+                    </Card>
+                </div>
             </div>
         </AuthenticatedLayout>
     );

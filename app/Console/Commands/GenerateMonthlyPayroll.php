@@ -27,7 +27,7 @@ class GenerateMonthlyPayroll extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $monthInput = $this->argument('month') ?? Carbon::now()->subMonth()->format('Y-m');
         $startOfMonth = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
@@ -40,41 +40,50 @@ class GenerateMonthlyPayroll extends Command
         foreach ($coaches as $coach) {
             $this->info("Processing coach: {$coach->name}");
 
-            // Find sessions delivered by this coach in the given month
-            // We count distinct (class_id, attendance_date) pairs from the attendance table
-            // where the class belongs to this coach
-            $sessionCount = Attendance::query()
+            // Get distinct (class_id, attendance_date) session pairs delivered by this coach in the given month.
+            // Group by class so we can look up each class's package rate.
+            $sessions = Attendance::query()
                 ->whereHas('class', function ($query) use ($coach) {
                     $query->where('coach_id', $coach->id);
                 })
                 ->whereBetween('attendance_date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
                 ->select('class_id', 'attendance_date')
                 ->distinct()
-                ->get()
-                ->count();
+                ->with('class.package')
+                ->get();
 
-            if ($sessionCount > 0) {
-                $hourlyRate = $coach->hourly_rate ?? 0;
-                $totalAmount = $sessionCount * $hourlyRate;
-
-                Payroll::updateOrCreate(
-                    [
-                        'coach_id' => $coach->id,
-                        'month_year' => $monthInput,
-                    ],
-                    [
-                        'total_sessions' => $sessionCount,
-                        'base_rate' => $hourlyRate,
-                        'total_amount' => $totalAmount,
-                        'status' => 'Draft',
-                        'generated_at' => now(),
-                    ]
-                );
-
-                $this->info("  - Generated payroll: {$sessionCount} sessions, \${$totalAmount}");
-            } else {
+            if ($sessions->isEmpty()) {
                 $this->info('  - No delivered sessions found.');
+
+                continue;
             }
+
+            // Calculate total pay: sum each session's package coach_rate_per_session.
+            // If no package rate is set, the session contributes 0.
+            $totalAmount = $sessions->sum(function ($session) {
+                return (float) ($session->class?->package?->coach_rate_per_session ?? 0);
+            });
+
+            $sessionCount = $sessions->count();
+
+            // Store the average rate for display purposes (total / sessions).
+            $averageRate = $sessionCount > 0 ? round($totalAmount / $sessionCount, 2) : 0;
+
+            Payroll::updateOrCreate(
+                [
+                    'coach_id' => $coach->id,
+                    'month_year' => $monthInput,
+                ],
+                [
+                    'total_sessions' => $sessionCount,
+                    'base_rate' => $averageRate,
+                    'total_amount' => $totalAmount,
+                    'status' => 'Draft',
+                    'generated_at' => now(),
+                ]
+            );
+
+            $this->info("  - Generated payroll: {$sessionCount} sessions, RM {$totalAmount}");
         }
 
         $this->info('Payroll generation completed.');
