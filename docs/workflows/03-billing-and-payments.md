@@ -40,7 +40,7 @@ graph TD
 
 ### Step 1: Generating Draft Invoices
 
-Monthly draft invoices are generated automatically by the system at the start of each billing cycle, or manually via **Invoices → Generate Monthly Drafts**.
+Monthly draft invoices are generated automatically by the system on the 1st of each month at 00:00 via the Laravel scheduler (`invoices:generate-monthly` command). No manual action is required.
 - Draft invoices calculate:  
   `Total = Base Tuition Fee + Tax - Recurring Student Discount`
 

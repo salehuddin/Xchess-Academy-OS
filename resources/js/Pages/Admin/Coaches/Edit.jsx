@@ -148,6 +148,15 @@ export default function Edit({ auth, coach }) {
                                         </SelectItem>
                                     ))}
                                 </Select>
+                                <Input
+                                    type="number"
+                                    label="Hourly Rate (RM)"
+                                    placeholder="e.g. 60.00"
+                                    value={data.hourly_rate}
+                                    onChange={(e) => setData('hourly_rate', e.target.value)}
+                                    errorMessage={errors.hourly_rate}
+                                    isInvalid={!!errors.hourly_rate}
+                                />
                             </div>
                         </CardBody>
                     </Card>

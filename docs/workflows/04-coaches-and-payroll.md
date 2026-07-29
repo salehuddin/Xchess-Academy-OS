@@ -10,7 +10,7 @@ This guide explains how to add coaches, manage dual-role staff members who teach
 graph TD
     A[Coaches Conduct Classes & Attendance Saved] --> B[Generate Monthly Payroll]
     B --> C[System Scans Delivered Sessions]
-    C --> D[Pay Calculated: Sessions Delivered x Coach Hourly Rate]
+    C --> D[Pay Calculated: Sessions x Package Coach Rate per Session]
     D --> E[Payroll Generated in Pending Status]
     E --> F[Management Reviews Session Breakdown]
     F --> G[Click Approve Payroll]
@@ -50,7 +50,7 @@ Some administrators or operations staff members also teach classes. The system n
 3. Select the billing **Month & Year** (e.g. `July 2026`).
 4. Click **"Run Payroll Calculation"**.
 5. The system scans all delivered sessions for every coach (including dual-role coaches) and calculates:  
-   `Total Pay = Delivered Sessions × Coach Hourly Rate`
+   `Total Pay = Delivered Sessions × Package Coach Rate per Session`
 
 ---
 
@@ -63,4 +63,4 @@ Some administrators or operations staff members also teach classes. The system n
 5. Click **"Mark as Paid"**. Status updates to `Paid` with timestamp and reference ID.
 
 > [!IMPORTANT]
-> Coach payroll is calculated strictly on **actual delivered sessions**, ensuring payroll is 100% decoupled from student discounts or invoice adjustments!
+> Coach payroll is calculated strictly on **actual delivered sessions** using the **Package's coach rate per session**, ensuring payroll is 100% decoupled from student discounts or invoice adjustments!

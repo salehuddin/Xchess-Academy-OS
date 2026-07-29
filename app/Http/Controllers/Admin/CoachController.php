@@ -57,7 +57,7 @@ class CoachController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8', // Or optional/generated
+            'password' => 'required|string|min:8',
             'nric' => 'nullable|string|max:20',
             'phone' => 'nullable|string|max:20',
             'bank_name' => 'nullable|string|max:255',
@@ -73,8 +73,7 @@ class CoachController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'role' => UserRole::Coach, // Default role
-                'hourly_rate' => $validated['hourly_rate'] ?? 0, // Fallback for user table
+                'role' => UserRole::Coach,
             ]);
 
             CoachProfile::create([
@@ -191,7 +190,6 @@ class CoachController extends Controller
             $coach->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'hourly_rate' => $validated['hourly_rate'] ?? 0,
             ]);
 
             $coach->coachProfile()->updateOrCreate(
