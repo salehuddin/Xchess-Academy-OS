@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 import {
     Card,
@@ -57,7 +57,7 @@ export default function Services({ auth, settings }) {
     const handleTestSmtp = () => {
         if (!testRecipient) return;
         setTestingSmtp(true);
-        post(route('admin.settings.test-smtp'), { recipient: testRecipient }, {
+        router.post(route('admin.settings.test-smtp'), { recipient: testRecipient }, {
             preserveScroll: true,
             onSuccess: () => setTestingSmtp(false),
             onError: () => setTestingSmtp(false),
@@ -67,7 +67,7 @@ export default function Services({ auth, settings }) {
 
     const handleTestChip = () => {
         setTestingChip(true);
-        post(route('admin.settings.test-chip'), {}, {
+        router.post(route('admin.settings.test-chip'), {}, {
             preserveScroll: true,
             onSuccess: () => setTestingChip(false),
             onError: () => setTestingChip(false),
@@ -78,7 +78,7 @@ export default function Services({ auth, settings }) {
     const handleTestWhatsApp = () => {
         if (!testPhone) return;
         setTestingWhatsApp(true);
-        post(route('admin.settings.test-whatsapp'), { phone: testPhone }, {
+        router.post(route('admin.settings.test-whatsapp'), { phone: testPhone }, {
             preserveScroll: true,
             onSuccess: () => setTestingWhatsApp(false),
             onError: () => setTestingWhatsApp(false),
