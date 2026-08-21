@@ -17,7 +17,8 @@ import {
     SelectItem,
     Textarea
 } from "@heroui/react";
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import StudentDetailsModal from '../Students/StudentDetailsModal';
 
 // Icons
 const CalendarIcon = (props) => (
@@ -51,6 +52,15 @@ export default function Show({ auth, schedule, students, coaches }) {
         })),
     });
 
+    // Student Details Modal State
+    const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+
+    const handleStudentClick = (student) => {
+        setSelectedStudent(student);
+        setIsStudentModalOpen(true);
+    };
+
     const handleToggle = (studentId) => {
         const index = data.attendances.findIndex(a => a.student_id === studentId);
         if (index !== -1) {
@@ -71,13 +81,18 @@ export default function Show({ auth, schedule, students, coaches }) {
         switch (columnKey) {
             case "student":
                 return (
-                    <User
-                        avatarProps={{radius: "lg", src: `https://ui-avatars.com/api/?name=${student.name}&background=random`}}
-                        description={student.student_uid}
-                        name={student.name}
+                    <div
+                        className="cursor-pointer hover:opacity-80 transition-opacity min-w-[200px]"
+                        onClick={() => handleStudentClick(student)}
                     >
-                        {student.email}
-                    </User>
+                        <User
+                            avatarProps={{radius: "lg", src: `https://ui-avatars.com/api/?name=${student.name}&background=random`}}
+                            description={student.student_uid}
+                            name={student.name}
+                        >
+                            {student.email}
+                        </User>
+                    </div>
                 );
             case "status":
                 return (
@@ -97,7 +112,7 @@ export default function Show({ auth, schedule, students, coaches }) {
             default:
                 return null;
         }
-    }, [data.attendances]);
+    }, [data.attendances, handleStudentClick]);
 
     return (
         <AuthenticatedLayout
@@ -236,7 +251,13 @@ export default function Show({ auth, schedule, students, coaches }) {
                         </div>
                     </CardBody>
                 </Card>
-            </form>
+             </form>
+
+            <StudentDetailsModal
+                isOpen={isStudentModalOpen}
+                onClose={() => setIsStudentModalOpen(false)}
+                student={selectedStudent}
+            />
         </AuthenticatedLayout>
     );
 }

@@ -197,7 +197,9 @@ export default function Create({ parents, preselectedParentId }) {
                                         <AutocompleteItem key={String(item.id)} textValue={item.name}>
                                             <div className="flex flex-col">
                                                 <span className="text-small">{item.name}</span>
-                                                <span className="text-tiny text-default-400">{item.email}</span>
+                                                <span className="text-tiny text-default-400">
+                                                    {item.email}{item.phone ? ` · ${item.phone}` : ''}
+                                                </span>
                                             </div>
                                         </AutocompleteItem>
                                     )}

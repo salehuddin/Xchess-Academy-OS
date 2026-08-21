@@ -274,7 +274,7 @@ class ClassController extends Controller
                 ]),
             'availableStudents' => Student::whereDoesntHave('classes', function ($q) use ($class) {
                 $q->where('class_id', $class->id);
-            })->orderBy('name')->get(['id', 'name', 'student_uid']),
+            })->orderBy('name')->get(['id', 'name', 'student_uid', 'nric_passport']),
         ]);
     }
 }

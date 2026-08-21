@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link, usePage } from '@inertiajs/react';
+import { useState, useMemo } from 'react';
 import {
     Card,
     CardBody,
@@ -7,7 +8,9 @@ import {
     Input,
     Select,
     SelectItem,
-    Textarea
+    Textarea,
+    Autocomplete,
+    AutocompleteItem
 } from "@heroui/react";
 
 export default function Edit({ student, parents }) {
@@ -23,6 +26,17 @@ export default function Edit({ student, parents }) {
         status: student.status,
         parent_id: student.parent_id,
     });
+
+    const [parentQuery, setParentQuery] = useState('');
+    const filteredParents = useMemo(() => {
+        if (!parentQuery) return parents;
+        const q = parentQuery.toLowerCase();
+        return parents.filter((parent) =>
+            parent.name?.toLowerCase().includes(q) ||
+            parent.email?.toLowerCase().includes(q) ||
+            parent.phone?.toLowerCase().includes(q)
+        );
+    }, [parents, parentQuery]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -136,23 +150,28 @@ export default function Edit({ student, parents }) {
                             <SelectItem key="Suspended" value="Suspended">Suspended</SelectItem>
                         </Select>
 
-                        <Select
+                        <Autocomplete
                             label="Parent / Guardian"
-                            selectedKeys={data.parent_id ? [String(data.parent_id)] : []}
-                            onChange={(e) => setData('parent_id', e.target.value)}
+                            placeholder="Search by name, email or phone"
+                            items={filteredParents}
+                            onInputChange={setParentQuery}
+                            selectedKey={data.parent_id ? String(data.parent_id) : null}
+                            onSelectionChange={(key) => setData('parent_id', key ?? '')}
                             errorMessage={errors.parent_id}
                             isInvalid={!!errors.parent_id}
                             isRequired
                         >
-                            {parents.map((parent) => (
-                                <SelectItem key={String(parent.id)} textValue={`${parent.name} (${parent.email})`}>
+                            {(parent) => (
+                                <AutocompleteItem key={String(parent.id)} textValue={parent.name}>
                                     <div className="flex flex-col">
                                         <span className="text-small">{parent.name}</span>
-                                        <span className="text-tiny text-default-400">{parent.email}</span>
+                                        <span className="text-tiny text-default-400">
+                                            {parent.email}{parent.phone ? ` · ${parent.phone}` : ''}
+                                        </span>
                                     </div>
-                                </SelectItem>
-                            ))}
-                        </Select>
+                                </AutocompleteItem>
+                            )}
+                        </Autocomplete>
 
                         <div className="flex items-center justify-end gap-4 mt-4">
                             <Button

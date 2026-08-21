@@ -69,7 +69,6 @@ const EyeIcon = (props) => (
 );
 
 const columns = [
-    {name: "UID", uid: "uid", sortable: true},
     {name: "CLASS NAME", uid: "name", sortable: true},
     {name: "PACKAGE", uid: "package", sortable: false},
     {name: "COACH", uid: "coach", sortable: false},
@@ -289,16 +288,16 @@ export default function Index({ auth, classes, coaches, packages, rooms, filters
     const renderCell = useCallback((chessClass, columnKey) => {
         const cellValue = chessClass[columnKey];
         switch (columnKey) {
-            case "uid":
-                return (
-                     <div className="flex flex-col">
-                        <p className="text-bold text-sm">{chessClass.uid || '#' + chessClass.id}</p>
-                    </div>
-                );
             case "name":
                 return (
-                     <div className="flex flex-col">
-                        <p className="text-bold text-sm capitalize">{chessClass.name}</p>
+                    <div className="flex flex-col min-w-[160px]">
+                        <Link
+                            href={route('admin.classes.show', chessClass.id)}
+                            className="text-bold text-sm capitalize text-foreground hover:text-primary hover:underline transition-colors"
+                        >
+                            {chessClass.name || chessClass.package?.title || `Class #${chessClass.uid || chessClass.id}`}
+                        </Link>
+                        <p className="text-tiny text-default-400">{chessClass.uid || '#' + chessClass.id}</p>
                     </div>
                 );
             case "package":

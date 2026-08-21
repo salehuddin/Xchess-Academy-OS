@@ -126,4 +126,77 @@ class StudentManagementTest extends TestCase
                 ->has('availableClasses')
             );
     }
+
+    public function test_can_search_students_by_specific_field()
+    {
+        $parentA = StudentParent::factory()->create(['phone' => '0111111111']);
+        $parentB = StudentParent::factory()->create(['phone' => '0222222222']);
+
+        Student::factory()->create([
+            'name' => 'Alice Chess',
+            'student_uid' => 'STU-AAAA11',
+            'nric_passport' => '111111111111',
+            'parent_id' => $parentA->id,
+        ]);
+        Student::factory()->create([
+            'name' => 'Bob Chess',
+            'student_uid' => 'STU-BBBB22',
+            'nric_passport' => '222222222222',
+            'parent_id' => $parentB->id,
+        ]);
+
+        // By name
+        $this->actingAs($this->admin)->get(route('admin.students.index', ['search' => 'Alice', 'search_field' => 'name']))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.name', 'Alice Chess')
+            );
+
+        // By student ID
+        $this->actingAs($this->admin)->get(route('admin.students.index', ['search' => 'AAAA11', 'search_field' => 'student_id']))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.name', 'Alice Chess')
+            );
+
+        // By MyKad / Passport
+        $this->actingAs($this->admin)->get(route('admin.students.index', ['search' => '222222222222', 'search_field' => 'nric_passport']))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.name', 'Bob Chess')
+            );
+
+        // By parent phone
+        $this->actingAs($this->admin)->get(route('admin.students.index', ['search' => '0222222222', 'search_field' => 'parent_phone']))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.name', 'Bob Chess')
+            );
+
+        // Default (no field selector) still searches all fields including parent phone
+        $this->actingAs($this->admin)->get(route('admin.students.index', ['search' => '0111111111']))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.name', 'Alice Chess')
+            );
+    }
+
+    public function test_edit_page_includes_parent_phone()
+    {
+        $parent = StudentParent::factory()->create(['phone' => '0123456789']);
+        $student = Student::factory()->create(['parent_id' => $parent->id]);
+
+        $this->actingAs($this->admin)->get(route('admin.students.edit', $student))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('Admin/Students/Edit')
+                ->has('parents', 1)
+                ->where('parents.0.phone', '0123456789')
+            );
+    }
 }

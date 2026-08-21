@@ -184,6 +184,7 @@ class DatabaseSeeder extends Seeder
             $class = ChessClass::query()->updateOrCreate(
                 ['uid' => 'CLS-XCHESS0'.($i + 1)],
                 [
+                    'name' => $packages[$i]->title,
                     'coach_id' => $coaches[$i]->id,
                     'package_id' => $packages[$i]->id,
                     'room_id' => $rooms[$i]->id,

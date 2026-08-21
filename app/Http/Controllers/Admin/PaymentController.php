@@ -15,8 +15,8 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        $payments = Payment::with('invoice.student.user')->latest()->get();
-        $invoices = Invoice::with('student.user')->where('status', '!=', 'Paid')->get();
+        $payments = Payment::with('invoice.student')->latest()->get();
+        $invoices = Invoice::with('student')->where('status', '!=', 'Paid')->get();
 
         return Inertia::render('Admin/Payments/Index', [
             'payments' => $payments,

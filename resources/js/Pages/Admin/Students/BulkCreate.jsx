@@ -287,14 +287,16 @@ export default function BulkCreate({ parents }) {
                                                                 isRequired
                                                                 size="sm"
                                                             >
-                                                                {(item) => (
-                                                                    <AutocompleteItem key={String(item.id)} textValue={item.name}>
-                                                                        <div className="flex flex-col">
-                                                                            <span className="text-small">{item.name}</span>
-                                                                            <span className="text-tiny text-default-400">{item.email}</span>
-                                                                        </div>
-                                                                    </AutocompleteItem>
-                                                                )}
+                                                {(item) => (
+                                                    <AutocompleteItem key={String(item.id)} textValue={item.name}>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-small">{item.name}</span>
+                                                            <span className="text-tiny text-default-400">
+                                                                {item.email}{item.phone ? ` · ${item.phone}` : ''}
+                                                            </span>
+                                                        </div>
+                                                    </AutocompleteItem>
+                                                )}
                                                             </Autocomplete>
                                                         ) : (
                                                             <div className="space-y-2 p-2 bg-default-100 rounded-md">

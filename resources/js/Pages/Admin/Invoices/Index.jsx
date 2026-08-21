@@ -18,6 +18,7 @@ import {
     SelectItem,
 } from "@heroui/react";
 import { useCallback, useState } from "react";
+import StudentDetailsModal from "../Students/StudentDetailsModal";
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 const EyeIcon = (props) => (
@@ -96,6 +97,15 @@ export default function Index({ auth, invoices, summary, availableMonths, filter
     const [selectedMonth, setSelectedMonth] = useState(new Set(filters?.month ? [filters.month] : []));
     const [selectedStatus, setSelectedStatus] = useState(new Set(filters?.status ? [filters.status] : []));
 
+    // Student Details Modal State
+    const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+
+    const handleStudentClick = (student) => {
+        setSelectedStudent(student);
+        setIsStudentModalOpen(true);
+    };
+
     const pushFilters = (overrides = {}) => {
         const params = {
             search: search || undefined,
@@ -142,7 +152,11 @@ export default function Index({ auth, invoices, summary, availableMonths, filter
                 );
             case 'student':
                 return (
-                    <div>
+                    <div
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleStudentClick(invoice.student)}
+                        title="View student details"
+                    >
                         <p className="font-semibold text-sm">{invoice.student?.name}</p>
                         <p className="text-xs text-default-400">{invoice.student?.student_uid ?? ''}</p>
                     </div>
@@ -181,7 +195,7 @@ export default function Index({ auth, invoices, summary, availableMonths, filter
             default:
                 return invoice[columnKey];
         }
-    }, []);
+    }, [handleStudentClick]);
 
     return (
         <AuthenticatedLayout
@@ -356,6 +370,12 @@ export default function Index({ auth, invoices, summary, availableMonths, filter
                     )}
                 </CardBody>
             </Card>
+
+            <StudentDetailsModal
+                isOpen={isStudentModalOpen}
+                onClose={() => setIsStudentModalOpen(false)}
+                student={selectedStudent}
+            />
         </AuthenticatedLayout>
     );
 }

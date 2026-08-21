@@ -114,7 +114,7 @@ export default function StudentDetailsModal({ isOpen, onClose, student: initialS
                                                     <div>
                                                         <div className="flex justify-between items-center">
                                                             <h4 className="text-small font-bold text-default-500 uppercase">Parent / Guardian</h4>
-                                                            {student.parent_id && (
+                                                            {student.parent_id && onViewParent && (
                                                                 <Button
                                                                     size="sm"
                                                                     variant="light"

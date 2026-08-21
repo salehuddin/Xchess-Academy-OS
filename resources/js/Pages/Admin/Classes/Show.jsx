@@ -5,8 +5,6 @@ import {
     CardHeader,
     CardBody,
     Button,
-    Select,
-    SelectItem,
     Autocomplete,
     AutocompleteItem,
     Table,
@@ -28,6 +26,8 @@ import {
 } from "@heroui/react";
 import { useCallback, useState, useMemo } from 'react';
 import AttendanceModal from '../Attendance/AttendanceModal';
+import StudentDetailsModal from '../Students/StudentDetailsModal';
+import ParentDetailsModal from '../Students/ParentDetailsModal';
 
 // Icons
 const DeleteIcon = (props) => (
@@ -70,6 +70,37 @@ export default function Show({ chessClass, availableStudents, allClasses, attend
     const [selectedSession, setSelectedSession] = useState(null);
     const [showPastSchedules, setShowPastSchedules] = useState(false);
     const [sortOrder, setSortOrder] = useState('asc'); // 'asc' or 'desc'
+    const [studentQuery, setStudentQuery] = useState('');
+
+    // Student Details Modal State
+    const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+
+    // Parent Details Modal State
+    const [isParentModalOpen, setIsParentModalOpen] = useState(false);
+    const [selectedParentId, setSelectedParentId] = useState(null);
+
+    const handleStudentClick = (student) => {
+        setSelectedStudent(student);
+        setIsStudentModalOpen(true);
+    };
+
+    const handleParentClick = (parentId) => {
+        if (!parentId) return;
+        setIsStudentModalOpen(false);
+        setSelectedParentId(parentId);
+        setIsParentModalOpen(true);
+    };
+
+    const filteredAvailableStudents = useMemo(() => {
+        if (!studentQuery) return availableStudents;
+        const q = studentQuery.toLowerCase();
+        return availableStudents.filter((student) =>
+            student.name?.toLowerCase().includes(q) ||
+            student.student_uid?.toLowerCase().includes(q) ||
+            student.nric_passport?.toLowerCase().includes(q)
+        );
+    }, [availableStudents, studentQuery]);
 
     const handleAttendanceClick = (date) => {
         setSelectedSession({ id: chessClass.id, date });
@@ -119,7 +150,10 @@ export default function Show({ chessClass, availableStudents, allClasses, attend
     const submitEnroll = (e) => {
         e.preventDefault();
         post(route('admin.classes.enroll', chessClass.id), {
-            onSuccess: () => reset('student_id'),
+            onSuccess: () => {
+                reset('student_id');
+                setStudentQuery('');
+            },
         });
     };
 
@@ -128,13 +162,18 @@ export default function Show({ chessClass, availableStudents, allClasses, attend
         switch (columnKey) {
             case "name":
                 return (
-                    <HeroUser
-                        avatarProps={{radius: "lg", src: student.avatar_url || `https://ui-avatars.com/api/?name=${student.name}&background=random`}}
-                        description={student.student_uid}
-                        name={cellValue}
+                    <div
+                        className="cursor-pointer hover:opacity-80 transition-opacity min-w-[200px]"
+                        onClick={() => handleStudentClick(student)}
                     >
-                        {student.email}
-                    </HeroUser>
+                        <HeroUser
+                            avatarProps={{radius: "lg", src: student.avatar_url || `https://ui-avatars.com/api/?name=${student.name}&background=random`}}
+                            description={student.student_uid}
+                            name={cellValue}
+                        >
+                            {student.email}
+                        </HeroUser>
+                    </div>
                 );
             case "actions":
                 return (
@@ -154,7 +193,7 @@ export default function Show({ chessClass, availableStudents, allClasses, attend
             default:
                 return cellValue;
         }
-    }, [chessClass.id]);
+    }, [chessClass.id, handleStudentClick]);
 
     const scheduleItems = useMemo(() => {
         // Current date info for filtering
@@ -288,7 +327,7 @@ export default function Show({ chessClass, availableStudents, allClasses, attend
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold leading-tight text-gray-800">
-                            {chessClass.name} <span className="text-default-400 text-lg font-normal">#{chessClass.uid}</span>
+                            {chessClass.name || chessClass.package?.title || `Class #${chessClass.uid || chessClass.id}`} <span className="text-default-400 text-lg font-normal">#{chessClass.uid}</span>
                         </h2>
                         <p className="text-sm text-gray-500">Manage class students and schedules</p>
                     </div>
@@ -418,26 +457,31 @@ export default function Show({ chessClass, availableStudents, allClasses, attend
                     </CardHeader>
                     <CardBody>
                         <form onSubmit={submitEnroll} className="mb-6 flex flex-col md:flex-row gap-4 items-end">
-                            <Select
+                            <Autocomplete
                                 label="Enroll Student"
-                                placeholder="Select a student"
-                                selectedKeys={data.student_id ? [String(data.student_id)] : []}
-                                onChange={(e) => setData('student_id', e.target.value)}
+                                placeholder="Search by name, ID or MyKad / Passport..."
+                                items={filteredAvailableStudents}
+                                inputValue={studentQuery}
+                                onInputChange={setStudentQuery}
+                                selectedKey={data.student_id ? String(data.student_id) : null}
+                                onSelectionChange={(key) => setData('student_id', key ?? '')}
                                 errorMessage={errors.student_id}
                                 isInvalid={!!errors.student_id}
                                 className="max-w-md"
                             >
-                                {availableStudents.map((student) => (
-                                    <SelectItem key={String(student.id)} textValue={`${student.name} (${student.student_uid})`}>
+                                {(student) => (
+                                    <AutocompleteItem key={String(student.id)} textValue={student.name}>
                                         <div className="flex gap-2 items-center">
                                             <div className="flex flex-col">
                                                 <span className="text-small">{student.name}</span>
-                                                <span className="text-tiny text-default-400">{student.student_uid}</span>
+                                                <span className="text-tiny text-default-400">
+                                                    {student.student_uid}{student.nric_passport ? ` · ${student.nric_passport}` : ''}
+                                                </span>
                                             </div>
                                         </div>
-                                    </SelectItem>
-                                ))}
-                            </Select>
+                                    </AutocompleteItem>
+                                )}
+                            </Autocomplete>
                             <Button
                                 type="submit"
                                 color="primary"
@@ -551,6 +595,25 @@ export default function Show({ chessClass, availableStudents, allClasses, attend
                     session={selectedSession}
                 />
             )}
+
+            <StudentDetailsModal
+                isOpen={isStudentModalOpen}
+                onClose={() => setIsStudentModalOpen(false)}
+                student={selectedStudent}
+                onViewParent={() => handleParentClick(selectedStudent?.parent_id)}
+            />
+
+            <ParentDetailsModal
+                isOpen={isParentModalOpen}
+                onClose={() => setIsParentModalOpen(false)}
+                parentId={selectedParentId}
+                onStudentClick={(student) => {
+                    setIsParentModalOpen(false);
+                    setTimeout(() => {
+                        handleStudentClick(student);
+                    }, 100);
+                }}
+            />
         </AuthenticatedLayout>
     );
 }

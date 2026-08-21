@@ -18,6 +18,7 @@ import {
 import { useEffect, useState } from "react";
 import { useForm, router, usePage } from "@inertiajs/react";
 import axios from "axios";
+import StudentDetailsModal from "../Students/StudentDetailsModal";
 
 export default function AttendanceModal({ isOpen, onClose, session }) {
     const { auth } = usePage().props;
@@ -27,6 +28,15 @@ export default function AttendanceModal({ isOpen, onClose, session }) {
     const [students, setStudents] = useState([]);
     const [coaches, setCoaches] = useState([]);
     const [scheduleDetails, setScheduleDetails] = useState(null);
+
+    // Student Details Modal State (admin only — coach role has no access to student details endpoint)
+    const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+
+    const handleStudentClick = (student) => {
+        setSelectedStudent(student);
+        setIsStudentModalOpen(true);
+    };
 
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         attendances: [],
@@ -144,6 +154,7 @@ export default function AttendanceModal({ isOpen, onClose, session }) {
     if (!isOpen) return null;
 
     return (
+        <>
         <Modal
             isOpen={isOpen}
             onClose={onClose}
@@ -219,22 +230,27 @@ export default function AttendanceModal({ isOpen, onClose, session }) {
 
                                                 return (
                                                     <div key={student.id} className="p-3 flex justify-between items-center hover:bg-default-50 transition-colors">
-                                                        <User
-                                                            name={
-                                                                <div className="flex items-center gap-2">
-                                                                    <span>{student.name}</span>
-                                                                    {student.status !== 'Active' && (
-                                                                        <Chip size="sm" variant="flat" color="danger" className="h-4 text-[10px] px-1">
-                                                                            {student.status}
-                                                                        </Chip>
-                                                                    )}
-                                                                </div>
-                                                            }
-                                                            description={student.student_uid}
-                                                            avatarProps={{
-                                                                src: `https://ui-avatars.com/api/?name=${student.name}&background=random`
-                                                            }}
-                                                        />
+                                                        <div
+                                                            className={isCoach ? "" : "cursor-pointer hover:opacity-80 transition-opacity"}
+                                                            onClick={() => !isCoach && handleStudentClick(student)}
+                                                        >
+                                                            <User
+                                                                name={
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span>{student.name}</span>
+                                                                        {student.status !== 'Active' && (
+                                                                            <Chip size="sm" variant="flat" color="danger" className="h-4 text-[10px] px-1">
+                                                                                {student.status}
+                                                                            </Chip>
+                                                                        )}
+                                                                    </div>
+                                                                }
+                                                                description={student.student_uid}
+                                                                avatarProps={{
+                                                                    src: `https://ui-avatars.com/api/?name=${student.name}&background=random`
+                                                                }}
+                                                            />
+                                                        </div>
                                                         <Checkbox
                                                             isSelected={isPresent}
                                                             onValueChange={(val) => handleAttendanceChange(student.id, val)}
@@ -286,5 +302,13 @@ export default function AttendanceModal({ isOpen, onClose, session }) {
                 )}
             </ModalContent>
         </Modal>
+        {!isCoach && (
+            <StudentDetailsModal
+                isOpen={isStudentModalOpen}
+                onClose={() => setIsStudentModalOpen(false)}
+                student={selectedStudent}
+            />
+        )}
+        </>
     );
 }

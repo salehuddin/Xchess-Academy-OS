@@ -18,18 +18,32 @@ class StudentController extends Controller
     {
         $query = Student::with('parent');
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('student_uid', 'like', "%{$search}%")
-                    ->orWhere('nric_passport', 'like', "%{$search}%")
-                    ->orWhereHas('parent', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%")
-                            ->orWhere('phone', 'like', "%{$search}%");
-                    });
-            });
+            $searchField = $request->input('search_field', 'all');
+
+            if ($searchField === 'name') {
+                $query->where('name', 'like', "%{$search}%");
+            } elseif ($searchField === 'student_id') {
+                $query->where('student_uid', 'like', "%{$search}%");
+            } elseif ($searchField === 'nric_passport') {
+                $query->where('nric_passport', 'like', "%{$search}%");
+            } elseif ($searchField === 'parent_phone') {
+                $query->whereHas('parent', function ($q) use ($search) {
+                    $q->where('phone', 'like', "%{$search}%");
+                });
+            } else {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('student_uid', 'like', "%{$search}%")
+                        ->orWhere('nric_passport', 'like', "%{$search}%")
+                        ->orWhereHas('parent', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
+                        });
+                });
+            }
         }
 
         if ($request->has('status') && $request->status !== 'all') {
@@ -84,7 +98,7 @@ class StudentController extends Controller
     public function create(Request $request): Response
     {
         return Inertia::render('Admin/Students/Create', [
-            'parents' => StudentParent::select('id', 'name', 'email')->orderBy('name')->get(),
+            'parents' => StudentParent::select('id', 'name', 'email', 'phone')->orderBy('name')->get(),
             'preselectedParentId' => $request->input('parent_id'),
         ]);
     }
@@ -92,7 +106,7 @@ class StudentController extends Controller
     public function bulkCreate(): Response
     {
         return Inertia::render('Admin/Students/BulkCreate', [
-            'parents' => StudentParent::select('id', 'name', 'email')->orderBy('name')->get(),
+            'parents' => StudentParent::select('id', 'name', 'email', 'phone')->orderBy('name')->get(),
         ]);
     }
 
@@ -214,7 +228,7 @@ class StudentController extends Controller
     {
         return Inertia::render('Admin/Students/Edit', [
             'student' => $student->load('parent'),
-            'parents' => StudentParent::select('id', 'name', 'email')->orderBy('name')->get(),
+            'parents' => StudentParent::select('id', 'name', 'email', 'phone')->orderBy('name')->get(),
         ]);
     }
 

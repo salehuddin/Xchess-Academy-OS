@@ -23,6 +23,7 @@ import {
     Tooltip
 } from "@heroui/react";
 import { useState, useCallback } from 'react';
+import StudentDetailsModal from '../Students/StudentDetailsModal';
 
 // Icons
 const PlusIcon = (props) => (
@@ -126,6 +127,15 @@ export default function Index({ auth, payments = [], invoices = [] }) {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
+    // Student Details Modal State
+    const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+
+    const handleStudentClick = (student) => {
+        setSelectedStudent(student);
+        setIsStudentModalOpen(true);
+    };
+
     const pages = Math.ceil(payments.length / rowsPerPage) || 1;
 
     const items = useMemo(() => {
@@ -181,8 +191,12 @@ export default function Index({ auth, payments = [], invoices = [] }) {
                 );
             case "student":
                 return (
-                    <div className="flex flex-col">
-                        <p className="font-bold text-sm capitalize">{payment.invoice?.student?.user?.name}</p>
+                    <div
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleStudentClick(payment.invoice?.student)}
+                        title="View student details"
+                    >
+                        <p className="font-bold text-sm capitalize">{payment.invoice?.student?.name}</p>
                     </div>
                 );
             case "amount":
@@ -219,7 +233,7 @@ export default function Index({ auth, payments = [], invoices = [] }) {
             default:
                 return cellValue;
         }
-    }, []);
+    }, [handleStudentClick]);
 
     const topContent = (
         <div className="flex justify-between items-center pb-2">
@@ -322,8 +336,8 @@ export default function Index({ auth, payments = [], invoices = [] }) {
                                             required
                                         >
                                             {invoices.map((invoice) => (
-                                                <SelectItem key={String(invoice.id)} textValue={`#${invoice.invoice_number} - ${invoice.student.user.name} ($${invoice.amount})`}>
-                                                    #{invoice.invoice_number} - {invoice.student.user.name} (${invoice.amount})
+                                                <SelectItem key={String(invoice.id)} textValue={`#${invoice.invoice_number} - ${invoice.student?.name} ($${invoice.amount})`}>
+                                                    #{invoice.invoice_number} - {invoice.student?.name} (${invoice.amount})
                                                 </SelectItem>
                                             ))}
                                         </Select>
@@ -405,6 +419,12 @@ export default function Index({ auth, payments = [], invoices = [] }) {
                     )}
                 </ModalContent>
             </Modal>
+
+            <StudentDetailsModal
+                isOpen={isStudentModalOpen}
+                onClose={() => setIsStudentModalOpen(false)}
+                student={selectedStudent}
+            />
         </AuthenticatedLayout>
     );
 }

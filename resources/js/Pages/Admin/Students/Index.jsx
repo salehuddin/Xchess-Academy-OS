@@ -139,9 +139,26 @@ const statusOptions = [
     {name: "Inactive", uid: "Inactive"},
 ];
 
+const searchFieldOptions = [
+    {name: "All Fields", uid: "all"},
+    {name: "Name", uid: "name"},
+    {name: "Student ID", uid: "student_id"},
+    {name: "MyKad / Passport", uid: "nric_passport"},
+    {name: "Parent Phone", uid: "parent_phone"},
+];
+
+const searchPlaceholders = {
+    all: "Search students...",
+    name: "Search by name...",
+    student_id: "Search by student ID...",
+    nric_passport: "Search by MyKad / Passport...",
+    parent_phone: "Search by parent phone...",
+};
+
 export default function Index({ auth, students, filters, parents }) {
     // State
     const [filterValue, setFilterValue] = useState(filters.search || '');
+    const [searchField, setSearchField] = useState(filters.search_field || 'all');
     const [selectedKeys, setSelectedKeys] = useState(new Set([]));
     const [visibleColumns, setVisibleColumns] = useState(new Set(INITIAL_VISIBLE_COLUMNS));
     const [statusFilter, setStatusFilter] = useState(filters.status ? new Set(filters.status.split(',')) : "all");
@@ -164,6 +181,7 @@ export default function Index({ auth, students, filters, parents }) {
         setSelectedParentFilter(filters.parent_id ? Number(filters.parent_id) : null);
         setDateFrom(filters.date_from || '');
         setDateTo(filters.date_to || '');
+        setSearchField(filters.search_field || 'all');
     }, [filters]);
 
     // Modal State
@@ -240,6 +258,13 @@ export default function Index({ auth, students, filters, parents }) {
             router.get(route('admin.students.index'), { ...filters, search: '' }, { preserveState: true, replace: true });
         }
     }, [filters]);
+
+    const onSearchFieldChange = useCallback((keys) => {
+        const key = Array.from(keys)[0];
+        if (!key) return;
+        setSearchField(key);
+        router.get(route('admin.students.index'), { ...filters, search_field: key, search: filterValue }, { preserveState: true });
+    }, [filters, filterValue]);
 
     // Debounce search
     const onSearchSubmit = (e) => {
@@ -467,21 +492,35 @@ export default function Index({ auth, students, filters, parents }) {
         return (
             <div className="flex flex-col gap-4">
                 <div className="flex justify-between gap-3 items-end">
-                    <Input
-                        isClearable
-                        classNames={{
-                            base: "w-full sm:max-w-[44%]",
-                            inputWrapper: "border-1",
-                        }}
-                        placeholder="Search by name..."
-                        size="sm"
-                        startContent={<SearchIcon className="text-default-300" />}
-                        value={filterValue}
-                        onClear={onClear}
-                        onValueChange={onSearchChange}
-                        onKeyDown={onSearchSubmit}
-                        variant="bordered"
-                    />
+                    <div className="flex gap-2 w-full sm:max-w-[60%]">
+                        <Input
+                            isClearable
+                            classNames={{
+                                base: "w-full",
+                                inputWrapper: "border-1",
+                            }}
+                            placeholder={searchPlaceholders[searchField] || "Search students..."}
+                            size="sm"
+                            startContent={<SearchIcon className="text-default-300" />}
+                            value={filterValue}
+                            onClear={onClear}
+                            onValueChange={onSearchChange}
+                            onKeyDown={onSearchSubmit}
+                            variant="bordered"
+                        />
+                        <Select
+                            aria-label="Search By"
+                            variant="bordered"
+                            size="sm"
+                            selectedKeys={[searchField]}
+                            onSelectionChange={onSearchFieldChange}
+                            classNames={{ base: "w-[190px] flex-shrink-0" }}
+                        >
+                            {searchFieldOptions.map((field) => (
+                                <SelectItem key={field.uid}>{field.name}</SelectItem>
+                            ))}
+                        </Select>
+                    </div>
                     <div className="flex gap-3">
                         {selectedKeys.size > 0 || selectedKeys === "all" ? (
                             <Dropdown>
@@ -613,7 +652,7 @@ export default function Index({ auth, students, filters, parents }) {
                 </div>
             </div>
         );
-    }, [filterValue, statusFilter, visibleColumns, onSearchChange, onRowsPerPageChange, students.total, rowsPerPage, onClear, onStatusChange, onSearchSubmit, selectedKeys, filters, parents, onFilterOpen, onVisibleColumnsChange]);
+    }, [filterValue, searchField, statusFilter, visibleColumns, onSearchChange, onRowsPerPageChange, students.total, rowsPerPage, onClear, onStatusChange, onSearchSubmit, selectedKeys, filters, parents, onFilterOpen, onVisibleColumnsChange, onSearchFieldChange]);
 
     const bottomContent = useMemo(() => {
         return (
