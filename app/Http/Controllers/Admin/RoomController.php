@@ -64,7 +64,7 @@ class RoomController extends Controller
 
         $rules = [
             'name' => 'required|string|max:255|unique:rooms',
-            'capacity' => 'required|integer|min:1',
+            'capacity' => ['nullable', 'integer', 'min:1'],
             'mode' => ['required', Rule::in(['physical', 'online'])],
             'location' => ['nullable', 'string', 'max:255'],
             'platform' => ['nullable', Rule::in(['zoom', 'google_meet'])],
@@ -89,8 +89,8 @@ class RoomController extends Controller
 
         $validated = Validator::make($request->all(), $rules)->validate();
 
-        // Default capacity since field was removed
-        $validated['capacity'] = 20;
+        // Default capacity if not provided
+        $validated['capacity'] = $validated['capacity'] ?? 20;
 
         if ($validated['mode'] === 'online') {
             $validated['location'] = null;
@@ -132,7 +132,7 @@ class RoomController extends Controller
 
         $rules = [
             'name' => 'required|string|max:255|unique:rooms,name,'.$room->id,
-            'capacity' => 'required|integer|min:1',
+            'capacity' => ['nullable', 'integer', 'min:1'],
             'mode' => ['required', Rule::in(['physical', 'online'])],
             'location' => ['nullable', 'string', 'max:255'],
             'platform' => ['nullable', Rule::in(['zoom', 'google_meet'])],
@@ -157,6 +157,8 @@ class RoomController extends Controller
         }
 
         $validated = Validator::make($request->all(), $rules)->validate();
+
+        $validated['capacity'] = $validated['capacity'] ?? $room->capacity ?? 20;
 
         if ($validated['mode'] === 'online') {
             $validated['location'] = null;

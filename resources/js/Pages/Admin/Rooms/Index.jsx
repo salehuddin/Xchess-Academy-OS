@@ -133,7 +133,6 @@ export default function Index({ auth, rooms, filters }) {
     const [editingRoom, setEditingRoom] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
-        capacity: 0,
         mode: 'physical',
         location: '',
         platform: '',
@@ -217,7 +216,7 @@ export default function Index({ auth, rooms, filters }) {
     // Modal Handlers
     const handleOpenCreate = () => {
         setEditingRoom(null);
-        setFormData({ name: '', capacity: 0, mode: 'physical', location: '', platform: '', account_email: '' });
+        setFormData({ name: '', mode: 'physical', location: '', platform: '', account_email: '' });
         setErrors({});
         onOpen();
     };
@@ -226,7 +225,6 @@ export default function Index({ auth, rooms, filters }) {
         setEditingRoom(room);
         setFormData({
             name: room.name,
-            capacity: room.capacity ?? 0,
             mode: room.mode || 'physical',
             location: room.location || '',
             platform: room.platform || '',
@@ -237,7 +235,9 @@ export default function Index({ auth, rooms, filters }) {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+        }
         setIsSaving(true);
         setErrors({});
 
@@ -249,6 +249,9 @@ export default function Index({ auth, rooms, filters }) {
             onError: (err) => {
                 setIsSaving(false);
                 setErrors(err);
+            },
+            onFinish: () => {
+                setIsSaving(false);
             },
         };
 
@@ -472,11 +475,18 @@ export default function Index({ auth, rooms, filters }) {
             <Modal isOpen={isOpen} onClose={onClose}>
                 <ModalContent>
                     {(onClose) => (
-                        <form onSubmit={handleSubmit}>
+                        <>
                             <ModalHeader className="flex flex-col gap-1">
                                 {editingRoom ? 'Edit Room' : 'Add New Room'}
                             </ModalHeader>
                             <ModalBody>
+                                {Object.keys(errors).some(k => !['mode', 'name', 'location', 'platform', 'account_email'].includes(k)) && (
+                                    <div className="text-danger text-sm bg-danger-50 dark:bg-danger-900/20 p-2 rounded">
+                                        {Object.entries(errors)
+                                            .filter(([k]) => !['mode', 'name', 'location', 'platform', 'account_email'].includes(k))
+                                            .map(([k, msg]) => <div key={k}>{msg}</div>)}
+                                    </div>
+                                )}
                                 <RadioGroup
                                     label="Online / Physical"
                                     orientation="horizontal"
@@ -502,8 +512,7 @@ export default function Index({ auth, rooms, filters }) {
                                     label="Name"
                                     placeholder="Enter room name"
                                     value={formData.name}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
+                                    onValueChange={(value) => {
                                         setFormData((prev) => ({ ...prev, name: value }));
                                         setErrors((prev) => {
                                             if (!prev?.name) return prev;
@@ -518,28 +527,30 @@ export default function Index({ auth, rooms, filters }) {
                                 />
 
                                 {formData.mode === 'physical' ? (
-                                    <Select
-                                        label="Physical Location"
-                                        selectedKeys={formData.location ? [String(formData.location)] : []}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setFormData((prev) => ({ ...prev, location: value }));
-                                            setErrors((prev) => {
-                                                if (!prev?.location) return prev;
-                                                const next = { ...prev };
-                                                delete next.location;
-                                                return next;
-                                            });
-                                        }}
-                                        errorMessage={errors.location}
-                                        isInvalid={!!errors.location}
-                                        isRequired
-                                    >
-                                        <SelectItem key="Kota Bharu">Kota Bharu</SelectItem>
-                                        <SelectItem key="Melaka Tengah">Melaka Tengah</SelectItem>
-                                    </Select>
+                                    <div key="physical-room-fields" className="w-full">
+                                        <Select
+                                            label="Physical Location"
+                                            selectedKeys={formData.location ? [String(formData.location)] : []}
+                                            onSelectionChange={(keys) => {
+                                                const value = Array.from(keys)[0] || '';
+                                                setFormData((prev) => ({ ...prev, location: value }));
+                                                setErrors((prev) => {
+                                                    if (!prev?.location) return prev;
+                                                    const next = { ...prev };
+                                                    delete next.location;
+                                                    return next;
+                                                });
+                                            }}
+                                            errorMessage={errors.location}
+                                            isInvalid={!!errors.location}
+                                            isRequired
+                                        >
+                                            <SelectItem key="Kota Bharu">Kota Bharu</SelectItem>
+                                            <SelectItem key="Melaka Tengah">Melaka Tengah</SelectItem>
+                                        </Select>
+                                    </div>
                                 ) : (
-                                    <>
+                                    <div key="online-room-fields" className="flex flex-col gap-4">
                                         <RadioGroup
                                             label="Platform"
                                             orientation="horizontal"
@@ -563,9 +574,9 @@ export default function Index({ auth, rooms, filters }) {
                                         <Input
                                             type="email"
                                             label="Account Email"
+                                            placeholder="Enter account email"
                                             value={formData.account_email}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
+                                            onValueChange={(value) => {
                                                 setFormData((prev) => ({ ...prev, account_email: value }));
                                                 setErrors((prev) => {
                                                     if (!prev?.account_email) return prev;
@@ -578,18 +589,18 @@ export default function Index({ auth, rooms, filters }) {
                                             isInvalid={!!errors.account_email}
                                             isRequired
                                         />
-                                    </>
+                                    </div>
                                 )}
                             </ModalBody>
                             <ModalFooter>
                                 <Button color="danger" variant="light" onPress={onClose}>
                                     Close
                                 </Button>
-                                <Button color="primary" type="submit" isLoading={isSaving}>
+                                <Button color="primary" onPress={handleSubmit} isLoading={isSaving}>
                                     Save
                                 </Button>
                             </ModalFooter>
-                        </form>
+                        </>
                     )}
                 </ModalContent>
             </Modal>
