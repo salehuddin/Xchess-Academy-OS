@@ -15,6 +15,8 @@ import {
     TableBody,
     TableRow,
     TableCell,
+    Select,
+    SelectItem,
 } from "@heroui/react";
 
 // ── Icons ──────────────────────────────────────────────────────────────────
@@ -38,6 +40,14 @@ const SendIcon = (props) => (
     <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
         <line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
         <polygon points="22 2 15 22 11 13 2 9 22 2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+    </svg>
+);
+
+const TrashIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+        <line x1="10" y1="11" x2="10" y2="17" stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} />
+        <line x1="14" y1="11" x2="14" y2="17" stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} />
     </svg>
 );
 
@@ -93,12 +103,25 @@ function AmountRow({ label, value, isDeduction, isTotal, isMuted }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function Show({ invoice }) {
+export default function Show({ invoice, pendingAdjustments = [] }) {
     const { auth } = usePage().props;
 
+    const appliedAdjustments = invoice.adjustments ?? [];
+
     const { data, setData, put, processing, errors, wasSuccessful } = useForm({
-        manual_adjustment: invoice.manual_adjustment ?? 0,
         finance_remarks: invoice.finance_remarks ?? '',
+        adjustments: appliedAdjustments.map((adj) => ({
+            id: adj.id,
+            type: adj.type,
+            amount: Number(adj.amount),
+            reason: adj.reason ?? '',
+        })),
+    });
+
+    const carryForm = useForm({
+        type: 'credit',
+        amount: '',
+        reason: '',
     });
 
     const handleSubmit = (e) => {
@@ -112,13 +135,47 @@ export default function Show({ invoice }) {
         }
     };
 
+    const handleAddAdjustment = () => {
+        setData('adjustments', [
+            ...data.adjustments,
+            { id: null, type: 'credit', amount: '', reason: '' },
+        ]);
+    };
+
+    const handleUpdateAdjustment = (index, key, value) => {
+        const next = data.adjustments.map((adj, i) => (i === index ? { ...adj, [key]: value } : adj));
+        setData('adjustments', next);
+    };
+
+    const handleRemoveAdjustment = (index) => {
+        setData('adjustments', data.adjustments.filter((_, i) => i !== index));
+    };
+
+    const handleRecordCarryForward = (e) => {
+        e.preventDefault();
+        carryForm.post(route('admin.invoices.adjustments.store', invoice.id), {
+            onSuccess: () => carryForm.reset('amount', 'reason'),
+        });
+    };
+
+    const handleDeletePending = (id) => {
+        if (confirm('Remove this pending adjustment? It will not be applied to next month\'s invoice.')) {
+            router.delete(route('admin.invoices.adjustments.destroy', id));
+        }
+    };
+
     const isDraft = invoice.status === 'Draft';
+
+    const netAdjustment = data.adjustments.reduce(
+        (carry, adj) => carry + (Number(adj.amount) || 0) * (adj.type === 'charge' ? 1 : -1),
+        0
+    );
     const adjustedTotal = Math.max(
         0,
         Number(invoice.base_amount) +
         Number(invoice.tax_amount) -
-        Number(invoice.recurring_discount_val) -
-        Number(data.manual_adjustment)
+        Number(invoice.recurring_discount_val) +
+        netAdjustment
     );
 
     const enrolledClasses = invoice.student?.classes ?? [];
@@ -323,13 +380,16 @@ export default function Show({ invoice }) {
                                     isDeduction
                                 />
                             )}
-                            {Number(data.manual_adjustment) > 0 && (
-                                <AmountRow
-                                    label="Manual Adjustment"
-                                    value={formatRM(data.manual_adjustment)}
-                                    isDeduction
-                                />
-                            )}
+                            {data.adjustments
+                                .filter((adj) => Number(adj.amount) > 0)
+                                .map((adj, i) => (
+                                    <AmountRow
+                                        key={adj.id ?? `new-${i}`}
+                                        label={adj.type === 'charge' ? `Charge: ${adj.reason || 'Additional fee'}` : `Credit: ${adj.reason || 'Refund'}`}
+                                        value={formatRM(adj.amount)}
+                                        isDeduction={adj.type === 'credit'}
+                                    />
+                                ))}
                             <AmountRow
                                 label="Total"
                                 value={formatRM(isDraft ? adjustedTotal : invoice.total_amount)}
@@ -348,7 +408,7 @@ export default function Show({ invoice }) {
                     {isDraft && (
                         <Card shadow="none" className="border border-warning-200 bg-warning-50/30">
                             <CardHeader className="px-5 pt-5 pb-3">
-                                <p className="font-semibold text-default-700">Manual Adjustment</p>
+                                <p className="font-semibold text-default-700">Manual Adjustments</p>
                             </CardHeader>
                             <CardBody className="px-5 pt-0 pb-5">
                                 {wasSuccessful && (
@@ -357,27 +417,74 @@ export default function Show({ invoice }) {
                                     </div>
                                 )}
                                 <form onSubmit={handleSubmit} className="space-y-4">
-                                    <Input
-                                        id="manual-adjustment-input"
-                                        type="number"
-                                        label="Deduction Amount (RM)"
-                                        placeholder="0.00"
-                                        min="0"
-                                        step="0.01"
-                                        value={String(data.manual_adjustment)}
-                                        onValueChange={(val) => setData('manual_adjustment', val)}
-                                        description="Amount to deduct — e.g. for a missed session."
-                                        errorMessage={errors.manual_adjustment}
-                                        isInvalid={!!errors.manual_adjustment}
-                                        startContent={
-                                            <span className="text-default-400 text-sm pointer-events-none">RM</span>
-                                        }
-                                    />
+                                    <p className="text-sm text-default-500">
+                                        Add a <strong>Credit</strong> to reduce the total (e.g. refund, missed session) or a <strong>Charge</strong> to add an extra fee.
+                                    </p>
+
+                                    {data.adjustments.map((adj, index) => (
+                                        <div key={adj.id ?? `new-${index}`} className="p-3 border border-default-200 rounded-lg space-y-3 bg-content1">
+                                            <div className="flex items-end justify-between gap-2">
+                                                <div className="flex gap-2 flex-1">
+                                                    <Select
+                                                        aria-label="Adjustment type"
+                                                        size="sm"
+                                                        selectedKeys={[adj.type]}
+                                                        onSelectionChange={(keys) =>
+                                                            handleUpdateAdjustment(index, 'type', Array.from(keys)[0])
+                                                        }
+                                                        className="w-32"
+                                                    >
+                                                        <SelectItem key="credit" value="credit">Credit</SelectItem>
+                                                        <SelectItem key="charge" value="charge">Charge</SelectItem>
+                                                    </Select>
+                                                    <Input
+                                                        aria-label="Adjustment amount"
+                                                        type="number"
+                                                        size="sm"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value={String(adj.amount ?? '')}
+                                                        onValueChange={(val) => handleUpdateAdjustment(index, 'amount', val)}
+                                                        placeholder="0.00"
+                                                        startContent={<span className="text-default-400 text-sm pointer-events-none">RM</span>}
+                                                    />
+                                                </div>
+                                                <Button
+                                                    isIconOnly
+                                                    size="sm"
+                                                    variant="light"
+                                                    color="danger"
+                                                    aria-label="Remove adjustment"
+                                                    onPress={() => handleRemoveAdjustment(index)}
+                                                >
+                                                    <TrashIcon />
+                                                </Button>
+                                            </div>
+                                            <Input
+                                                aria-label="Adjustment reason"
+                                                size="sm"
+                                                value={adj.reason ?? ''}
+                                                onValueChange={(val) => handleUpdateAdjustment(index, 'reason', val)}
+                                                placeholder="Reason e.g. refund for cancelled class"
+                                            />
+                                        </div>
+                                    ))}
+
+                                    <Button
+                                        id="add-adjustment-btn"
+                                        type="button"
+                                        color="default"
+                                        variant="flat"
+                                        className="w-full"
+                                        onPress={handleAddAdjustment}
+                                    >
+                                        + Add Adjustment
+                                    </Button>
 
                                     <Textarea
                                         id="finance-remarks-input"
                                         label="Finance Remarks"
-                                        placeholder="e.g. Deduction for missed session on 5 Jan..."
+                                        placeholder="General notes for the invoice..."
                                         value={data.finance_remarks}
                                         onValueChange={(val) => setData('finance_remarks', val)}
                                         errorMessage={errors.finance_remarks}
@@ -399,6 +506,85 @@ export default function Show({ invoice }) {
                             </CardBody>
                         </Card>
                     )}
+
+                    {/* Record adjustment for next month (carry-forward) */}
+                    <Card shadow="none" className="border border-primary-200 bg-primary-50/20">
+                        <CardHeader className="px-5 pt-5 pb-3">
+                            <p className="font-semibold text-default-700">Record Adjustment for Next Month</p>
+                        </CardHeader>
+                        <CardBody className="px-5 pt-0 pb-5 space-y-4">
+                            <p className="text-sm text-default-500">
+                                Record a <strong>refund credit</strong> or <strong>additional charge</strong> here. It will be
+                                auto-applied to {invoice.student?.name}'s next month's invoice.
+                            </p>
+
+                            {pendingAdjustments.length > 0 && (
+                                <div className="p-3 bg-default-50 rounded-lg space-y-2">
+                                    <p className="text-xs text-default-400 font-medium uppercase tracking-wide">Pending (applies next month)</p>
+                                    {pendingAdjustments.map((adj) => (
+                                        <div key={adj.id} className="flex items-center justify-between gap-2">
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium">
+                                                    <span className={adj.type === 'credit' ? 'text-success-600' : 'text-danger-600'}>
+                                                        {adj.type === 'credit' ? '−' : '+'}RM{Number(adj.amount).toFixed(2)}
+                                                    </span>
+                                                    {adj.applied_from && <span className="text-default-400 text-xs"> · from INV-{adj.applied_from.id}</span>}
+                                                </p>
+                                                <p className="text-xs text-default-500">{adj.reason}</p>
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                variant="light"
+                                                color="danger"
+                                                onPress={() => handleDeletePending(adj.id)}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleRecordCarryForward} className="space-y-3">
+                                <div className="flex gap-2">
+                                    <Select
+                                        label="Type"
+                                        selectedKeys={[carryForm.data.type]}
+                                        onSelectionChange={(keys) => carryForm.setData('type', Array.from(keys)[0])}
+                                        className="w-36"
+                                    >
+                                        <SelectItem key="credit" value="credit">Credit (refund)</SelectItem>
+                                        <SelectItem key="charge" value="charge">Charge (extra)</SelectItem>
+                                    </Select>
+                                    <Input
+                                        label="Amount (RM)"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={carryForm.data.amount}
+                                        onValueChange={(val) => carryForm.setData('amount', val)}
+                                        errorMessage={carryForm.errors.amount}
+                                        isInvalid={!!carryForm.errors.amount}
+                                    />
+                                </div>
+                                <Input
+                                    label="Reason"
+                                    value={carryForm.data.reason}
+                                    onValueChange={(val) => carryForm.setData('reason', val)}
+                                    errorMessage={carryForm.errors.reason}
+                                    isInvalid={!!carryForm.errors.reason}
+                                />
+                                <Button
+                                    type="submit"
+                                    color="primary"
+                                    className="w-full font-semibold"
+                                    isLoading={carryForm.processing}
+                                >
+                                    Record for Next Month
+                                </Button>
+                            </form>
+                        </CardBody>
+                    </Card>
 
                     {/* Send Invoice Action */}
                     <Card shadow="none" className={`border ${isDraft ? 'border-success-200' : 'border-default-200'}`}>

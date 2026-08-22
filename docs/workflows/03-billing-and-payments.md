@@ -11,7 +11,7 @@ graph TD
     A[System Generates Monthly Invoices] --> B[Invoices Created in Draft Status]
     B --> C[Finance Review: Check Amounts & Discounts]
     C --> D{Need Adjustments?}
-    D -->|Yes| E[Enter Manual Deduction / Finance Remarks]
+    D -->|Yes| E[Add Itemized Credit / Charge Line Items]
     D -->|No| F[Click Send Invoice]
     E --> F
     F --> G[Status Changes to Pending]
@@ -42,7 +42,8 @@ graph TD
 
 Monthly draft invoices are generated automatically by the system on the 1st of each month at 00:00 via the Laravel scheduler (`invoices:generate-monthly` command). No manual action is required.
 - Draft invoices calculate:  
-  `Total = Base Tuition Fee + Tax - Recurring Student Discount`
+  `Total = Base Tuition Fee + Tax − Recurring Student Discount ± Carry-Forward Adjustments`  
+  (carry-forward adjustments are any recorded refund credits or additional charges, applied automatically)
 
 ---
 
@@ -50,10 +51,18 @@ Monthly draft invoices are generated automatically by the system on the 1st of e
 
 1. Open **Invoices** from the main sidebar.
 2. Click **View** on any invoice in `Draft` status.
-3. If an adjustment is needed (e.g. credit for cancelled class or sibling allowance):
-   - Enter amount in **Manual Adjustment**.
-   - Enter explanatory reason in **Finance Remarks**.
-   - Click **"Save Adjustment"**. The total amount updates in real-time.
+3. If an adjustment is needed, add **adjustment line items** (editable only while the invoice is in `Draft`):
+   - **Credit** — reduces the total (e.g. refund, cancelled class, sibling allowance).
+   - **Charge** — increases the total (e.g. additional fee, surcharge).
+   - Enter an **amount** and a **reason** for each line item.
+   - Click **"Save Adjustment"**. The total updates in real-time
+     (`Total = Base Tuition + Tax − Recurring Discount + Charges − Credits`, clamped ≥ 0).
+
+**Recording a refund or additional charge for next month's invoice**
+- Use the **"Record Adjustment for Next Month"** section on any invoice.
+- Enter a **Credit (refund)** or **Charge (additional fee)**, amount, and reason.
+- It is stored as *pending* and **auto-applied to that student's next month's auto-generated Draft invoice** on the 1st of the month (never double-counted).
+- Pending carry-forward adjustments appear on the Draft invoice as itemized lines, and can be removed before that invoice is sent.
 
 ---
 

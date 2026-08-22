@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Invoice;
+use App\Models\InvoiceAdjustment;
 use App\Models\Student;
 use Illuminate\Console\Command;
 
@@ -56,19 +57,36 @@ class GenerateMonthlyInvoices extends Command
             // Assuming 0 tax for now, or configurable
             $taxAmount = 0;
 
-            $totalAmount = $totalBeforeTax + $taxAmount;
+            // Carry-forward pending adjustments (refund credits reduce, additional fees raise)
+            $pendingAdjustments = InvoiceAdjustment::where('student_id', $student->id)
+                ->where('status', 'pending')
+                ->get();
+            $netPending = $pendingAdjustments->reduce(
+                fn (float $carry, InvoiceAdjustment $adj) => $carry + $adj->signedAmount(),
+                0.0
+            );
 
-            Invoice::create([
+            $totalAmount = max(0, $totalBeforeTax + $taxAmount + $netPending);
+
+            $invoice = Invoice::create([
                 'student_id' => $student->id,
                 'base_amount' => $baseAmount,
                 'tax_amount' => $taxAmount,
                 'recurring_discount_val' => $recurringDiscount,
-                'manual_adjustment' => 0,
-                'total_amount' => $totalAmount,
+                'manual_adjustment' => round($netPending, 2),
+                'total_amount' => round($totalAmount, 2),
                 'status' => 'Draft',
                 'month_year' => $monthYear,
                 'due_date' => now()->addDays(7), // Default due date logic
             ]);
+
+            // Mark carried-forward adjustments as applied so they are never reused.
+            foreach ($pendingAdjustments as $pendingAdjustment) {
+                $pendingAdjustment->update([
+                    'status' => 'applied',
+                    'invoice_id' => $invoice->id,
+                ]);
+            }
 
             $count++;
         }

@@ -157,7 +157,7 @@ class ParentPortalController extends Controller
             ->where('unique_access_token', $token)
             ->firstOrFail();
 
-        $invoice->load(['student.parent', 'student.classes.room', 'student.classes.coach', 'student.classes.package', 'payments']);
+        $invoice->load(['student.parent', 'student.classes.room', 'student.classes.coach', 'student.classes.package', 'payments', 'adjustments']);
 
         if ($invoice->student?->parent_id !== $parent->id) {
             abort(404);
@@ -183,7 +183,7 @@ class ParentPortalController extends Controller
             abort(404);
         }
 
-        $invoice->load(['student.parent', 'student.classes.package', 'payments']);
+        $invoice->load(['student.parent', 'student.classes.package', 'payments', 'adjustments']);
 
         $company = [
             'name' => Setting::get('company_name', 'X Chess Academy'),

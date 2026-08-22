@@ -34,4 +34,44 @@ class Invoice extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function adjustments(): HasMany
+    {
+        return $this->hasMany(InvoiceAdjustment::class);
+    }
+
+    /**
+     * Net signed adjustment for this invoice: +charges - credits.
+     */
+    public function netAdjustment(): float
+    {
+        return $this->adjustments()
+            ->where('status', 'applied')
+            ->get()
+            ->reduce(fn (float $carry, InvoiceAdjustment $adj) => $carry + $adj->signedAmount(), 0.0);
+    }
+
+    /**
+     * Recompute and persist the total amount from base + tax - recurring discount
+     * plus the net of applied adjustments (charges - credits), clamped at >= 0.
+     * Mirrors the net into manual_adjustment for backwards compatibility.
+     */
+    public function recomputeTotal(): static
+    {
+        $netAdjustment = $this->netAdjustment();
+        $total = max(
+            0,
+            (float) $this->base_amount
+            + (float) $this->tax_amount
+            - (float) $this->recurring_discount_val
+            + $netAdjustment
+        );
+
+        $this->update([
+            'manual_adjustment' => round($netAdjustment, 2),
+            'total_amount' => round($total, 2),
+        ]);
+
+        return $this;
+    }
 }

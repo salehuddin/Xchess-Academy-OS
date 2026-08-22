@@ -5,10 +5,13 @@ Dear {{ $invoice->student->parent->name }},
 
 An invoice has been generated for **{{ $invoice->student->name }}**.
 
-**Amount Due: ${{ $invoice->total_amount }}**
+**Amount Due: RM {{ number_format($invoice->total_amount, 2) }}
 
-@if($invoice->manual_adjustment > 0)
-*Includes a manual adjustment of -${{ $invoice->manual_adjustment }}*
+@if($invoice->adjustments->where('status', 'applied')->where('amount', '>', 0)->isNotEmpty())
+*Adjustments:*
+@foreach($invoice->adjustments->where('status', 'applied')->where('amount', '>', 0) as $adj)
+- {{ $adj->type === 'charge' ? '+' : '-' }}RM {{ number_format($adj->amount, 2) }} — {{ $adj->reason }}
+@endforeach
 @endif
 
 @php

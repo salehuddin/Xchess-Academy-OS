@@ -40,11 +40,16 @@ Reconciliation Bridge: This flag serves as a visual reminder for Finance during 
 
 Primary Actor: Finance
 
-Monthly Batch Generation (System): On a set date, the system generates Draft INVOICES for all active students for the upcoming month.
+Monthly Batch Generation (System): On a set date, the system generates Draft INVOICES for all active students for the upcoming month. Any pending carry-forward adjustments (refund credits or additional charges recorded against the student) are automatically folded into the new Draft's total and marked applied (never reused).
 
 Audit & Review: Finance reviews the Drafts. They check the previous month's ATTENDANCE for manual_discount_pending flags.
 
-Manual Adjustment: * Finance enters a manual_adjustment (negative value) for missed classes.
+Manual Adjustments: Finance adds itemized adjustment line items to the Draft invoice:
+- **Credit** — reduces the total (e.g. refund for a missed class, sibling allowance).
+- **Charge** — increases the total (e.g. additional fee, surcharge).
+Each line item has an amount and reason. The total is recomputed as `base + tax − recurring discount + charges − credits` (clamped ≥ 0). Adjustments are editable only while the invoice is in Draft.
+
+Carry-Forward Adjustments: If a refund or additional fee should reflect on next month's invoice, Finance records it via "Record Adjustment for Next Month". It is stored as pending and auto-applied to the student's next auto-generated Draft invoice on the 1st of the month.
 
 Finance adds finance_remarks (e.g., "Adjusted for absence on Dec 15").
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\InvoiceCreated;
 use App\Models\Invoice;
+use App\Models\InvoiceAdjustment;
 use App\Models\Setting;
 use App\Services\Notifications\NotificationEngine;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -70,31 +71,113 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load(['student.parent', 'student.classes.package', 'payments']);
+        $invoice->load(['student.parent', 'student.classes.package', 'payments', 'adjustments']);
+
+        $pendingAdjustments = InvoiceAdjustment::query()
+            ->with('appliedFrom')
+            ->where('student_id', $invoice->student_id)
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
 
         return Inertia::render('Admin/Invoices/Show', [
             'invoice' => $invoice,
+            'pendingAdjustments' => $pendingAdjustments,
         ]);
     }
 
     public function update(Request $request, Invoice $invoice)
     {
+        if ($invoice->status !== 'Draft') {
+            return redirect()->back()->with('error', 'Adjustments can only be edited while the invoice is in Draft status.');
+        }
+
         $request->validate([
-            'manual_adjustment' => 'required|numeric|min:0',
             'finance_remarks' => 'nullable|string',
+            'adjustments' => 'nullable|array',
+            'adjustments.*.id' => 'nullable|integer',
+            'adjustments.*.type' => 'required|string|in:credit,charge',
+            'adjustments.*.amount' => 'required|numeric|min:0',
+            'adjustments.*.reason' => 'required|string',
         ]);
 
-        $manualAdjustment = $request->manual_adjustment;
-        $totalAmount = $invoice->base_amount + $invoice->tax_amount - $invoice->recurring_discount_val - $manualAdjustment;
-        $totalAmount = max(0, $totalAmount);
+        $incoming = collect($request->adjustments ?? []);
 
-        $invoice->update([
-            'manual_adjustment' => $manualAdjustment,
-            'finance_remarks' => $request->finance_remarks,
-            'total_amount' => $totalAmount,
-        ]);
+        // Track which existing adjustment ids are kept so we can prune removed rows.
+        $keptIds = $incoming->filter(fn ($adj) => ! empty($adj['id']))->pluck('id');
+
+        // Prune applied adjustments that are no longer in the submitted set.
+        if ($keptIds->isEmpty()) {
+            $invoice->adjustments()->where('status', 'applied')->delete();
+        } else {
+            $invoice->adjustments()->where('status', 'applied')->whereNotIn('id', $keptIds)->delete();
+        }
+
+        foreach ($incoming as $adj) {
+            if (! empty($adj['id'])) {
+                $invoice->adjustments()->whereKey($adj['id'])->where('status', 'applied')->update([
+                    'type' => $adj['type'],
+                    'amount' => $adj['amount'],
+                    'reason' => $adj['reason'],
+                ]);
+            } else {
+                $invoice->adjustments()->create([
+                    'student_id' => $invoice->student_id,
+                    'type' => $adj['type'],
+                    'amount' => $adj['amount'],
+                    'reason' => $adj['reason'],
+                    'status' => 'applied',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        }
+
+        $invoice->update(['finance_remarks' => $request->finance_remarks]);
+        $invoice->recomputeTotal();
+
+        activity()->on($invoice)->log('Invoice #'.$invoice->id.' adjustments updated');
 
         return redirect()->back()->with('success', 'Invoice updated successfully.');
+    }
+
+    /**
+     * Record a pending carry-forward adjustment (refund credit or additional charge)
+     * against a student to be auto-applied to next month's draft invoice.
+     */
+    public function storeAdjustment(Request $request, Invoice $invoice)
+    {
+        $request->validate([
+            'type' => 'required|string|in:credit,charge',
+            'amount' => 'required|numeric|min:0.01',
+            'reason' => 'required|string',
+        ]);
+
+        InvoiceAdjustment::create([
+            'student_id' => $invoice->student_id,
+            'type' => $request->type,
+            'amount' => $request->amount,
+            'reason' => $request->reason,
+            'status' => 'pending',
+            'applied_from_id' => $invoice->id,
+            'created_by' => auth()->id(),
+        ]);
+
+        activity()
+            ->on($invoice)
+            ->log(($request->type === 'credit' ? 'Refund credit' : 'Additional charge').' of RM'.$request->amount.' recorded for next month\'s invoice');
+
+        return redirect()->back()->with('success', 'Adjustment recorded. It will be applied to next month\'s invoice.');
+    }
+
+    public function destroyAdjustment(InvoiceAdjustment $adjustment)
+    {
+        if ($adjustment->status !== 'pending') {
+            return redirect()->back()->with('error', 'Only pending adjustments can be removed. Applied adjustments are managed on the invoice.');
+        }
+
+        $adjustment->delete();
+
+        return redirect()->back()->with('success', 'Pending adjustment removed.');
     }
 
     public function send(Invoice $invoice)
@@ -108,7 +191,7 @@ class InvoiceController extends Controller
             'notification_sent' => true,
         ]);
 
-        $invoice->load('student.parent');
+        $invoice->load(['student.parent', 'adjustments']);
         if ($invoice->student->parent && $invoice->student->parent->email) {
             Mail::to($invoice->student->parent->email)->send(new InvoiceCreated($invoice));
         }
@@ -120,7 +203,7 @@ class InvoiceController extends Controller
 
     public function downloadPdf(Invoice $invoice)
     {
-        $invoice->load(['student.parent', 'student.classes.package', 'payments']);
+        $invoice->load(['student.parent', 'student.classes.package', 'payments', 'adjustments']);
 
         $company = [
             'name' => Setting::get('company_name', 'X Chess Academy'),

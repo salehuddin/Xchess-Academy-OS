@@ -8,6 +8,8 @@
   - `GET /admin/invoices/{invoice}/pdf` (`admin.invoices.pdf`)
   - `PUT /admin/invoices/{invoice}` (`admin.invoices.update`)
   - `POST /admin/invoices/{invoice}/send` (`admin.invoices.send`)
+  - `POST /admin/invoices/{invoice}/adjustments` (`admin.invoices.adjustments.store`) — record carry-forward adjustment
+  - `DELETE /admin/invoices/adjustments/{adjustment}` (`admin.invoices.adjustments.destroy`) — remove pending adjustment
 - Access: `auth` + `role:Admin`
 - Backend controller: [Admin/InvoiceController](app/Http/Controllers/Admin/InvoiceController.php)
 
@@ -37,11 +39,18 @@
 - Paid invoices generate downloadable **Official Receipts** (`/portal/{token}/invoices/{invoice}/receipt-pdf`).
 - Features payment date, transaction reference ID, payment method, and verified electronic stamp.
 
-### 5. Finance Adjustments
-- Admin can adjust `manual_adjustment` and `finance_remarks`.
-- Recomputes `total_amount = base_amount + tax_amount - recurring_discount_val - manual_adjustment` (clamped to min 0).
+### 5. Finance Adjustments (itemized credits & charges)
+- Admin can add **adjustment line items** to a Draft invoice — each with a **type** (`credit` or `charge`), **amount**, and **reason** — plus `finance_remarks`.
+- Involves `invoice_adjustments` records; the net (charges − credits) is mirrored into `manual_adjustment` for compatibility.
+- Total is recomputed: `total_amount = base + tax − recurring_discount + Σcharges − Σcredits` (clamped ≥ 0).
+- Adjustments are editable **only while the invoice is `Draft`** (edits to non-Draft are rejected).
 
-### 6. Send Invoice Control
+### 6. Carry-Forward Adjustments (refunds & additional fees)
+- **"Record Adjustment for Next Month"** stores a pending credit (refund) or charge (additional fee) against the student.
+- `invoices:generate-monthly` auto-applies all **pending** adjustments to that student's next month's Draft invoice on the 1st of the month.
+- Applied rows flip `pending → applied` (never used twice). Pending adjustments can be removed; applied adjustments are managed via the Draft update flow.
+
+### 7. Send Invoice Control
 - `Draft` invoices are sent to parents via email and notification engine, moving status to `Pending`.
 
 ## Notes

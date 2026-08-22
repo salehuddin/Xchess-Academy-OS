@@ -82,6 +82,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
         Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
         Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
+        Route::post('/invoices/{invoice}/adjustments', [InvoiceController::class, 'storeAdjustment'])->name('invoices.adjustments.store');
+        Route::delete('/invoices/adjustments/{adjustment}', [InvoiceController::class, 'destroyAdjustment'])->name('invoices.adjustments.destroy');
 
         Route::get('/payrolls', [PayrollController::class, 'index'])->name('payrolls.index');
         Route::put('/payrolls/{payroll}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');

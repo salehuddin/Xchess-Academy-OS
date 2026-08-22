@@ -27,6 +27,7 @@ erDiagram
 
     STUDENT ||--o{ ATTENDANCE : "attends"
     STUDENT ||--o{ INVOICE : "billed_to"
+    STUDENT ||--o{ INVOICE_ADJUSTMENT : "carries"
     STUDENT {
         int id PK
         string student_uid UK
@@ -79,17 +80,43 @@ erDiagram
         boolean manual_discount_pending "Flag for Ops to review"
     }
 
+    INVOICE ||--o{ PAYMENT : "receives"
+    INVOICE ||--o{ INVOICE_ADJUSTMENT : "has"
     INVOICE {
         int id PK
         int student_id FK
         decimal base_amount
         decimal tax_amount
         decimal recurring_discount_val
-        decimal manual_adjustment "For missed classes/credits"
+        decimal manual_adjustment "Net mirror of applied adjustments (charges - credits)"
         decimal total_amount
-        string status "Draft, Pending, Paid"
+        string status "Draft, Pending, Paid, Overdue, Partial"
         boolean notification_sent "Manual trigger flag"
         text finance_remarks "Ops/Finance adjustment notes"
+        date due_date
+        string month_year "e.g. 2026-08"
+    }
+
+    INVOICE_ADJUSTMENT {
+        int id PK
+        int invoice_id FK "null until applied to a draft"
+        int student_id FK "carry-forward owner"
+        string type "credit, charge"
+        decimal amount "always positive"
+        text reason "required"
+        string status "pending, applied"
+        int applied_from_id FK "originating invoice"
+        int created_by FK "user who recorded it"
+    }
+
+    PAYMENT {
+        int id PK
+        int invoice_id FK
+        decimal amount
+        date payment_date
+        string payment_method
+        string transaction_id
+        text notes
     }
 
     COACH_PAYROLL {
@@ -125,7 +152,7 @@ erDiagram
 
 Logic Updates
 
-Manual Reconciliation: The manual_discount_pending flag in ATTENDANCE serves as a reminder. Ops/Finance then manually calculates the value and enters it into the manual_adjustment field of the INVOICE.
+Manual Reconciliation: The manual_discount_pending flag in ATTENDANCE serves as a reminder. Ops/Finance then records itemized adjustment line items (credit or charge) on the INVOICE via INVOICE_ADJUSTMENT. The net (charges − credits) is mirrored into the manual_adjustment field for backwards compatibility. Refunds or additional fees can also be recorded as pending carry-forward adjustments against a STUDENT, which are auto-applied to the next month's generated Draft invoice.
 
 Manual Notification: The INVOICE remains in Draft status even after adjustment. A manual "Send Notification" action must be triggered to change status to Pending and alert the parent.
 

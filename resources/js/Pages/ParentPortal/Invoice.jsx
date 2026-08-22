@@ -134,10 +134,17 @@ export default function Invoice({ token, parent, invoice }) {
                                     <TableCell>Recurring Student Discount</TableCell>
                                     <TableCell className="text-right text-success-600">-RM{invoice.recurring_discount_val}</TableCell>
                                 </TableRow>
-                                <TableRow key="adjustment">
-                                    <TableCell>Manual Deductions / Adjustments</TableCell>
-                                    <TableCell className="text-right text-success-600">-RM{invoice.manual_adjustment}</TableCell>
-                                </TableRow>
+                                {invoice.adjustments?.filter((adj) => Number(adj.amount) > 0).map((adj) => (
+                                    <TableRow key={`adj-${adj.id}`}>
+                                        <TableCell>
+                                            {adj.type === 'charge' ? 'Additional Charge' : 'Credit / Refund'}
+                                            {adj.reason ? <span className="block text-xs text-default-400">{adj.reason}</span> : null}
+                                        </TableCell>
+                                        <TableCell className={`text-right ${adj.type === 'credit' ? 'text-success-600' : 'text-danger-600'}`}>
+                                            {adj.type === 'credit' ? '-' : '+'}RM{Number(adj.amount).toFixed(2)}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
                                 <TableRow key="total">
                                     <TableCell>
                                         <span className="font-bold text-base">Total Payable</span>

@@ -156,12 +156,17 @@
                 <td class="text-right" style="color: #059669;">-RM {{ number_format($invoice->recurring_discount_val, 2) }}</td>
             </tr>
             @endif
-            @if($invoice->manual_adjustment > 0)
+            @foreach($invoice->adjustments->where('status', 'applied')->where('amount', '>', 0) as $adj)
             <tr>
-                <td style="color: #059669;">Manual Deductions / Adjustments</td>
-                <td class="text-right" style="color: #059669;">-RM {{ number_format($invoice->manual_adjustment, 2) }}</td>
+                <td style="{{ $adj->type === 'charge' ? 'color: #b91c1c;' : 'color: #059669;' }}">
+                    {{ $adj->type === 'charge' ? 'Additional Charge' : 'Credit / Refund' }}
+                    @if($adj->reason) — {{ $adj->reason }} @endif
+                </td>
+                <td class="text-right" style="{{ $adj->type === 'charge' ? 'color: #b91c1c;' : 'color: #059669;' }}">
+                    {{ $adj->type === 'charge' ? '+' : '-' }}RM {{ number_format($adj->amount, 2) }}
+                </td>
             </tr>
-            @endif
+            @endforeach
             <tr class="total-row">
                 <td>Total Amount Payable</td>
                 <td class="text-right" style="color: #2563eb;">RM {{ number_format($invoice->total_amount, 2) }}</td>

@@ -44,7 +44,7 @@ class PaymentController extends Controller
         $invoice = Invoice::find($validated['invoice_id']);
         $totalPaid = $invoice->payments()->sum('amount');
 
-        if ($totalPaid >= $invoice->amount) {
+        if ($totalPaid >= $invoice->total_amount) {
             $invoice->update(['status' => 'Paid']);
         } elseif ($totalPaid > 0) {
             $invoice->update(['status' => 'Partial']);
@@ -63,12 +63,12 @@ class PaymentController extends Controller
 
         // Recalculate invoice status
         $totalPaid = $invoice->payments()->sum('amount');
-        if ($totalPaid >= $invoice->amount) {
+        if ($totalPaid >= $invoice->total_amount) {
             $invoice->update(['status' => 'Paid']);
         } elseif ($totalPaid > 0) {
             $invoice->update(['status' => 'Partial']);
         } else {
-            $invoice->update(['status' => 'Unpaid']);
+            $invoice->update(['status' => 'Pending']);
         }
 
         return redirect()->back()->with('success', 'Payment deleted successfully.');

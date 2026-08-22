@@ -14,17 +14,24 @@ Matching: System provides filters to match student levels with coach specialties
 
 Discounts: Permanent recurring discounts (e.g., Sibling/Staff) are set on the Student profile.
 
-### 2.2 Billing & Invoicing (Manual Adjustment Model)
+### 2.2 Billing & Invoicing (Adjustment Model)
 
-Draft Generation: Monthly invoices are generated in Draft status.
+Draft Generation: Monthly invoices are generated automatically on the 1st of each month in Draft status. Any pending carry-forward adjustments (refund credits or additional charges recorded against the student) are auto-applied to the new Draft and marked applied (never reused).
 
-Manual Adjustment:
+Manual Adjustments:
 
 Ops/Finance reviews the previous month's attendance.
 
-If a class was missed (with notice), Finance calculates the discount and enters it into the manual_adjustment field.
+Finance adds itemized adjustment line items to the Draft invoice:
+- **Credit** — reduces the total (e.g. refund for a missed class, sibling allowance).
+- **Charge** — increases the total (e.g. additional fee, surcharge).
+Each line item has an amount and reason. The total is recomputed as `base + tax − recurring discount + charges − credits` (clamped ≥ 0).
 
-Remarks are added to explain the deduction (e.g., "Deduction for 1 missed session on Dec 5").
+Adjustments are editable only while the invoice is in Draft status.
+
+Carry-Forward: If a refund or additional fee should reflect on next month's invoice, Finance records it via "Record Adjustment for Next Month". It is stored as pending and auto-applied to the student's next auto-generated Draft invoice.
+
+Remarks are added to explain the adjustments (e.g., "Deduction for 1 missed session on Dec 5").
 
 Manual Notification:
 
