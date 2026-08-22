@@ -18,6 +18,7 @@ export default function Edit({ student, parents }) {
     const { data, setData, put, processing, errors } = useForm({
         name: student.name,
         nric_passport: student.nric_passport || '',
+        date_of_birth: student.date_of_birth || '',
         preferred_language: student.preferred_language || 'English',
         date_of_registration: student.date_of_registration || '',
         current_level: student.current_level || '',
@@ -77,6 +78,16 @@ export default function Edit({ student, parents }) {
                             isInvalid={!!errors.nric_passport}
                             isRequired
                             maxLength={12}
+                        />
+
+                        <Input
+                            type="date"
+                            label="Date of Birth"
+                            value={data.date_of_birth}
+                            onValueChange={(val) => setData('date_of_birth', val)}
+                            errorMessage={errors.date_of_birth}
+                            isInvalid={!!errors.date_of_birth}
+                            isRequired
                         />
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

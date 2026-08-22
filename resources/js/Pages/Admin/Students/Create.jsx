@@ -24,6 +24,7 @@ export default function Create({ parents, preselectedParentId }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         nric_passport: '',
+        date_of_birth: '',
         preferred_language: 'Bahasa Melayu',
         date_of_registration: new Date().toISOString().split('T')[0],
         current_level: '',
@@ -103,6 +104,16 @@ export default function Create({ parents, preselectedParentId }) {
                                     isInvalid={!!errors.nric_passport}
                                     isRequired
                                     maxLength={12}
+                                />
+
+                                <Input
+                                    type="date"
+                                    label="Date of Birth"
+                                    value={data.date_of_birth}
+                                    onValueChange={(val) => setData('date_of_birth', val)}
+                                    errorMessage={errors.date_of_birth}
+                                    isInvalid={!!errors.date_of_birth}
+                                    isRequired
                                 />
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

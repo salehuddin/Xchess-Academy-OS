@@ -21,6 +21,7 @@ class StudentFactory extends Factory
         return [
             'student_uid' => 'STU-'.$this->faker->unique()->numberBetween(1000, 9999),
             'name' => $this->faker->name(),
+            'date_of_birth' => $this->faker->dateTimeBetween('-16 years', '-6 years')->format('Y-m-d'),
             'parent_id' => StudentParent::factory(),
             'status' => 'Active',
             'current_level' => 'Beginner',

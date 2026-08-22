@@ -204,6 +204,14 @@ export default function Show({ student, availableClasses }) {
                                 <p className="text-md font-medium">{student.nric_passport || 'N/A'}</p>
                             </div>
                             <div>
+                                <p className="text-sm text-default-500">Date of Birth</p>
+                                <p className="text-md font-medium">
+                                    {student.date_of_birth
+                                        ? `${new Date(student.date_of_birth).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}${student.age ? ` (${student.age})` : ''}`
+                                        : 'N/A'}
+                                </p>
+                            </div>
+                            <div>
                                 <p className="text-sm text-default-500">Preferred Language</p>
                                 <p className="text-md font-medium">{student.preferred_language || 'N/A'}</p>
                             </div>

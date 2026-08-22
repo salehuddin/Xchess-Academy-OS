@@ -161,12 +161,15 @@ class DatabaseSeeder extends Seeder
         $levels = ['Beginner', 'Intermediate', 'Advanced', 'Master'];
 
         $students = collect();
+        // Varied ages 6-15 years old (in months offset from today)
+        $studentAges = [9, 11, 7, 13, 8, 10, 12, 6, 14, 15];
         foreach ($studentNames as $i => $sName) {
             $studentUid = 'STU-'.(1001 + $i);
             $student = Student::query()->updateOrCreate(
                 ['student_uid' => $studentUid],
                 [
                     'name' => $sName,
+                    'date_of_birth' => now()->subYears($studentAges[$i])->subMonths(($i * 2) % 12)->format('Y-m-d'),
                     'parent_id' => $parents[$i]->id,
                     'status' => 'Active',
                     'current_level' => $levels[$i % count($levels)],

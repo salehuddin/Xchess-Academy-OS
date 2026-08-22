@@ -97,6 +97,14 @@ export default function StudentDetailsModal({ isOpen, onClose, student: initialS
                                                                 <span className="text-small">{student.nric_passport || '-'}</span>
                                                             </div>
                                                             <div>
+                                                                <span className="text-tiny text-default-400 block">Date of Birth</span>
+                                                                <span className="text-small">
+                                                                    {student.date_of_birth
+                                                                        ? `${new Date(student.date_of_birth).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}${student.age ? ` (${student.age})` : ''}`
+                                                                        : '-'}
+                                                                </span>
+                                                            </div>
+                                                            <div>
                                                                 <span className="text-tiny text-default-400 block">Date Registered</span>
                                                                 <span className="text-small">{student.date_of_registration || '-'}</span>
                                                             </div>

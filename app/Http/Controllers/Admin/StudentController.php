@@ -72,7 +72,7 @@ class StudentController extends Controller
         $direction = $request->input('direction', 'desc');
 
         // Handle sorting by related columns if necessary, for now simple columns
-        if (in_array($sort, ['name', 'nric_passport', 'current_level', 'preferred_language', 'date_of_registration', 'status', 'created_at'])) {
+        if (in_array($sort, ['name', 'nric_passport', 'date_of_birth', 'current_level', 'preferred_language', 'date_of_registration', 'status', 'created_at'])) {
             $query->orderBy($sort, $direction);
         } elseif ($sort === 'parent') {
             // Basic join for sorting by parent name could be complex, skipping or implementing simple version
@@ -116,6 +116,7 @@ class StudentController extends Controller
             'students' => 'required|array|min:1',
             'students.*.name' => 'required|string|max:255',
             'students.*.nric_passport' => 'required|string|max:12',
+            'students.*.date_of_birth' => 'required|date|before:today',
             'students.*.preferred_language' => 'required|in:Bahasa Melayu,English,Mandarin,Tamil',
             'students.*.date_of_registration' => 'required|date',
             'students.*.current_level' => 'nullable|string|max:255',
@@ -157,6 +158,7 @@ class StudentController extends Controller
                     'student_uid' => $uid,
                     'name' => $studentData['name'],
                     'nric_passport' => $studentData['nric_passport'],
+                    'date_of_birth' => $studentData['date_of_birth'],
                     'preferred_language' => $studentData['preferred_language'],
                     'date_of_registration' => $studentData['date_of_registration'],
                     'parent_id' => $parentId,
@@ -176,6 +178,7 @@ class StudentController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'nric_passport' => 'required|string|max:12',
+            'date_of_birth' => 'required|date|before:today',
             'preferred_language' => 'required|in:Bahasa Melayu,English,Mandarin,Tamil',
             'date_of_registration' => 'required|date',
             'current_level' => 'nullable|string|max:255',
@@ -211,6 +214,7 @@ class StudentController extends Controller
                 'student_uid' => $uid,
                 'name' => $request->name,
                 'nric_passport' => $request->nric_passport,
+                'date_of_birth' => $request->date_of_birth,
                 'preferred_language' => $request->preferred_language,
                 'date_of_registration' => $request->date_of_registration,
                 'parent_id' => $parentId,
@@ -237,6 +241,7 @@ class StudentController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'nric_passport' => 'required|string|max:12',
+            'date_of_birth' => 'required|date|before:today',
             'preferred_language' => 'required|in:Bahasa Melayu,English,Mandarin,Tamil',
             'date_of_registration' => 'required|date',
             'current_level' => 'nullable|string|max:255',
@@ -249,6 +254,7 @@ class StudentController extends Controller
         $student->update($request->only([
             'name',
             'nric_passport',
+            'date_of_birth',
             'preferred_language',
             'date_of_registration',
             'current_level',

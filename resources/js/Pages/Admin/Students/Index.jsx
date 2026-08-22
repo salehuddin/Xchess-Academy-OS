@@ -119,12 +119,13 @@ const statusColorMap = {
     Inactive: "warning",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["student", "nric", "level", "preferred_language", "date_of_registration", "parent", "status", "actions"];
+const INITIAL_VISIBLE_COLUMNS = ["student", "nric", "date_of_birth", "level", "preferred_language", "date_of_registration", "parent", "status", "actions"];
 const LOCKED_COLUMNS = new Set(["student", "actions"]);
 
 const columns = [
     {name: "STUDENT", uid: "student", sortable: true},
     {name: "ID / PASSPORT", uid: "nric", sortable: true},
+    {name: "AGE", uid: "date_of_birth", sortable: true},
     {name: "LEVEL", uid: "level", sortable: true},
     {name: "LANGUAGE", uid: "preferred_language", sortable: true},
     {name: "DATE REGISTERED", uid: "date_of_registration", sortable: true},
@@ -341,6 +342,10 @@ export default function Index({ auth, students, filters, parents }) {
                         <p className="text-bold text-sm capitalize">{student.nric_passport || '-'}</p>
                         <p className="text-tiny text-default-400">{student.student_uid}</p>
                     </div>
+                );
+            case "date_of_birth":
+                return (
+                    <p className="text-bold text-sm">{student.age || '-'}</p>
                 );
             case "level":
                 return (

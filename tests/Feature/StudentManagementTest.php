@@ -39,6 +39,7 @@ class StudentManagementTest extends TestCase
         $response = $this->actingAs($this->admin)->post(route('admin.students.store'), [
             'name' => 'John Doe Jr',
             'nric_passport' => '123456789012',
+            'date_of_birth' => '2015-06-15',
             'preferred_language' => 'English',
             'date_of_registration' => '2025-01-01',
             'current_level' => 'Beginner',
@@ -59,6 +60,7 @@ class StudentManagementTest extends TestCase
 
         $this->assertDatabaseHas('students', [
             'name' => 'John Doe Jr',
+            'date_of_birth' => '2015-06-15',
             'current_level' => 'Beginner',
             'recurring_discount' => 10,
         ]);
@@ -71,6 +73,7 @@ class StudentManagementTest extends TestCase
         $response = $this->actingAs($this->admin)->post(route('admin.students.store'), [
             'name' => 'Jane Doe',
             'nric_passport' => '987654321098',
+            'date_of_birth' => '2012-03-20',
             'preferred_language' => 'English',
             'date_of_registration' => '2025-01-01',
             'current_level' => 'Advanced',
@@ -94,6 +97,7 @@ class StudentManagementTest extends TestCase
         $response = $this->actingAs($this->admin)->put(route('admin.students.update', $student), [
             'name' => 'Updated Name',
             'nric_passport' => '111122223333',
+            'date_of_birth' => '2014-09-10',
             'preferred_language' => 'English',
             'date_of_registration' => '2025-01-01',
             'current_level' => 'Intermediate',
@@ -107,6 +111,7 @@ class StudentManagementTest extends TestCase
         $this->assertDatabaseHas('students', [
             'id' => $student->id,
             'name' => 'Updated Name',
+            'date_of_birth' => '2014-09-10',
             'status' => 'Suspended',
             'parent_id' => $newParent->id,
         ]);
@@ -198,5 +203,85 @@ class StudentManagementTest extends TestCase
                 ->has('parents', 1)
                 ->where('parents.0.phone', '0123456789')
             );
+    }
+
+    public function test_age_accessor_formats_years_and_months()
+    {
+        // 9 years 5 months ago
+        $student = Student::factory()->make([
+            'date_of_birth' => now()->subYears(9)->subMonths(5)->format('Y-m-d'),
+        ]);
+        $this->assertSame('9y 5m', $student->age);
+    }
+
+    public function test_age_accessor_omits_months_when_zero()
+    {
+        // ~10 years exactly (months diff rounds to 0)
+        $student = Student::factory()->make([
+            'date_of_birth' => now()->subYears(10)->format('Y-m-d'),
+        ]);
+        $this->assertSame('10y', $student->age);
+    }
+
+    public function test_age_accessor_returns_months_only_for_infants()
+    {
+        // 8 months ago (under 1 year)
+        $student = Student::factory()->make([
+            'date_of_birth' => now()->subMonths(8)->format('Y-m-d'),
+        ]);
+        $this->assertSame('8m', $student->age);
+    }
+
+    public function test_age_accessor_returns_null_when_no_birthdate()
+    {
+        $student = Student::factory()->make(['date_of_birth' => null]);
+        $this->assertNull($student->age);
+    }
+
+    public function test_student_list_includes_age()
+    {
+        Student::factory()->create([
+            'date_of_birth' => now()->subYears(7)->subMonths(3)->format('Y-m-d'),
+        ]);
+
+        $this->actingAs($this->admin)->get(route('admin.students.index'))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->where('students.data.0.age', '7y 3m')
+            );
+    }
+
+    public function test_creating_student_requires_date_of_birth()
+    {
+        $parent = StudentParent::factory()->create();
+
+        $response = $this->actingAs($this->admin)->post(route('admin.students.store'), [
+            'name' => 'No DOB',
+            'nric_passport' => '123456789012',
+            'preferred_language' => 'English',
+            'date_of_registration' => '2025-01-01',
+            'parent_mode' => 'existing',
+            'parent_id' => $parent->id,
+            // date_of_birth intentionally omitted
+        ]);
+
+        $response->assertSessionHasErrors('date_of_birth');
+    }
+
+    public function test_creating_student_rejects_future_birthdate()
+    {
+        $parent = StudentParent::factory()->create();
+
+        $response = $this->actingAs($this->admin)->post(route('admin.students.store'), [
+            'name' => 'Future Kid',
+            'nric_passport' => '123456789012',
+            'date_of_birth' => now()->addDay()->format('Y-m-d'),
+            'preferred_language' => 'English',
+            'date_of_registration' => '2025-01-01',
+            'parent_mode' => 'existing',
+            'parent_id' => $parent->id,
+        ]);
+
+        $response->assertSessionHasErrors('date_of_birth');
     }
 }

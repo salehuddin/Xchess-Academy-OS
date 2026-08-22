@@ -70,7 +70,7 @@ export default function Show({ auth, student, attendances, impersonatedCoach }) 
                                 name=""
                             />
                             <h3 className="text-xl font-bold mt-4">{student.name}</h3>
-                            <p className="text-default-500 mb-4">{student.student_uid}</p>
+                            <p className="text-default-500 mb-4">{student.student_uid}{student.age ? ` · ${student.age}` : ''}</p>
                             
                             <Chip 
                                 variant="flat" 

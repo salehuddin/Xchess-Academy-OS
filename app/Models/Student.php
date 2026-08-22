@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Database\Factories\StudentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,9 +18,39 @@ class Student extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'date_of_birth' => 'date',
+    ];
+
+    protected $appends = ['age'];
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(StudentParent::class, 'parent_id');
+    }
+
+    /**
+     * Computed age label in the form "9y 5m". Returns null when no birthdate is set.
+     */
+    public function getAgeAttribute(): ?string
+    {
+        if (! $this->date_of_birth) {
+            return null;
+        }
+
+        $now = Carbon::now();
+        $dob = Carbon::instance($this->date_of_birth);
+
+        $years = (int) $dob->diffInYears($now);
+        $months = (int) $dob->copy()->addYears($years)->diffInMonths($now);
+
+        if ($years > 0 && $months > 0) {
+            return "{$years}y {$months}m";
+        } elseif ($years > 0) {
+            return "{$years}y";
+        }
+
+        return "{$months}m";
     }
 
     public function classes(): BelongsToMany

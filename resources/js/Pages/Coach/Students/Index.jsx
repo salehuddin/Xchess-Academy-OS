@@ -43,6 +43,10 @@ export default function Index({ auth, students, filters, impersonatedCoach }) {
                         name={item.name}
                     />
                 );
+            case "age":
+                return (
+                    <p className="text-bold text-sm">{item.age || '-'}</p>
+                );
             case "classes":
                 return (
                     <div className="flex flex-wrap gap-1">
@@ -149,6 +153,7 @@ export default function Index({ auth, students, filters, impersonatedCoach }) {
                 >
                     <TableHeader>
                         <TableColumn key="name">STUDENT</TableColumn>
+                        <TableColumn key="age">AGE</TableColumn>
                         <TableColumn key="classes">MY CLASSES</TableColumn>
                         <TableColumn key="status">STATUS</TableColumn>
                         <TableColumn key="actions" align="end">ACTIONS</TableColumn>

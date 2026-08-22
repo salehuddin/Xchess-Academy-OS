@@ -83,6 +83,7 @@ export default function BulkCreate({ parents }) {
             {
                 name: '',
                 nric_passport: '',
+                date_of_birth: '',
                 preferred_language: 'Bahasa Melayu',
                 date_of_registration: new Date().toISOString().split('T')[0],
                 current_level: '',
@@ -127,6 +128,7 @@ export default function BulkCreate({ parents }) {
             {
                 name: '',
                 nric_passport: '',
+                date_of_birth: '',
                 preferred_language: 'Bahasa Melayu',
                 date_of_registration: new Date().toISOString().split('T')[0],
                 current_level: '',
@@ -192,12 +194,13 @@ export default function BulkCreate({ parents }) {
                     <Card className="w-full shadow-sm border border-divider overflow-visible">
                         <CardBody className="p-4 overflow-visible">
                             <div className="overflow-x-auto pb-32 md:pb-0">
-                                <table className="w-full min-w-[1200px] border-collapse">
+                                <table className="w-full min-w-[1400px] border-collapse">
                                     <thead>
                                         <tr className="border-b border-divider text-left">
                                             <th className="p-2 w-10">#</th>
                                             <th className="p-2 w-48">Student Name</th>
                                             <th className="p-2 w-32">MyKid/Passport</th>
+                                            <th className="p-2 w-36">Birthdate</th>
                                             <th className="p-2 w-32">Level</th>
                                             <th className="p-2 w-64">Parent / Guardian</th>
                                             <th className="p-2 w-10"></th>
@@ -229,6 +232,18 @@ export default function BulkCreate({ parents }) {
                                                         isInvalid={!!errors[`students.${index}.nric_passport`]}
                                                         isRequired
                                                         maxLength={12}
+                                                        size="sm"
+                                                    />
+                                                </td>
+                                                <td className="p-2 pt-4">
+                                                    <Input
+                                                        type="date"
+                                                        placeholder="Birthdate"
+                                                        value={student.date_of_birth}
+                                                        onValueChange={(val) => updateRow(index, 'date_of_birth', val)}
+                                                        errorMessage={errors[`students.${index}.date_of_birth`]}
+                                                        isInvalid={!!errors[`students.${index}.date_of_birth`]}
+                                                        isRequired
                                                         size="sm"
                                                     />
                                                 </td>
