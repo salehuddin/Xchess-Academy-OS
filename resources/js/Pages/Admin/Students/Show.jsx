@@ -56,7 +56,7 @@ const PlusIcon = (props) => (
   </svg>
 );
 
-export default function Show({ student, availableClasses, pendingAdjustments = [], appliedAdjustments = [] }) {
+export default function Show({ student, availableClasses, attendances = [], pendingAdjustments = [], appliedAdjustments = [] }) {
     const { auth } = usePage().props;
     const { data, setData, post, processing, reset, errors } = useForm({
         class_id: '',
@@ -112,6 +112,30 @@ export default function Show({ student, availableClasses, pendingAdjustments = [
                 return cellValue;
         }
     }, [student.id]);
+
+    const renderAttendanceCell = useCallback((att, columnKey) => {
+        switch (columnKey) {
+            case "date":
+                return att.date || 'N/A';
+            case "class_name":
+                return (
+                    <div className="flex flex-col">
+                        <p className="text-bold text-sm">{att.class_name || 'N/A'}</p>
+                        {att.package && <p className="text-xs text-default-500">{att.package}</p>}
+                    </div>
+                );
+            case "time":
+                return `${att.start_time || '-'} - ${att.end_time || '-'}`;
+            case "is_present":
+                return (
+                    <Chip className="capitalize" color={att.is_present ? "success" : "danger"} size="sm" variant="flat">
+                        {att.is_present ? 'Present' : 'Absent'}
+                    </Chip>
+                );
+            default:
+                return att[columnKey] || 'N/A';
+        }
+    }, []);
 
     const renderInvoiceCell = useCallback((inv, columnKey) => {
         const cellValue = inv[columnKey];
@@ -273,6 +297,30 @@ export default function Show({ student, availableClasses, pendingAdjustments = [
                                 {(item) => (
                                     <TableRow key={item.id}>
                                         {(columnKey) => <TableCell>{renderClassCell(item, columnKey)}</TableCell>}
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardBody>
+                </Card>
+
+                {/* Attendance History */}
+                <Card className="shadow-sm border border-divider">
+                    <CardHeader>
+                        <p className="text-md font-semibold">Attendance History</p>
+                    </CardHeader>
+                    <CardBody>
+                        <Table aria-label="Attendance history table">
+                            <TableHeader>
+                                <TableColumn key="date">DATE</TableColumn>
+                                <TableColumn key="class_name">CLASS</TableColumn>
+                                <TableColumn key="time">TIME</TableColumn>
+                                <TableColumn key="is_present">STATUS</TableColumn>
+                            </TableHeader>
+                            <TableBody items={attendances} emptyContent="No attendance records found.">
+                                {(item) => (
+                                    <TableRow key={item.id}>
+                                        {(columnKey) => <TableCell>{renderAttendanceCell(item, columnKey)}</TableCell>}
                                     </TableRow>
                                 )}
                             </TableBody>

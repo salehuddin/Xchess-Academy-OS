@@ -8,6 +8,7 @@ use App\Models\InvoiceAdjustment;
 use App\Models\Student;
 use App\Models\StudentParent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -272,6 +273,8 @@ class StudentController extends Controller
     {
         $student->load(['parent', 'classes.package', 'classes.coach', 'invoices']);
 
+        $attendances = $this->attendanceHistory($student);
+
         $pendingAdjustments = InvoiceAdjustment::query()
             ->where('student_id', $student->id)
             ->where('status', 'pending')
@@ -287,6 +290,7 @@ class StudentController extends Controller
 
         return Inertia::render('Admin/Students/Show', [
             'student' => $student,
+            'attendances' => $attendances,
             'pendingAdjustments' => $pendingAdjustments,
             'appliedAdjustments' => $appliedAdjustments,
             'availableClasses' => ChessClass::with(['package', 'coach'])
@@ -369,6 +373,8 @@ class StudentController extends Controller
     {
         $student->load(['parent', 'classes.package', 'classes.coach', 'invoices']);
 
+        $student->setRelation('attendances', $this->attendanceHistory($student));
+
         return response()->json($student);
     }
 
@@ -387,5 +393,26 @@ class StudentController extends Controller
             ->get(['id', 'name', 'email', 'phone']);
 
         return response()->json($parents);
+    }
+
+    private function attendanceHistory(Student $student)
+    {
+        return $student->attendances()
+            ->with(['class.package', 'class.room'])
+            ->orderByDesc('attendance_date')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get()
+            ->map(fn ($attendance) => [
+                'id' => $attendance->id,
+                'date' => $attendance->attendance_date?->format('Y-m-d'),
+                'class_id' => $attendance->class_id,
+                'class_name' => $attendance->class?->name ?? $attendance->class?->package?->title ?? 'Class #'.$attendance->class_id,
+                'package' => $attendance->class?->package?->title,
+                'room_name' => $attendance->class?->room?->name,
+                'start_time' => $attendance->class?->start_time ? Carbon::parse($attendance->class->start_time)->format('H:i') : null,
+                'end_time' => $attendance->class?->end_time ? Carbon::parse($attendance->class->end_time)->format('H:i') : null,
+                'is_present' => $attendance->is_present,
+            ]);
     }
 }

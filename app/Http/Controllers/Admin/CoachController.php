@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Models\Attendance;
 use App\Models\ChessClass;
+use App\Models\ClassSession;
 use App\Models\CoachProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -130,22 +130,28 @@ class CoachController extends Controller
                 'status' => $class->status,
             ]);
 
-        $attendances = Attendance::with(['student', 'class.package', 'class.room'])
-            ->whereHas('class', fn ($q) => $q->where('coach_id', $coach->id))
+        $sessions = ClassSession::with(['class.package', 'class.room', 'coach'])
+            ->where(function ($q) use ($coach) {
+                $q->where('coach_id', $coach->id)
+                    ->orWhere(function ($sq) use ($coach) {
+                        $sq->whereNull('coach_id')
+                            ->whereHas('class', fn ($c) => $c->where('coach_id', $coach->id));
+                    });
+            })
+            ->orderByDesc('session_date')
             ->orderByDesc('id')
             ->take(100)
             ->get()
-            ->map(fn ($attendance) => [
-                'id' => $attendance->id,
-                'student' => $attendance->student?->name,
-                'student_id' => $attendance->student_id,
-                'is_present' => $attendance->is_present,
-                'class_name' => $attendance->class?->package?->title ?? $attendance->class?->name ?? 'Class',
-                'room_name' => $attendance->class?->room?->name,
-                'date' => $attendance->attendance_date?->format('Y-m-d'),
-                'start_time' => $attendance->class?->start_time ? Carbon::parse($attendance->class->start_time)->format('H:i') : null,
-                'end_time' => $attendance->class?->end_time ? Carbon::parse($attendance->class->end_time)->format('H:i') : null,
-                'is_delivered' => true,
+            ->map(fn ($session) => [
+                'id' => $session->id,
+                'class_id' => $session->class_id,
+                'class_name' => $session->class?->name ?? $session->class?->package?->title ?? 'Class #'.$session->class_id,
+                'room_name' => $session->class?->room?->name,
+                'date' => $session->session_date?->format('Y-m-d'),
+                'start_time' => $session->class?->start_time ? Carbon::parse($session->class->start_time)->format('H:i') : null,
+                'end_time' => $session->class?->end_time ? Carbon::parse($session->class->end_time)->format('H:i') : null,
+                'topic' => $session->topic,
+                'coach_name' => $session->coach?->name ?? $session->class?->coach?->name ?? 'Unassigned',
             ]);
 
         $coachOptions = User::with('coachProfile')
@@ -166,7 +172,7 @@ class CoachController extends Controller
         return Inertia::render('Admin/Coaches/Show', [
             'coach' => $coach,
             'classes' => $classes,
-            'attendances' => $attendances,
+            'sessions' => $sessions,
             'coachOptions' => $coachOptions,
         ]);
     }

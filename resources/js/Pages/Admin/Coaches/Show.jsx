@@ -14,8 +14,7 @@ import {
     TableRow,
     TableCell,
     Chip,
-    Tooltip,
-    User
+    Tooltip
 } from "@heroui/react";
 import { useCallback, useMemo } from 'react';
 
@@ -34,7 +33,7 @@ const EyeIcon = (props) => (
     </svg>
 );
 
-export default function Show({ coach, classes, attendances, coachOptions }) {
+export default function Show({ coach, classes, sessions, coachOptions }) {
     const { auth } = usePage().props;
 
     const statusColorMap = {
@@ -57,14 +56,13 @@ export default function Show({ coach, classes, attendances, coachOptions }) {
         { name: "ACTIONS", uid: "actions" },
     ]), []);
 
-    const attendanceColumns = useMemo(() => ([
+    const sessionColumns = useMemo(() => ([
         { name: "DATE", uid: "date" },
         { name: "CLASS", uid: "class_name" },
-        { name: "STUDENT", uid: "student" },
+        { name: "COACH", uid: "coach_name" },
         { name: "TIME", uid: "time" },
         { name: "ROOM", uid: "room_name" },
-        { name: "PRESENT", uid: "is_present" },
-        { name: "DELIVERED", uid: "is_delivered" },
+        { name: "TOPIC", uid: "topic" },
     ]), []);
 
     const renderClassCell = useCallback((item, columnKey) => {
@@ -99,31 +97,19 @@ export default function Show({ coach, classes, attendances, coachOptions }) {
         }
     }, [statusColorMap]);
 
-    const renderAttendanceCell = useCallback((item, columnKey) => {
+    const renderSessionCell = useCallback((item, columnKey) => {
         switch (columnKey) {
-            case "student":
+            case "class_name":
                 return (
-                    <User
-                        avatarProps={{ radius: "lg", src: `https://ui-avatars.com/api/?name=${item.student || 'Student'}&background=random` }}
-                        name={item.student || 'Unknown'}
-                    >
-                        {item.student || 'Unknown'}
-                    </User>
+                    <div className="flex flex-col">
+                        <p className="text-bold text-sm">{item.class_name || 'N/A'}</p>
+                        <p className="text-xs text-default-500">#{item.class_id}</p>
+                    </div>
                 );
             case "time":
                 return `${item.start_time || '-'} - ${item.end_time || '-'}`;
-            case "is_present":
-                return (
-                    <Chip className="capitalize" color={item.is_present ? "success" : "danger"} size="sm" variant="flat">
-                        {item.is_present ? 'Present' : 'Absent'}
-                    </Chip>
-                );
-            case "is_delivered":
-                return (
-                    <Chip className="capitalize" color={item.is_delivered ? "success" : "warning"} size="sm" variant="flat">
-                        {item.is_delivered ? 'Delivered' : 'Pending'}
-                    </Chip>
-                );
+            case "topic":
+                return item.topic || '—';
             default:
                 return item[columnKey] || 'N/A';
         }
@@ -274,23 +260,23 @@ export default function Show({ coach, classes, attendances, coachOptions }) {
 
                 <Card className="shadow-sm border border-divider">
                     <CardHeader className="flex justify-between items-center">
-                        <p className="text-md font-semibold">Class Attendance</p>
+                        <p className="text-md font-semibold">Class Sessions Delivered</p>
                     </CardHeader>
                     <CardBody>
-                        <Table aria-label="Class attendance table">
-                            <TableHeader columns={attendanceColumns}>
+                        <Table aria-label="Class sessions delivered table">
+                            <TableHeader columns={sessionColumns}>
                                 {(column) => (
                                     <TableColumn key={column.uid}>
                                         {column.name}
                                     </TableColumn>
                                 )}
                             </TableHeader>
-                            <TableBody items={attendances} emptyContent="No attendance records found">
+                            <TableBody items={sessions} emptyContent="No class sessions delivered yet">
                                 {(item) => (
                                     <TableRow key={item.id}>
                                         {(columnKey) => (
                                             <TableCell>
-                                                {renderAttendanceCell(item, columnKey)}
+                                                {renderSessionCell(item, columnKey)}
                                             </TableCell>
                                         )}
                                     </TableRow>

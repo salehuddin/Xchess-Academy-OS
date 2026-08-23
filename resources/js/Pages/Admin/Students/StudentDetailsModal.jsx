@@ -203,6 +203,29 @@ export default function StudentDetailsModal({ isOpen, onClose, student: initialS
                                             <p>Invoice history will appear here.</p>
                                         </div>
                                     </Tab>
+                                    <Tab key="attendance" title="Attendance">
+                                        {student.attendances && student.attendances.length > 0 ? (
+                                            <div className="flex flex-col gap-2">
+                                                {student.attendances.map((att) => (
+                                                    <div key={att.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-default-50 transition-colors">
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-small font-semibold">{att.class_name}</span>
+                                                            <span className="text-tiny text-default-500">
+                                                                {att.date}{att.start_time ? ` · ${att.start_time} - ${att.end_time}` : ''}
+                                                            </span>
+                                                        </div>
+                                                        <Chip size="sm" variant="flat" color={att.is_present ? 'success' : 'danger'}>
+                                                            {att.is_present ? 'Present' : 'Absent'}
+                                                        </Chip>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-4 text-center text-default-500">
+                                                <p>No attendance records found.</p>
+                                            </div>
+                                        )}
+                                    </Tab>
                                 </Tabs>
                             )}
                         </ModalBody>
