@@ -3,8 +3,9 @@ import { Head, Link } from '@inertiajs/react';
 import { Card, CardBody, CardHeader, Chip, Button } from "@heroui/react";
 import { useState } from 'react';
 import AttendanceModal from '../Admin/Attendance/AttendanceModal'; // We will reuse the admin modal for now
+import UnreadNotificationsWidget from '@/Components/UnreadNotificationsWidget';
 
-export default function Dashboard({ auth, stats, todaySessions, impersonatedCoach }) {
+export default function Dashboard({ auth, stats, todaySessions, impersonatedCoach, unreadNotifications }) {
     const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
     const [selectedSession, setSelectedSession] = useState(null);
 
@@ -136,6 +137,9 @@ export default function Dashboard({ auth, stats, todaySessions, impersonatedCoac
                         )}
                     </CardBody>
                 </Card>
+
+                {/* Recent Notifications */}
+                <UnreadNotificationsWidget notifications={unreadNotifications} />
             </div>
 
             {isAttendanceModalOpen && (

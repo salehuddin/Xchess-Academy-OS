@@ -118,12 +118,6 @@ export default function Show({ invoice, pendingAdjustments = [] }) {
         })),
     });
 
-    const carryForm = useForm({
-        type: 'credit',
-        amount: '',
-        reason: '',
-    });
-
     const handleSubmit = (e) => {
         e.preventDefault();
         put(route('admin.invoices.update', invoice.id));
@@ -149,19 +143,6 @@ export default function Show({ invoice, pendingAdjustments = [] }) {
 
     const handleRemoveAdjustment = (index) => {
         setData('adjustments', data.adjustments.filter((_, i) => i !== index));
-    };
-
-    const handleRecordCarryForward = (e) => {
-        e.preventDefault();
-        carryForm.post(route('admin.invoices.adjustments.store', invoice.id), {
-            onSuccess: () => carryForm.reset('amount', 'reason'),
-        });
-    };
-
-    const handleDeletePending = (id) => {
-        if (confirm('Remove this pending adjustment? It will not be applied to next month\'s invoice.')) {
-            router.delete(route('admin.invoices.adjustments.destroy', id));
-        }
     };
 
     const isDraft = invoice.status === 'Draft';
@@ -507,18 +488,18 @@ export default function Show({ invoice, pendingAdjustments = [] }) {
                         </Card>
                     )}
 
-                    {/* Record adjustment for next month (carry-forward) */}
+                    {/* Carry-forward summary (read-only — managed on the student profile) */}
                     <Card shadow="none" className="border border-primary-200 bg-primary-50/20">
                         <CardHeader className="px-5 pt-5 pb-3">
-                            <p className="font-semibold text-default-700">Record Adjustment for Next Month</p>
+                            <p className="font-semibold text-default-700">Carry-Forward for Next Month</p>
                         </CardHeader>
                         <CardBody className="px-5 pt-0 pb-5 space-y-4">
                             <p className="text-sm text-default-500">
-                                Record a <strong>refund credit</strong> or <strong>additional charge</strong> here. It will be
+                                Pending refunds or charges recorded on the student profile will be
                                 auto-applied to {invoice.student?.name}'s next month's invoice.
                             </p>
 
-                            {pendingAdjustments.length > 0 && (
+                            {pendingAdjustments.length > 0 ? (
                                 <div className="p-3 bg-default-50 rounded-lg space-y-2">
                                     <p className="text-xs text-default-400 font-medium uppercase tracking-wide">Pending (applies next month)</p>
                                     {pendingAdjustments.map((adj) => (
@@ -528,61 +509,26 @@ export default function Show({ invoice, pendingAdjustments = [] }) {
                                                     <span className={adj.type === 'credit' ? 'text-success-600' : 'text-danger-600'}>
                                                         {adj.type === 'credit' ? '−' : '+'}RM{Number(adj.amount).toFixed(2)}
                                                     </span>
-                                                    {adj.applied_from && <span className="text-default-400 text-xs"> · from INV-{adj.applied_from.id}</span>}
                                                 </p>
                                                 <p className="text-xs text-default-500">{adj.reason}</p>
                                             </div>
-                                            <Button
-                                                size="sm"
-                                                variant="light"
-                                                color="danger"
-                                                onPress={() => handleDeletePending(adj.id)}
-                                            >
-                                                Remove
-                                            </Button>
                                         </div>
                                     ))}
                                 </div>
+                            ) : (
+                                <p className="text-xs text-default-400">No pending carry-forward adjustments.</p>
                             )}
 
-                            <form onSubmit={handleRecordCarryForward} className="space-y-3">
-                                <div className="flex gap-2">
-                                    <Select
-                                        label="Type"
-                                        selectedKeys={[carryForm.data.type]}
-                                        onSelectionChange={(keys) => carryForm.setData('type', Array.from(keys)[0])}
-                                        className="w-36"
-                                    >
-                                        <SelectItem key="credit" value="credit">Credit (refund)</SelectItem>
-                                        <SelectItem key="charge" value="charge">Charge (extra)</SelectItem>
-                                    </Select>
-                                    <Input
-                                        label="Amount (RM)"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={carryForm.data.amount}
-                                        onValueChange={(val) => carryForm.setData('amount', val)}
-                                        errorMessage={carryForm.errors.amount}
-                                        isInvalid={!!carryForm.errors.amount}
-                                    />
-                                </div>
-                                <Input
-                                    label="Reason"
-                                    value={carryForm.data.reason}
-                                    onValueChange={(val) => carryForm.setData('reason', val)}
-                                    errorMessage={carryForm.errors.reason}
-                                    isInvalid={!!carryForm.errors.reason}
-                                />
-                                <Button
-                                    type="submit"
-                                    color="primary"
-                                    className="w-full font-semibold"
-                                    isLoading={carryForm.processing}
-                                >
-                                    Record for Next Month
-                                </Button>
-                            </form>
+                            <Button
+                                as={Link}
+                                href={route('admin.students.show', invoice.student?.id)}
+                                color="primary"
+                                variant="flat"
+                                className="w-full font-semibold"
+                                isDisabled={!invoice.student?.id}
+                            >
+                                Manage on Student Profile
+                            </Button>
                         </CardBody>
                     </Card>
 

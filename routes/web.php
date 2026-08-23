@@ -18,11 +18,13 @@ use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SiteAnnouncementController;
+use App\Http\Controllers\Admin\StudentAdjustmentController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Notifications\InboxController;
 use App\Http\Controllers\Portal\AccessLinkController;
 use App\Http\Controllers\Portal\ParentPortalController;
 use App\Http\Controllers\ProfileController;
@@ -41,6 +43,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // In-app notification center — accessible to every authenticated user.
+    Route::prefix('me/notifications')->name('me.notifications.')->group(function () {
+        Route::get('/', [InboxController::class, 'index'])->name('index');
+        Route::get('/unread', [InboxController::class, 'unread'])->name('unread');
+        Route::post('/{id}/read', [InboxController::class, 'markRead'])->name('read');
+        Route::post('/read-all', [InboxController::class, 'markAllRead'])->name('read-all');
+    });
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -73,8 +83,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/students/bulk-create', [StudentController::class, 'bulkCreate'])->name('students.bulk-create');
         Route::post('/students/bulk-store', [StudentController::class, 'bulkStore'])->name('students.bulk-store');
         Route::post('/students/bulk-action', [StudentController::class, 'bulkAction'])->name('students.bulk-action');
-        Route::get('/students/{student}/details', [StudentController::class, 'getDetails'])->name('students.details');
-        Route::resource('students', StudentController::class);
+        Route::resource('students', StudentController::class)->except(['show']);
         Route::resource('parents', ParentController::class);
 
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
@@ -82,8 +91,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
         Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
         Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
-        Route::post('/invoices/{invoice}/adjustments', [InvoiceController::class, 'storeAdjustment'])->name('invoices.adjustments.store');
-        Route::delete('/invoices/adjustments/{adjustment}', [InvoiceController::class, 'destroyAdjustment'])->name('invoices.adjustments.destroy');
 
         Route::get('/payrolls', [PayrollController::class, 'index'])->name('payrolls.index');
         Route::put('/payrolls/{payroll}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
@@ -120,6 +127,15 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/system-logs', [SystemLogController::class, 'index'])->name('system-logs.index');
         Route::delete('/system-logs', [SystemLogController::class, 'clear'])->name('system-logs.clear');
+    });
+
+    // Student financial context — visible to Admin and Finance (but not Coach).
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Admin,Finance'])->group(function () {
+        Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
+        Route::get('/students/{student}/details', [StudentController::class, 'getDetails'])->name('students.details');
+        Route::post('/students/{student}/adjustments', [StudentAdjustmentController::class, 'store'])->name('students.adjustments.store');
+        Route::put('/students/{student}/adjustments/{adjustment}', [StudentAdjustmentController::class, 'update'])->name('students.adjustments.update');
+        Route::delete('/students/{student}/adjustments/{adjustment}', [StudentAdjustmentController::class, 'destroy'])->name('students.adjustments.destroy');
     });
 
     Route::prefix('coach')->name('coach.')->middleware('role:Coach')->group(function () {

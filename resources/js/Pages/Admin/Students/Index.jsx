@@ -73,6 +73,13 @@ export const EditIcon = (props) => (
   </svg>
 );
 
+export const EyeIcon = (props) => (
+  <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+    <path d="M15.58 12c0 1.98-1.6 3.58-3.58 3.58S8.42 13.98 8.42 12s1.6-3.58 3.58-3.58 3.58 1.6 3.58 3.58Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+    <path d="M12 20.27c3.53 0 6.82-2.08 9.11-5.68.9-1.41.9-3.78 0-5.19-2.29-3.6-5.58-5.68-9.11-5.68-3.53 0-6.82 2.08-9.11 5.68-.9 1.41-.9 3.78 0 5.19 2.29 3.6 5.58 5.68 9.11 5.68Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+  </svg>
+);
+
 export const DeleteIcon = (props) => (
   <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 20 20" width="1em" {...props}>
     <path d="M17.5 4.98332C14.725 4.70832 11.9333 4.56665 9.15 4.56665C7.5 4.56665 5.85 4.64998 4.2 4.81665L2.5 4.98332" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
@@ -399,6 +406,13 @@ export default function Index({ auth, students, filters, parents }) {
             case "actions":
                 return (
                     <div className="relative flex items-center justify-center gap-2">
+                        <Tooltip content="View Profile">
+                            <Link href={route('admin.students.show', student.id)}>
+                                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+                                    <EyeIcon />
+                                </span>
+                            </Link>
+                        </Tooltip>
                         <Tooltip content="Edit Student">
                             <Link href={route('admin.students.edit', student.id)}>
                                 <span className="text-lg text-default-400 cursor-pointer active:opacity-50">

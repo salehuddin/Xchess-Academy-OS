@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChessClass;
+use App\Models\InvoiceAdjustment;
 use App\Models\Student;
 use App\Models\StudentParent;
 use Illuminate\Http\Request;
@@ -271,8 +272,23 @@ class StudentController extends Controller
     {
         $student->load(['parent', 'classes.package', 'classes.coach', 'invoices']);
 
+        $pendingAdjustments = InvoiceAdjustment::query()
+            ->where('student_id', $student->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        $appliedAdjustments = InvoiceAdjustment::query()
+            ->with('invoice:id,month_year,status')
+            ->where('student_id', $student->id)
+            ->where('status', 'applied')
+            ->latest()
+            ->get();
+
         return Inertia::render('Admin/Students/Show', [
             'student' => $student,
+            'pendingAdjustments' => $pendingAdjustments,
+            'appliedAdjustments' => $appliedAdjustments,
             'availableClasses' => ChessClass::with(['package', 'coach'])
                 ->whereDoesntHave('students', function ($q) use ($student) {
                     $q->where('student_id', $student->id);

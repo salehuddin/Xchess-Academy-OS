@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import CarryForwardAdjustments from '@/Components/CarryForwardAdjustments';
 import {
     Card,
     CardHeader,
@@ -55,7 +56,7 @@ const PlusIcon = (props) => (
   </svg>
 );
 
-export default function Show({ student, availableClasses }) {
+export default function Show({ student, availableClasses, pendingAdjustments = [], appliedAdjustments = [] }) {
     const { auth } = usePage().props;
     const { data, setData, post, processing, reset, errors } = useForm({
         class_id: '',
@@ -279,30 +280,45 @@ export default function Show({ student, availableClasses }) {
                     </CardBody>
                 </Card>
 
-                {/* Invoices History */}
-                <Card className="shadow-sm border border-divider">
-                    <CardHeader>
-                        <p className="text-md font-semibold">Invoices History</p>
-                    </CardHeader>
-                    <CardBody>
-                        <Table aria-label="Invoices history table">
-                            <TableHeader>
-                                <TableColumn key="id">ID</TableColumn>
-                                <TableColumn key="month_year">MONTH</TableColumn>
-                                <TableColumn key="total_amount">AMOUNT</TableColumn>
-                                <TableColumn key="status">STATUS</TableColumn>
-                                <TableColumn key="actions" align="end">ACTIONS</TableColumn>
-                            </TableHeader>
-                            <TableBody items={student.invoices} emptyContent="No invoices found.">
-                                {(item) => (
-                                    <TableRow key={item.id}>
-                                        {(columnKey) => <TableCell>{renderInvoiceCell(item, columnKey)}</TableCell>}
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardBody>
-                </Card>
+                {/* Invoices & Adjustments side by side */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    <Card className="shadow-sm border border-divider">
+                        <CardHeader>
+                            <p className="text-md font-semibold">Invoices History</p>
+                        </CardHeader>
+                        <CardBody>
+                            <Table aria-label="Invoices history table">
+                                <TableHeader>
+                                    <TableColumn key="id">ID</TableColumn>
+                                    <TableColumn key="month_year">MONTH</TableColumn>
+                                    <TableColumn key="total_amount">AMOUNT</TableColumn>
+                                    <TableColumn key="status">STATUS</TableColumn>
+                                    <TableColumn key="actions" align="end">ACTIONS</TableColumn>
+                                </TableHeader>
+                                <TableBody items={student.invoices} emptyContent="No invoices found.">
+                                    {(item) => (
+                                        <TableRow key={item.id}>
+                                            {(columnKey) => <TableCell>{renderInvoiceCell(item, columnKey)}</TableCell>}
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardBody>
+                    </Card>
+
+                    <Card className="shadow-sm border border-divider">
+                        <CardHeader>
+                            <p className="text-md font-semibold">Carry-Forward Adjustments</p>
+                        </CardHeader>
+                        <CardBody>
+                            <CarryForwardAdjustments
+                                student={student}
+                                pendingAdjustments={pendingAdjustments}
+                                appliedAdjustments={appliedAdjustments}
+                            />
+                        </CardBody>
+                    </Card>
+                </div>
             </div>
         </AuthenticatedLayout>
     );

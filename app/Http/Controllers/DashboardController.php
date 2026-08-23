@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\ChessClass;
 use App\Models\Invoice;
 use App\Models\Student;
+use App\Models\UserNotification;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -28,9 +29,20 @@ class DashboardController extends Controller
 
             return Inertia::render('Dashboard', [
                 'stats' => $stats,
+                'unreadNotifications' => $this->unreadNotifications($user),
             ]);
         } elseif ($user->role === UserRole::Coach) {
             return redirect()->route('coach.dashboard');
         }
+    }
+
+    private function unreadNotifications($user)
+    {
+        return UserNotification::query()
+            ->where('user_id', $user->id)
+            ->whereNull('read_at')
+            ->latest()
+            ->limit(8)
+            ->get(['id', 'type', 'title', 'body', 'url', 'created_at']);
     }
 }

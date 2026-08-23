@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
 use App\Models\Attendance;
 use App\Models\Payroll;
 use App\Models\User;
+use App\Services\Notifications\InAppNotifier;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -69,7 +71,7 @@ class GenerateMonthlyPayroll extends Command
             // Store the average rate for display purposes (total / sessions).
             $averageRate = $sessionCount > 0 ? round($totalAmount / $sessionCount, 2) : 0;
 
-            Payroll::updateOrCreate(
+            $payroll = Payroll::updateOrCreate(
                 [
                     'coach_id' => $coach->id,
                     'month_year' => $monthInput,
@@ -84,6 +86,29 @@ class GenerateMonthlyPayroll extends Command
             );
 
             $this->info("  - Generated payroll: {$sessionCount} sessions, RM {$totalAmount}");
+
+            app(InAppNotifier::class)->notify(
+                $coach,
+                'payroll_ready',
+                "Payroll ready for {$monthInput}",
+                "Your payroll for {$monthInput} has been generated: {$sessionCount} sessions, RM {$totalAmount}.",
+                route('coach.payrolls.index'),
+                ['coach_id' => $coach->id, 'month_year' => $monthInput, 'payroll_id' => $payroll->id],
+                "payroll_ready:{$coach->id}:{$monthInput}",
+            );
+
+            // One admin summary per month (idempotent across coaches via dedup).
+            app(InAppNotifier::class)->notifyRoles(
+                [UserRole::Admin],
+                'payroll_ready',
+                "Payroll generated for {$monthInput}",
+                "Monthly payroll has been generated for {$monthInput}. Review and approve.",
+                route('admin.payrolls.index'),
+                ['month_year' => $monthInput],
+                "payroll_ready_admin:{$monthInput}",
+                null,
+                false,
+            );
         }
 
         $this->info('Payroll generation completed.');

@@ -211,9 +211,19 @@ export default function StudentDetailsModal({ isOpen, onClose, student: initialS
                                 Close
                             </Button>
                             {student && (
-                                <Button color="primary" onPress={() => window.location.href = route('admin.students.edit', student.id)}>
-                                    Edit Student
-                                </Button>
+                                <>
+                                    <Button
+                                        as={Link}
+                                        href={route('admin.students.show', student.id)}
+                                        variant="flat"
+                                        color="secondary"
+                                    >
+                                        View Profile
+                                    </Button>
+                                    <Button color="primary" onPress={() => window.location.href = route('admin.students.edit', student.id)}>
+                                        Edit Student
+                                    </Button>
+                                </>
                             )}
                         </ModalFooter>
                     </>

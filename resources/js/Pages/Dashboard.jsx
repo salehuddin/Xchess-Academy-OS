@@ -1,8 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { Card, CardBody } from "@heroui/react";
+import UnreadNotificationsWidget from '@/Components/UnreadNotificationsWidget';
 
-export default function Dashboard({ stats, auth }) {
+export default function Dashboard({ stats, auth, unreadNotifications }) {
     const user = auth.user;
 
     return (
@@ -86,19 +87,15 @@ export default function Dashboard({ stats, auth }) {
                 </div>
             )}
 
-             {/* Placeholders for future widgets (resembling the screenshot's diagonal lines) */}
+             {/* Widgets */}
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 <Card className="h-64 border-2 border-dashed border-divider shadow-none bg-content1">
                     <CardBody className="flex items-center justify-center">
                         <span className="text-default-400">Activity Chart Placeholder</span>
                     </CardBody>
                 </Card>
-                <Card className="h-64 border-2 border-dashed border-divider shadow-none bg-content1">
-                    <CardBody className="flex items-center justify-center">
-                        <span className="text-default-400">Recent Assignments Placeholder</span>
-                    </CardBody>
-                </Card>
-                 </div>
+                <UnreadNotificationsWidget notifications={unreadNotifications} />
+            </div>
             </div>
         </AuthenticatedLayout>
     );

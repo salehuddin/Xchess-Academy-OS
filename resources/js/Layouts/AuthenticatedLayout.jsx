@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import Logo from '@/Components/Logo';
+import NotificationBell from '@/Components/NotificationBell';
 import {
     Navbar,
     NavbarContent,
@@ -13,7 +14,6 @@ import {
     DropdownItem,
     Input,
     Avatar,
-    Badge,
     Switch,
     Tooltip
 } from "@heroui/react";
@@ -623,11 +623,7 @@ export default function AuthenticatedLayout({ user: userProp, header, children }
                             )
                         )}
 
-                        <Button isIconOnly variant="light" radius="full">
-                            <Badge content="" color="danger" shape="circle" size="sm">
-                                <NotificationIcon className="text-default-500 text-xl" />
-                            </Badge>
-                        </Button>
+                        <NotificationBell />
 
                         <Tooltip content={isDarkMode ? "Light mode" : "Dark mode"} placement="bottom">
                             <Switch

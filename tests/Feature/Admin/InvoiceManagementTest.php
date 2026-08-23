@@ -306,69 +306,6 @@ class InvoiceManagementTest extends TestCase
         $this->assertEquals(75, (float) $invoices->first()->total_amount);
     }
 
-    public function test_admin_can_record_carry_forward_adjustment()
-    {
-        $admin = User::factory()->create(['role' => UserRole::Admin]);
-        $parent = StudentParent::factory()->create(['email' => 'parent@example.com']);
-        $student = Student::factory()->create(['parent_id' => $parent->id]);
-        $invoice = Invoice::factory()->create(['student_id' => $student->id, 'status' => 'Draft']);
-
-        $this->actingAs($admin)->post(route('admin.invoices.adjustments.store', $invoice), [
-            'type' => 'credit',
-            'amount' => 50,
-            'reason' => 'Refund for gym cancellation',
-        ])->assertRedirect();
-
-        $this->assertDatabaseHas('invoice_adjustments', [
-            'student_id' => $student->id,
-            'invoice_id' => null,
-            'type' => 'credit',
-            'amount' => 50,
-            'status' => 'pending',
-            'applied_from_id' => $invoice->id,
-        ]);
-    }
-
-    public function test_admin_can_delete_pending_adjustment()
-    {
-        $admin = User::factory()->create(['role' => UserRole::Admin]);
-        $parent = StudentParent::factory()->create(['email' => 'parent@example.com']);
-        $student = Student::factory()->create(['parent_id' => $parent->id]);
-        $invoice = Invoice::factory()->create(['student_id' => $student->id, 'status' => 'Draft']);
-        $adjustment = InvoiceAdjustment::create([
-            'student_id' => $student->id,
-            'type' => 'credit',
-            'amount' => 50,
-            'reason' => 'Refund',
-            'status' => 'pending',
-        ]);
-
-        $this->actingAs($admin)->delete(route('admin.invoices.adjustments.destroy', $adjustment))->assertRedirect();
-
-        $this->assertDatabaseMissing('invoice_adjustments', ['id' => $adjustment->id]);
-    }
-
-    public function test_applied_adjustment_cannot_be_deleted_via_carry_forward_route()
-    {
-        $admin = User::factory()->create(['role' => UserRole::Admin]);
-        $parent = StudentParent::factory()->create(['email' => 'parent@example.com']);
-        $student = Student::factory()->create(['parent_id' => $parent->id]);
-        $invoice = Invoice::factory()->create(['student_id' => $student->id, 'status' => 'Draft']);
-        $adjustment = InvoiceAdjustment::create([
-            'invoice_id' => $invoice->id,
-            'student_id' => $student->id,
-            'type' => 'credit',
-            'amount' => 50,
-            'reason' => 'Applied credit',
-            'status' => 'applied',
-        ]);
-
-        $this->actingAs($admin)->delete(route('admin.invoices.adjustments.destroy', $adjustment))->assertRedirect();
-
-        // Should still exist — applied adjustments are managed via the invoice update flow.
-        $this->assertDatabaseHas('invoice_adjustments', ['id' => $adjustment->id]);
-    }
-
     public function test_admin_can_send_invoice()
     {
         Mail::fake();

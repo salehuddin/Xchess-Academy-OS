@@ -106,4 +106,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(ChessClass::class, 'coach_id');
     }
+
+    public function userNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class);
+    }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->userNotifications()->whereNull('read_at')->count();
+    }
 }

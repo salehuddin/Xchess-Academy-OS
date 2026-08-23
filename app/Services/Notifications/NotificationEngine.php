@@ -2,11 +2,12 @@
 
 namespace App\Services\Notifications;
 
+use App\Enums\UserRole;
 use App\Models\Invoice;
 use App\Models\Notification;
 use App\Models\NotificationDispatch;
-use App\Models\StudentParent;
 use App\Models\Setting;
+use App\Models\StudentParent;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -172,6 +173,19 @@ class NotificationEngine
 
     protected function sendAdminAlert(int $failureCount): void
     {
+        // In-app alert fires regardless of email configuration (hourly throttle).
+        app(InAppNotifier::class)->notifyRoles(
+            [UserRole::Admin],
+            'outbound_failure_spike',
+            'Notification dispatch failures detected',
+            "{$failureCount} consecutive dispatch failures detected. Check the dispatch log and channel configuration.",
+            route('admin.notifications.dispatches'),
+            ['failure_count' => $failureCount],
+            'outbound_failure_spike:'.now()->format('Y-m-d H'),
+            null,
+            false,
+        );
+
         $alertEmail = Setting::get('notifications_admin_alert_email');
 
         if (empty($alertEmail)) {
@@ -194,11 +208,29 @@ class NotificationEngine
     {
         $dateStr = $today->format('Y-m-d');
 
-        return Invoice::query()
+        $ids = Invoice::query()
             ->whereIn('status', ['Pending', 'Partial'])
             ->whereNotNull('due_date')
             ->where('due_date', '<=', $dateStr)
-            ->update(['status' => 'Overdue']);
+            ->pluck('id');
+
+        if ($ids->isEmpty()) {
+            return 0;
+        }
+
+        Invoice::query()->whereIn('id', $ids)->update(['status' => 'Overdue']);
+
+        app(InAppNotifier::class)->notifyRoles(
+            [UserRole::Finance],
+            'invoice_overdue',
+            "{$ids->count()} invoice(s) marked overdue",
+            'Invoices past their due date have been flipped to Overdue and may need follow-up.',
+            route('admin.invoices.index', ['status' => 'Overdue']),
+            ['invoice_ids' => $ids->values()->all(), 'date' => $dateStr],
+            'invoice_overdue_summary:'.$dateStr,
+        );
+
+        return $ids->count();
     }
 
     private function queueAndSend(string $trigger, Invoice $invoice, StudentParent $parent, Carbon $scheduledFor): void

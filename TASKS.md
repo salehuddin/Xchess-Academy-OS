@@ -57,6 +57,12 @@ This file tracks implementation progress based on the revised `techincal-impleme
     - [ ] WhatsApp Integration (Twilio or similar)
     - [ ] Email Notifications (Postmark/SendGrid setup)
     - [ ] Triggers for "Invoice Sent", "Payment Received"
+    - [x] **In-App Notification Center** (per-user bell/inbox for staff & coaches):
+        - [x] `user_notifications` model + `InAppNotifier` service (dedup-aware)
+        - [x] `/me/notifications` routes + `InboxController` + unread polling endpoint
+        - [x] `<NotificationBell />` dropdown wired into `AuthenticatedLayout` (45s polling)
+        - [x] Inbox page (`Notifications/Index`) with filters (all/unread, type)
+        - [x] Triggers: task assigned, invoice sent, payroll ready, invoice overdue summary, attendance pending reminder, outbound failure spike
 - [ ] **Chip-in Payment Gateway**:
     - [ ] SDK/API Integration
     - [ ] Webhook Handler for Payment Status

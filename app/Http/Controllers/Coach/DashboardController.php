@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\ChessClass;
 use App\Models\User;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -95,6 +96,12 @@ class DashboardController extends Controller
             'stats' => $stats,
             'todaySessions' => $todaySessions,
             'impersonatedCoach' => $impersonatedCoach,
+            'unreadNotifications' => UserNotification::query()
+                ->where('user_id', $user->id)
+                ->whereNull('read_at')
+                ->latest()
+                ->limit(8)
+                ->get(['id', 'type', 'title', 'body', 'url', 'created_at']),
         ]);
     }
 }

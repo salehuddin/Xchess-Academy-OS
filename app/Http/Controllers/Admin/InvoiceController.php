@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Mail\InvoiceCreated;
 use App\Models\Invoice;
 use App\Models\InvoiceAdjustment;
 use App\Models\Setting;
+use App\Services\Notifications\InAppNotifier;
 use App\Services\Notifications\NotificationEngine;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -140,46 +142,6 @@ class InvoiceController extends Controller
         return redirect()->back()->with('success', 'Invoice updated successfully.');
     }
 
-    /**
-     * Record a pending carry-forward adjustment (refund credit or additional charge)
-     * against a student to be auto-applied to next month's draft invoice.
-     */
-    public function storeAdjustment(Request $request, Invoice $invoice)
-    {
-        $request->validate([
-            'type' => 'required|string|in:credit,charge',
-            'amount' => 'required|numeric|min:0.01',
-            'reason' => 'required|string',
-        ]);
-
-        InvoiceAdjustment::create([
-            'student_id' => $invoice->student_id,
-            'type' => $request->type,
-            'amount' => $request->amount,
-            'reason' => $request->reason,
-            'status' => 'pending',
-            'applied_from_id' => $invoice->id,
-            'created_by' => auth()->id(),
-        ]);
-
-        activity()
-            ->on($invoice)
-            ->log(($request->type === 'credit' ? 'Refund credit' : 'Additional charge').' of RM'.$request->amount.' recorded for next month\'s invoice');
-
-        return redirect()->back()->with('success', 'Adjustment recorded. It will be applied to next month\'s invoice.');
-    }
-
-    public function destroyAdjustment(InvoiceAdjustment $adjustment)
-    {
-        if ($adjustment->status !== 'pending') {
-            return redirect()->back()->with('error', 'Only pending adjustments can be removed. Applied adjustments are managed on the invoice.');
-        }
-
-        $adjustment->delete();
-
-        return redirect()->back()->with('success', 'Pending adjustment removed.');
-    }
-
     public function send(Invoice $invoice)
     {
         if ($invoice->status !== 'Draft') {
@@ -197,6 +159,17 @@ class InvoiceController extends Controller
         }
 
         (new NotificationEngine)->triggerInvoiceSent($invoice);
+
+        app(InAppNotifier::class)->notifyRoles(
+            [UserRole::Finance],
+            'invoice_sent',
+            "Invoice #{$invoice->id} sent",
+            "Invoice {$invoice->month_year} for {$invoice->student?->name} was sent to the parent.",
+            route('admin.invoices.show', $invoice),
+            ['invoice_id' => $invoice->id],
+            "invoice_sent:{$invoice->id}",
+            auth()->id(),
+        );
 
         return redirect()->back()->with('success', 'Invoice sent to parent.');
     }
