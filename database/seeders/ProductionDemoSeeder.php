@@ -146,12 +146,12 @@ class ProductionDemoSeeder extends Seeder
                 [
                     'name' => $name,
                     'phone' => '+601'.rand(10000000, 99999999),
-                    'unique_access_token' => Str::uuid()->toString(),
+                    'unique_access_token' => 'demo-parent-'.($index + 1),
                 ],
             );
 
             $parents->push($parent);
-            $this->command->line("  Parent: {$email}");
+            $this->command->line("  Parent: {$email}  =>  /portal/demo-parent-".($index + 1));
         }
 
         return $parents;
