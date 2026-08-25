@@ -37,7 +37,7 @@ export default function Index({ settings }) {
         chip_environment: settings.chip_environment || 'sandbox',
         chip_brand_id: settings.chip_brand_id || '',
         chip_api_key: settings.chip_api_key || '',
-        chip_webhook_secret: settings.chip_webhook_secret || '',
+        chip_webhook_public_key: settings.chip_webhook_public_key || '',
 
         mail_host: settings.mail_host || '',
         mail_port: settings.mail_port || 2525,
@@ -561,13 +561,14 @@ export default function Index({ settings }) {
                                             isInvalid={!!servicesForm.errors.chip_api_key}
                                             errorMessage={servicesForm.errors.chip_api_key}
                                         />
-                                        <Input
-                                            type="password"
-                                            label="Webhook Public Key / Secret"
-                                            value={servicesForm.data.chip_webhook_secret}
-                                            onChange={(e) => servicesForm.setData('chip_webhook_secret', e.target.value)}
-                                            isInvalid={!!servicesForm.errors.chip_webhook_secret}
-                                            errorMessage={servicesForm.errors.chip_webhook_secret}
+                                        <Textarea
+                                            label="Webhook Public Key (PEM, optional)"
+                                            description="Used to verify Chip webhook signatures. If empty, keys are auto-fetched from the Chip API."
+                                            value={servicesForm.data.chip_webhook_public_key}
+                                            onValueChange={(val) => servicesForm.setData('chip_webhook_public_key', val)}
+                                            isInvalid={!!servicesForm.errors.chip_webhook_public_key}
+                                            errorMessage={servicesForm.errors.chip_webhook_public_key}
+                                            minRows={3}
                                         />
                                     </div>
                                     <Divider className="mt-6" />

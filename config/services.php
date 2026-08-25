@@ -42,7 +42,7 @@ return [
         'environment' => env('CHIP_ENVIRONMENT', 'sandbox'),
         'brand_id' => env('CHIP_BRAND_ID'),
         'api_key' => env('CHIP_API_KEY'),
-        'webhook_secret' => env('CHIP_WEBHOOK_SECRET'),
+        'webhook_public_key' => env('CHIP_WEBHOOK_PUBLIC_KEY'),
     ],
 
     'whatsapp' => [

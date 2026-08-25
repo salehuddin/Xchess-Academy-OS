@@ -31,7 +31,7 @@ class SettingsTest extends TestCase
             'chip_environment' => 'sandbox',
             'chip_brand_id' => 'BRAND_12345',
             'chip_api_key' => 'SECRET_KEY_123',
-            'chip_webhook_secret' => 'WEBHOOK_SECRET_123',
+            'chip_webhook_public_key' => '-----BEGIN PUBLIC KEY-----test-----END PUBLIC KEY-----',
             'mail_host' => 'smtp.mailtrap.io',
             'mail_port' => 2525,
             'mail_username' => 'user_123',

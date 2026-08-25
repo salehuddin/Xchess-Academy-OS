@@ -36,7 +36,7 @@ class SettingController extends Controller
             'chip_environment' => Setting::get('chip_environment', 'sandbox'),
             'chip_brand_id' => Setting::get('chip_brand_id', ''),
             'chip_api_key' => Setting::get('chip_api_key', ''),
-            'chip_webhook_secret' => Setting::get('chip_webhook_secret', ''),
+            'chip_webhook_public_key' => Setting::get('chip_webhook_public_key', ''),
 
             'mail_host' => Setting::get('mail_host', config('mail.mailers.smtp.host', '127.0.0.1')),
             'mail_port' => Setting::get('mail_port', config('mail.mailers.smtp.port', '2525')),
@@ -104,7 +104,7 @@ class SettingController extends Controller
             'chip_environment' => 'required|in:sandbox,live',
             'chip_brand_id' => 'nullable|string|max:255',
             'chip_api_key' => 'nullable|string|max:255',
-            'chip_webhook_secret' => 'nullable|string|max:255',
+            'chip_webhook_public_key' => 'nullable|string|max:2000',
 
             'mail_host' => 'required|string|max:255',
             'mail_port' => 'required|numeric',
@@ -125,7 +125,8 @@ class SettingController extends Controller
         Setting::set('chip_environment', $validated['chip_environment'], 'chip');
         Setting::set('chip_brand_id', $validated['chip_brand_id'] ?? '', 'chip');
         Setting::set('chip_api_key', $validated['chip_api_key'] ?? '', 'chip', true);
-        Setting::set('chip_webhook_secret', $validated['chip_webhook_secret'] ?? '', 'chip', true);
+        // Public key is not secret, so store it unencrypted.
+        Setting::set('chip_webhook_public_key', $validated['chip_webhook_public_key'] ?? '', 'chip');
 
         Setting::set('mail_host', $validated['mail_host'], 'smtp');
         Setting::set('mail_port', $validated['mail_port'], 'smtp');

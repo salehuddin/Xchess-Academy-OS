@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\StudentParent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -106,17 +107,21 @@ class ChipPaymentController extends Controller
      */
     public function webhook(Request $request): JsonResponse
     {
-        $secret = Setting::get('chip_webhook_secret', config('services.chip.webhook_secret'));
+        // Chip signs every webhook with an RSA PKCS#1 v1.5 signature of the
+        // SHA256 digest of the raw request body, sent in the X-Signature
+        // header. The public key lives on the Webhook object, fetched via the
+        // Chip API. An explicit public key may be configured to skip the fetch.
+        $publicKeys = $this->webhookPublicKeys();
 
-        if (empty($secret)) {
-            Log::warning('Chip Webhook rejected: webhook secret is not configured');
+        if (empty($publicKeys)) {
+            Log::warning('Chip Webhook rejected: no webhook public key configured or fetchable');
 
-            return response()->json(['message' => 'Webhook secret not configured'], 503);
+            return response()->json(['message' => 'Webhook public key not configured'], 503);
         }
 
-        $signature = $this->signatureFromRequest($request);
+        $signature = $request->header('X-Signature');
 
-        if (! $this->hasValidSignature($request, $signature, $secret)) {
+        if (! $signature || ! $this->signatureIsValid($request->getContent(), $signature, $publicKeys)) {
             Log::warning('Chip Webhook rejected: invalid or missing signature', [
                 'ip' => $request->ip(),
                 'reference' => $request->input('reference'),
@@ -197,30 +202,83 @@ class ChipPaymentController extends Controller
     }
 
     /**
-     * Chip signs each webhook with the HMAC-SHA256 of the raw request body
-     * using the configured webhook secret. Accept the signature from either
-     * the `Signature` or `X-Signature` header.
+     * Resolve the candidate public keys for verifying a webhook payload.
+     *
+     * Priority:
+     *  1. An explicitly configured PEM (`chip_webhook_public_key` setting or
+     *     `services.chip.webhook_public_key`) — useful for locked-down setups.
+     *  2. The `public_key` of each registered Webhook, fetched via the Chip
+     *     API and cached for a day to avoid outbound calls on every delivery.
+     *
+     * Returns an empty array when neither is available (caller should 503).
+     *
+     * @return string[]
      */
-    private function signatureFromRequest(Request $request): ?string
+    private function webhookPublicKeys(): array
     {
-        $signature = $request->header('Signature') ?: $request->header('X-Signature');
+        $explicit = Setting::get('chip_webhook_public_key', config('services.chip.webhook_public_key'));
 
-        if (! $signature) {
-            return null;
+        if (! empty($explicit)) {
+            return [trim($explicit)];
         }
 
-        // Tolerate an optional algorithm prefix, e.g. "sha256=<hash>".
-        return strtolower(preg_replace('/^sha256=/', '', trim((string) $signature)));
+        $apiKey = Setting::get('chip_api_key', config('services.chip.api_key'));
+
+        if (empty($apiKey)) {
+            return [];
+        }
+
+        return Cache::remember('chip:webhook_public_keys', now()->addDay(), function () use ($apiKey) {
+            try {
+                $response = Http::withToken($apiKey)
+                    ->get(config('services.chip.base_url').'/webhooks/');
+
+                if (! $response->successful()) {
+                    Log::warning('Chip webhook public key fetch failed', ['status' => $response->status()]);
+
+                    return [];
+                }
+
+                $keys = [];
+                foreach ($response->json() as $webhook) {
+                    if (! empty($webhook['public_key'])) {
+                        $keys[] = trim($webhook['public_key']);
+                    }
+                }
+
+                return array_values(array_unique($keys));
+            } catch (\Exception $e) {
+                Log::error('Chip webhook public key fetch exception: '.$e->getMessage());
+
+                return [];
+            }
+        });
     }
 
-    private function hasValidSignature(Request $request, ?string $signature, string $secret): bool
+    /**
+     * Verify a Chip webhook signature (base64 RSA PKCS#1 v1.5 over the
+     * SHA256 digest of the raw body) against any of the candidate keys.
+     */
+    private function signatureIsValid(string $body, string $signatureB64, array $publicKeys): bool
     {
-        if (! $signature) {
+        $signature = base64_decode($signatureB64, true);
+
+        if ($signature === false) {
             return false;
         }
 
-        $expected = hash_hmac('sha256', $request->getContent(), $secret);
+        foreach ($publicKeys as $pem) {
+            $key = openssl_pkey_get_public($pem);
 
-        return hash_equals($expected, $signature);
+            if ($key === false) {
+                continue;
+            }
+
+            if (openssl_verify($body, $signature, $key, OPENSSL_ALGO_SHA256) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
