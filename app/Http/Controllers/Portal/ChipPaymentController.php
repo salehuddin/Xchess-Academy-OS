@@ -38,15 +38,14 @@ class ChipPaymentController extends Controller
 
         $brandId = Setting::get('chip_brand_id', config('services.chip.brand_id'));
         $apiKey = Setting::get('chip_api_key', config('services.chip.api_key'));
-        $environment = Setting::get('chip_environment', config('services.chip.environment', 'sandbox'));
 
         if (empty($brandId) || empty($apiKey)) {
             return back()->with('error', 'Chip Payment Gateway is currently unconfigured. Please contact academy finance.');
         }
 
-        $endpoint = $environment === 'live'
-            ? 'https://gate.chip-in.asia/api/v1/purchases/'
-            : 'https://gate.sandbox.chip-in.asia/api/v1/purchases/';
+        // Chip uses a single API host for test and live; the API key determines
+        // which mode is used. There is no separate sandbox subdomain.
+        $endpoint = config('services.chip.base_url').'/purchases/';
 
         $amountInCents = (int) round($invoice->total_amount * 100);
         $redirectUrl = route('portal.invoice.show', [$token, $invoice->id]);

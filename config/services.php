@@ -36,6 +36,9 @@ return [
     ],
 
     'chip' => [
+        // Chip exposes a single API host; test vs live is determined by the
+        // API key (test keys vs live keys), not a separate sandbox subdomain.
+        'base_url' => env('CHIP_API_BASE_URL', 'https://gate.chip-in.asia/api/v1'),
         'environment' => env('CHIP_ENVIRONMENT', 'sandbox'),
         'brand_id' => env('CHIP_BRAND_ID'),
         'api_key' => env('CHIP_API_KEY'),

@@ -14,7 +14,8 @@
 ## Service Integrations & Credentials
 
 ### 1. Chip Payment Gateway
-- Credentials: `chip_environment` (`sandbox` / `live`), `chip_brand_id`, `chip_api_key`, `chip_webhook_secret`.
+- Base API URL: `https://gate.chip-in.asia/api/v1` (single host — there is no separate sandbox subdomain). Test vs live mode is determined by the API key used (test key vs live key); for sandbox testing use Chip's test card `4444 3333 2222 1111` (CVC `123`, any future expiry).
+- Credentials: `chip_environment` (`sandbox` / `live` — informational label for the saved key), `chip_brand_id`, `chip_api_key`, `chip_webhook_secret`.
 - Features: Interactive **"Test Chip API Connection"** button verifies HTTP authentication against Chip endpoints.
 
 ### 2. SMTP Mailer

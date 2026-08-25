@@ -204,9 +204,7 @@ class SettingController extends Controller
         }
 
         try {
-            $endpoint = Setting::get('chip_environment') === 'live'
-                ? 'https://gate.chip-in.asia/api/v1/purchases/'
-                : 'https://gate.sandbox.chip-in.asia/api/v1/purchases/';
+            $endpoint = config('services.chip.base_url').'/purchases/';
 
             $response = Http::withToken($apiKey)->get($endpoint);
 

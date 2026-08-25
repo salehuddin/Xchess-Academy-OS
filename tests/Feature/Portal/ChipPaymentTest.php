@@ -47,9 +47,9 @@ class ChipPaymentTest extends TestCase
         Setting::set('chip_environment', 'sandbox', 'chip');
 
         Http::fake([
-            'https://gate.sandbox.chip-in.asia/api/v1/purchases/' => Http::response([
+            'https://gate.chip-in.asia/api/v1/purchases/' => Http::response([
                 'id' => 'CHIP_PURCHASE_123',
-                'checkout_url' => 'https://gate.sandbox.chip-in.asia/checkout/123',
+                'checkout_url' => 'https://gate.chip-in.asia/checkout/123',
             ], 200),
         ]);
 
@@ -59,7 +59,7 @@ class ChipPaymentTest extends TestCase
 
         $response = $this->post(route('portal.invoice.checkout', [$parent->unique_access_token, $invoice->id]));
 
-        $response->assertRedirect('https://gate.sandbox.chip-in.asia/checkout/123');
+        $response->assertRedirect('https://gate.chip-in.asia/checkout/123');
     }
 
     public function test_inertia_checkout_returns_external_location_response(): void
@@ -69,9 +69,9 @@ class ChipPaymentTest extends TestCase
         Setting::set('chip_environment', 'sandbox', 'chip');
 
         Http::fake([
-            'https://gate.sandbox.chip-in.asia/api/v1/purchases/' => Http::response([
+            'https://gate.chip-in.asia/api/v1/purchases/' => Http::response([
                 'id' => 'CHIP_PURCHASE_123',
-                'checkout_url' => 'https://gate.sandbox.chip-in.asia/checkout/123',
+                'checkout_url' => 'https://gate.chip-in.asia/checkout/123',
             ], 200),
         ]);
 
@@ -87,7 +87,7 @@ class ChipPaymentTest extends TestCase
         );
 
         $response->assertStatus(409);
-        $response->assertHeader('X-Inertia-Location', 'https://gate.sandbox.chip-in.asia/checkout/123');
+        $response->assertHeader('X-Inertia-Location', 'https://gate.chip-in.asia/checkout/123');
     }
 
     public function test_chip_webhook_reconciles_invoice_payment(): void
