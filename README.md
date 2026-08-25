@@ -34,8 +34,10 @@ Built with **Laravel 12** and **React (Inertia.js)**, utilizing **Hero UI** for 
 - **Payment Integration:** Ready for Chip-in Payment Gateway integration.
 
 ### 💼 Coach Payroll
-- **Session-Based Pay:** Payroll calculated strictly on delivered sessions × hourly rate.
+- **Session-Based Pay:** Payroll calculated strictly from delivered sessions and each package's coach rate per session.
 - **Independent Logic:** Coach pay is decoupled from student billing adjustments.
+- **Transparent Details:** Saved session breakdowns and activity trails explain each payroll amount and status change.
+- **Admin Controls:** Admins can edit Draft payroll totals; Processed and Paid payrolls are locked.
 
 ### ✅ Task Management & Auditing
 - **Contextual Tasks:** Create tasks linked directly to specific Students or Invoices.

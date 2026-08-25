@@ -35,6 +35,13 @@ return [
         ],
     ],
 
+    'chip' => [
+        'environment' => env('CHIP_ENVIRONMENT', 'sandbox'),
+        'brand_id' => env('CHIP_BRAND_ID'),
+        'api_key' => env('CHIP_API_KEY'),
+        'webhook_secret' => env('CHIP_WEBHOOK_SECRET'),
+    ],
+
     'whatsapp' => [
         'driver' => env('WHATSAPP_DRIVER', 'log'),
         'from' => env('WHATSAPP_FROM'),

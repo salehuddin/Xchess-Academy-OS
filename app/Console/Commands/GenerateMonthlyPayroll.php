@@ -71,19 +71,61 @@ class GenerateMonthlyPayroll extends Command
             // Store the average rate for display purposes (total / sessions).
             $averageRate = $sessionCount > 0 ? round($totalAmount / $sessionCount, 2) : 0;
 
-            $payroll = Payroll::updateOrCreate(
-                [
+            $values = [
+                'total_sessions' => $sessionCount,
+                'base_rate' => $averageRate,
+                'total_amount' => $totalAmount,
+                'generated_at' => now(),
+            ];
+
+            // Only set the status to Draft when creating a new payroll. On
+            // re-runs for a month that already exists, recompute the amounts
+            // and line items but PRESERVE the current status so already
+            // approved (Processed) or released (Paid) payrolls are not
+            // clobbered back to Draft.
+            $existing = Payroll::where('coach_id', $coach->id)
+                ->where('month_year', $monthInput)
+                ->first();
+
+            if ($existing) {
+                $existing->update($values);
+                $payroll = $existing;
+                $activityDescription = "Payroll regenerated for {$monthInput}: {$sessionCount} sessions, RM {$totalAmount}";
+
+                if ($existing->status !== 'Draft') {
+                    $this->warn("  - Existing payroll is {$existing->status}; status preserved, amounts recomputed.");
+                }
+            } else {
+                $payroll = Payroll::create(array_merge([
                     'coach_id' => $coach->id,
                     'month_year' => $monthInput,
-                ],
-                [
-                    'total_sessions' => $sessionCount,
-                    'base_rate' => $averageRate,
-                    'total_amount' => $totalAmount,
                     'status' => 'Draft',
-                    'generated_at' => now(),
-                ]
-            );
+                ], $values));
+                $activityDescription = "Payroll generated for {$monthInput}: {$sessionCount} sessions, RM {$totalAmount}";
+            }
+
+            // Persist a snapshot of the session breakdown so the payroll
+            // detail can explain exactly why the total amount is what it is.
+            $payroll->lineItems()->delete();
+
+            foreach ($sessions as $session) {
+                $payroll->lineItems()->create([
+                    'class_id' => $session->class_id,
+                    'class_name' => $session->class?->name,
+                    'package_title' => $session->class?->package?->title,
+                    'attendance_date' => $session->attendance_date,
+                    'rate' => (float) ($session->class?->package?->coach_rate_per_session ?? 0),
+                ]);
+            }
+
+            activity('payroll')
+                ->performedOn($payroll)
+                ->withProperties([
+                    'month_year' => $monthInput,
+                    'total_sessions' => $sessionCount,
+                    'total_amount' => $totalAmount,
+                ])
+                ->log($activityDescription);
 
             $this->info("  - Generated payroll: {$sessionCount} sessions, RM {$totalAmount}");
 

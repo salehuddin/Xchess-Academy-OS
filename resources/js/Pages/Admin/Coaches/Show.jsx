@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import PayrollDetailModal from '@/Components/PayrollDetailModal';
 import {
     Card,
     CardHeader,
@@ -16,7 +17,7 @@ import {
     Chip,
     Tooltip
 } from "@heroui/react";
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 const EditIcon = (props) => (
     <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 20 20" width="1em" {...props}>
@@ -33,14 +34,30 @@ const EyeIcon = (props) => (
     </svg>
 );
 
-export default function Show({ coach, classes, sessions, coachOptions }) {
+export default function Show({ coach, classes, sessions, coachOptions, payrolls }) {
     const { auth } = usePage().props;
+    const [detailPayroll, setDetailPayroll] = useState(null);
 
     const statusColorMap = {
         Active: "success",
         Pending: "warning",
         Paused: "default",
         Stopped: "danger",
+    };
+
+    const payrollStatusColorMap = {
+        Paid: "success",
+        Processed: "primary",
+        Draft: "warning",
+    };
+
+    const formatRM = (amount) => `RM ${Number(amount ?? 0).toFixed(2)}`;
+
+    const formatMonth = (yearMonth) => {
+        if (!yearMonth) return '—';
+        const [year, month] = yearMonth.split('-');
+        const date = new Date(Number(year), Number(month) - 1, 1);
+        return date.toLocaleDateString('en-MY', { year: 'numeric', month: 'long' });
     };
 
     const availability = coach.coach_profile?.availability || [];
@@ -63,6 +80,15 @@ export default function Show({ coach, classes, sessions, coachOptions }) {
         { name: "TIME", uid: "time" },
         { name: "ROOM", uid: "room_name" },
         { name: "TOPIC", uid: "topic" },
+    ]), []);
+
+    const payrollColumns = useMemo(() => ([
+        { name: "MONTH", uid: "month_year" },
+        { name: "SESSIONS", uid: "total_sessions" },
+        { name: "AVG RATE", uid: "base_rate" },
+        { name: "TOTAL", uid: "total_amount" },
+        { name: "STATUS", uid: "status" },
+        { name: "ACTIONS", uid: "actions" },
     ]), []);
 
     const renderClassCell = useCallback((item, columnKey) => {
@@ -114,6 +140,45 @@ export default function Show({ coach, classes, sessions, coachOptions }) {
                 return item[columnKey] || 'N/A';
         }
     }, []);
+
+    const renderPayrollCell = useCallback((item, columnKey) => {
+        switch (columnKey) {
+            case "month_year":
+                return <p className="font-medium text-sm">{formatMonth(item.month_year)}</p>;
+            case "total_sessions":
+                return (
+                    <p className="font-semibold text-sm">
+                        {item.total_sessions} <span className="text-xs text-default-400 font-normal">sessions</span>
+                    </p>
+                );
+            case "base_rate":
+                return <p className="text-sm text-default-600">{formatRM(item.base_rate)}</p>;
+            case "total_amount":
+                return <p className="font-bold text-sm text-success-600">{formatRM(item.total_amount)}</p>;
+            case "status":
+                return (
+                    <Chip className="capitalize" color={payrollStatusColorMap[item.status] || "default"} size="sm" variant="flat">
+                        {item.status}
+                    </Chip>
+                );
+            case "actions":
+                return (
+                    <div className="flex items-center gap-2 justify-center">
+                        <Tooltip content="View Details">
+                            <button
+                                className="text-default-400 hover:text-default-600 transition-colors"
+                                onClick={() => setDetailPayroll(item)}
+                                aria-label="View payroll details"
+                            >
+                                <EyeIcon />
+                            </button>
+                        </Tooltip>
+                    </div>
+                );
+            default:
+                return item[columnKey] || 'N/A';
+        }
+    }, [payrollStatusColorMap]);
 
     const onCoachSelect = (key) => {
         if (key && String(key) !== String(coach.id)) {
@@ -285,7 +350,45 @@ export default function Show({ coach, classes, sessions, coachOptions }) {
                         </Table>
                     </CardBody>
                 </Card>
+
+                <Card className="shadow-sm border border-divider">
+                    <CardHeader className="flex justify-between items-center">
+                        <p className="text-md font-semibold">Payroll History</p>
+                        <Button as={Link} href={route('admin.payrolls.index')} variant="flat" size="sm">
+                            View All Payrolls
+                        </Button>
+                    </CardHeader>
+                    <CardBody>
+                        <Table aria-label="Payroll history table">
+                            <TableHeader columns={payrollColumns}>
+                                {(column) => (
+                                    <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
+                                        {column.name}
+                                    </TableColumn>
+                                )}
+                            </TableHeader>
+                            <TableBody items={payrolls} emptyContent="No payroll records yet">
+                                {(item) => (
+                                    <TableRow key={item.id}>
+                                        {(columnKey) => (
+                                            <TableCell>
+                                                {renderPayrollCell(item, columnKey)}
+                                            </TableCell>
+                                        )}
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardBody>
+                </Card>
             </div>
+
+            <PayrollDetailModal
+                isOpen={!!detailPayroll}
+                onClose={() => setDetailPayroll(null)}
+                url={detailPayroll ? route('admin.payrolls.show', detailPayroll.id) : null}
+                canEdit
+            />
         </AuthenticatedLayout>
     );
 }

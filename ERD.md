@@ -13,7 +13,7 @@ erDiagram
         string role "Admin, Ops, Finance, Coach"
         string_array preferred_levels
         string_array availability_slots
-        decimal hourly_rate "Base rate per session delivered"
+        boolean is_coach "May teach classes and receive payroll"
     }
 
     PARENT ||--o{ STUDENT : "manages"
@@ -122,10 +122,23 @@ erDiagram
     COACH_PAYROLL {
         int id PK
         int coach_id FK
-        date month_year
-        int sessions_delivered_count
-        decimal total_pay
-        string status "Draft, Processed"
+        string month_year "YYYY-MM"
+        int total_sessions
+        decimal base_rate "Average snapshotted session rate"
+        decimal total_amount
+        string status "Draft, Processed, Paid"
+        datetime generated_at
+    }
+
+    COACH_PAYROLL ||--o{ PAYROLL_LINE_ITEM : "contains"
+    PAYROLL_LINE_ITEM {
+        int id PK
+        int payroll_id FK
+        int class_id FK "nullable snapshot reference"
+        string class_name "snapshot"
+        string package_title "snapshot"
+        date attendance_date
+        decimal rate "snapshotted package coach rate"
     }
 
     TASK {
@@ -158,4 +171,6 @@ Manual Notification: The INVOICE remains in Draft status even after adjustment. 
 
 Room Safeguard: The ROOM entity ensures that physical space is not double-booked during the scheduling process.
 
-Session-Based Pay: COACH_PAYROLL is derived directly from CLASS_SCHEDULE where is_delivered is true, ensuring coaches are paid per session regardless of class size or student discounts.
+Session-Based Pay: COACH_PAYROLL is derived from distinct delivered attendance session pairs for each coach's classes. Each package coach rate is stored as a PAYROLL_LINE_ITEM snapshot, ensuring coaches are paid per session regardless of class size or student discounts.
+
+Payroll Audit: Payroll generation, Draft edits, processing, and payment actions are recorded against COACH_PAYROLL in the Spatie activity log with actor and timestamp information.

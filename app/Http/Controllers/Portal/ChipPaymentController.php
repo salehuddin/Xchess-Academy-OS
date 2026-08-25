@@ -8,17 +8,19 @@ use App\Models\Payment;
 use App\Models\Setting;
 use App\Models\StudentParent;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 class ChipPaymentController extends Controller
 {
     /**
      * Initiate a Chip payment checkout session for an invoice.
      */
-    public function checkout(string $token, Invoice $invoice): RedirectResponse
+    public function checkout(string $token, Invoice $invoice, Request $request): Response
     {
         $parent = StudentParent::query()
             ->where('unique_access_token', $token)
@@ -36,7 +38,7 @@ class ChipPaymentController extends Controller
 
         $brandId = Setting::get('chip_brand_id', config('services.chip.brand_id'));
         $apiKey = Setting::get('chip_api_key', config('services.chip.api_key'));
-        $environment = Setting::get('chip_environment', 'sandbox');
+        $environment = Setting::get('chip_environment', config('services.chip.environment', 'sandbox'));
 
         if (empty($brandId) || empty($apiKey)) {
             return back()->with('error', 'Chip Payment Gateway is currently unconfigured. Please contact academy finance.');
@@ -60,7 +62,7 @@ class ChipPaymentController extends Controller
                 'currency' => 'MYR',
                 'products' => [
                     [
-                        'name' => 'Tuition Fee - Invoice #'.$invoice->id.' ('.$invoice->month_year.')',
+                        'name' => 'Tuition Fee - '.$invoice->invoice_number.' ('.$invoice->month_year.')',
                         'price' => $amountInCents,
                         'quantity' => 1,
                     ],
@@ -70,14 +72,24 @@ class ChipPaymentController extends Controller
             'success_redirect' => $redirectUrl.'?payment=success',
             'failure_redirect' => $redirectUrl.'?payment=failed',
             'cancel_redirect' => $redirectUrl.'?payment=cancelled',
-            'reference' => 'INV-'.$invoice->id,
+            'reference' => $invoice->invoice_number,
         ];
 
         try {
             $response = Http::withToken($apiKey)->post($endpoint, $payload);
 
             if ($response->successful() && ! empty($response->json('checkout_url'))) {
-                return redirect()->away($response->json('checkout_url'));
+                $checkoutUrl = $response->json('checkout_url');
+
+                // Inertia XHR requests cannot follow a plain 302 to an external
+                // domain (the redirect is followed inside XHR and blocked by
+                // CORS). Return a 409 + X-Inertia-Location response so the
+                // client performs a full page navigation to Chip's checkout.
+                if ($request->header('X-Inertia')) {
+                    return Inertia::location($checkoutUrl);
+                }
+
+                return redirect()->away($checkoutUrl);
             }
 
             Log::error('Chip Checkout Error', ['response' => $response->json(), 'status' => $response->status()]);
@@ -95,6 +107,25 @@ class ChipPaymentController extends Controller
      */
     public function webhook(Request $request): JsonResponse
     {
+        $secret = Setting::get('chip_webhook_secret', config('services.chip.webhook_secret'));
+
+        if (empty($secret)) {
+            Log::warning('Chip Webhook rejected: webhook secret is not configured');
+
+            return response()->json(['message' => 'Webhook secret not configured'], 503);
+        }
+
+        $signature = $this->signatureFromRequest($request);
+
+        if (! $this->hasValidSignature($request, $signature, $secret)) {
+            Log::warning('Chip Webhook rejected: invalid or missing signature', [
+                'ip' => $request->ip(),
+                'reference' => $request->input('reference'),
+            ]);
+
+            return response()->json(['message' => 'Invalid signature'], 401);
+        }
+
         $payload = $request->all();
         Log::info('Chip Webhook Received', $payload);
 
@@ -106,37 +137,91 @@ class ChipPaymentController extends Controller
             return response()->json(['message' => 'Missing invoice reference'], 400);
         }
 
-        // Extract Invoice ID from reference (e.g. 'INV-12')
-        $invoiceId = str_replace('INV-', '', $reference);
-        $invoice = Invoice::query()->find($invoiceId);
+        // Resolve the invoice from the purchase reference. Current format is
+        // the structured invoice number (INV-YYYYMM-#####); purchases created
+        // before that used the legacy INV-{id} reference.
+        $invoice = $this->resolveInvoiceFromReference((string) $reference);
 
         if (! $invoice) {
             return response()->json(['message' => 'Invoice not found'], 404);
         }
 
         if (in_array(strtolower((string) $event), ['paid', 'cleared', 'purchase.paid', 'success'])) {
-            if ($invoice->status !== 'Paid') {
-                $invoice->update([
-                    'status' => 'Paid',
-                ]);
+            // Idempotency: skip if the invoice is already reconciled or this
+            // Chip purchase has already been recorded.
+            $alreadyReconciled = $invoice->status === 'Paid'
+                || ($purchaseId && Payment::query()->where('transaction_id', $purchaseId)->exists());
 
-                Payment::query()->create([
-                    'invoice_id' => $invoice->id,
-                    'amount' => $invoice->total_amount,
-                    'payment_date' => now()->toDateString(),
-                    'payment_method' => 'Chip Gateway',
-                    'transaction_id' => $purchaseId ?? 'CHIP-'.now()->timestamp,
-                    'notes' => 'Automated payment reconciliation via Chip webhook',
-                ]);
+            if (! $alreadyReconciled) {
+                DB::transaction(function () use ($invoice, $purchaseId) {
+                    $invoice->update([
+                        'status' => 'Paid',
+                    ]);
+
+                    Payment::query()->create([
+                        'invoice_id' => $invoice->id,
+                        'amount' => $invoice->total_amount,
+                        'payment_date' => now()->toDateString(),
+                        'payment_method' => 'Chip Gateway',
+                        'transaction_id' => $purchaseId ?? 'CHIP-'.now()->timestamp,
+                        'notes' => 'Automated payment reconciliation via Chip webhook',
+                    ]);
+                });
 
                 activity()
                     ->on($invoice)
-                    ->log('Invoice #'.$invoice->id.' marked Paid via Chip Webhook notification');
+                    ->log($invoice->invoice_number.' marked Paid via Chip Webhook notification');
             }
 
             return response()->json(['message' => 'Invoice payment reconciled successfully']);
         }
 
         return response()->json(['message' => 'Webhook received']);
+    }
+
+    /**
+     * Resolve an invoice from a Chip purchase reference. Supports the
+     * structured invoice number (INV-YYYYMM-#####) and the legacy
+     * INV-{id} format used before structured numbering was introduced.
+     */
+    private function resolveInvoiceFromReference(string $reference): ?Invoice
+    {
+        if (preg_match('/^INV-\d{6}-\d{1,6}$/', $reference)) {
+            return Invoice::query()->where('invoice_number', $reference)->first();
+        }
+
+        if (preg_match('/^INV-(\d+)$/', $reference, $matches)) {
+            return Invoice::query()->find((int) $matches[1]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Chip signs each webhook with the HMAC-SHA256 of the raw request body
+     * using the configured webhook secret. Accept the signature from either
+     * the `Signature` or `X-Signature` header.
+     */
+    private function signatureFromRequest(Request $request): ?string
+    {
+        $signature = $request->header('Signature') ?: $request->header('X-Signature');
+
+        if (! $signature) {
+            return null;
+        }
+
+        // Tolerate an optional algorithm prefix, e.g. "sha256=<hash>".
+        return strtolower(preg_replace('/^sha256=/', '', trim((string) $signature)));
+    }
+
+    private function hasValidSignature(Request $request, ?string $signature, string $secret): bool
+    {
+        if (! $signature) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $request->getContent(), $secret);
+
+        return hash_equals($expected, $signature);
     }
 }

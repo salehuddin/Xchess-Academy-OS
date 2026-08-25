@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChessClass;
 use App\Models\Invoice;
 use App\Models\Setting;
+use App\Models\Student;
 use App\Models\StudentParent;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -46,6 +47,8 @@ class ParentPortalController extends Controller
             ->map(function (Invoice $invoice) use ($token) {
                 return [
                     'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'student_id' => $invoice->student_id,
                     'student_name' => $invoice->student?->name,
                     'month_year' => $invoice->month_year,
                     'status' => $invoice->status,
@@ -126,6 +129,7 @@ class ParentPortalController extends Controller
                     'end_time' => substr((string) $class->end_time, 0, 5),
                     'coach_name' => $effectiveCoachName,
                     'students' => $class->students->pluck('name')->values()->all(),
+                    'student_ids' => $class->students->pluck('id')->values()->all(),
                     'topic' => $session?->topic ?? null,
                 ]);
             }
@@ -134,6 +138,31 @@ class ParentPortalController extends Controller
         $schedule = $schedule
             ->sortBy(fn ($s) => $s['date'].' '.($s['start_time'] ?? '00:00'))
             ->values();
+
+        $summary = [
+            'pending_count' => $invoices->where('status', 'Pending')->count(),
+            'pending_amount' => $invoices->where('status', 'Pending')->sum('total_amount'),
+            'overdue_count' => $invoices->where('status', 'Overdue')->count(),
+            'overdue_amount' => $invoices->where('status', 'Overdue')->sum('total_amount'),
+            'paid_count' => $invoices->where('status', 'Paid')->count(),
+        ];
+
+        $nextSession = $schedule->first();
+
+        $whatsappNumber = Setting::get('whatsapp_phone_number')
+            ?: Setting::get('support_phone')
+            ?: Setting::get('company_phone');
+
+        $whatsappDigits = preg_replace('/\D/', '', (string) $whatsappNumber);
+
+        $contact = [
+            'support_email' => Setting::get('support_email', 'support@xchess-academy.com'),
+            'support_phone' => Setting::get('support_phone', Setting::get('company_phone', '+60 12-345 6789')),
+            'support_hours' => Setting::get('support_hours', 'Mon-Fri, 9am - 6pm'),
+            'whatsapp_url' => $whatsappDigits
+                ? 'https://wa.me/'.$whatsappDigits.'?text='.rawurlencode('Hi, I have a question about my child\'s account at '.Setting::get('company_name', 'X Chess Academy').'.')
+                : null,
+        ];
 
         return Inertia::render('ParentPortal/Index', [
             'token' => $token,
@@ -144,6 +173,9 @@ class ParentPortalController extends Controller
             'students' => $parent->students,
             'invoices' => $invoices,
             'schedule' => $schedule,
+            'summary' => $summary,
+            'next_session' => $nextSession,
+            'contact' => $contact,
             'range' => [
                 'start_date' => $startDate,
                 'end_date' => $endDate,
@@ -173,6 +205,49 @@ class ParentPortalController extends Controller
         ]);
     }
 
+    public function studentDetails(string $token, Student $student)
+    {
+        $parent = StudentParent::query()
+            ->where('unique_access_token', $token)
+            ->firstOrFail();
+
+        if ($student->parent_id !== $parent->id) {
+            abort(404);
+        }
+
+        // Only expose what the portal modal displays. Internal fields
+        // (admin_notes, recurring_discount) and relations (parent, invoices)
+        // must never leak to the guest-facing payload.
+        $student->load(['classes.package']);
+
+        $student->setRelation('attendances', $this->attendanceHistory($student));
+
+        return response()->json(
+            $student->makeHidden(['admin_notes', 'recurring_discount', 'deleted_at'])
+        );
+    }
+
+    private function attendanceHistory(Student $student)
+    {
+        return $student->attendances()
+            ->with(['class.package', 'class.room'])
+            ->orderByDesc('attendance_date')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get()
+            ->map(fn ($attendance) => [
+                'id' => $attendance->id,
+                'date' => $attendance->attendance_date?->format('Y-m-d'),
+                'class_id' => $attendance->class_id,
+                'class_name' => $attendance->class?->name ?? $attendance->class?->package?->title ?? 'Class #'.$attendance->class_id,
+                'package' => $attendance->class?->package?->title,
+                'room_name' => $attendance->class?->room?->name,
+                'start_time' => $attendance->class?->start_time ? Carbon::parse($attendance->class->start_time)->format('H:i') : null,
+                'end_time' => $attendance->class?->end_time ? Carbon::parse($attendance->class->end_time)->format('H:i') : null,
+                'is_present' => $attendance->is_present,
+            ]);
+    }
+
     public function downloadInvoicePdf(string $token, Invoice $invoice)
     {
         $parent = StudentParent::query()
@@ -199,7 +274,7 @@ class ParentPortalController extends Controller
             'company' => $company,
         ]);
 
-        return $pdf->download('Invoice-INV-'.$invoice->id.'.pdf');
+        return $pdf->download('Invoice-'.$invoice->invoice_number.'.pdf');
     }
 
     public function downloadReceiptPdf(string $token, Invoice $invoice)
@@ -235,6 +310,6 @@ class ParentPortalController extends Controller
             'company' => $company,
         ]);
 
-        return $pdf->download('Official-Receipt-INV-'.$invoice->id.'.pdf');
+        return $pdf->download('Official-Receipt-'.$invoice->invoice_number.'.pdf');
     }
 }

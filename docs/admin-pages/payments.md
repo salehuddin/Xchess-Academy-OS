@@ -17,7 +17,7 @@
 - **Webhook Reconciliation (`/webhooks/chip`)**:
   - Excluded from CSRF validation in `bootstrap/app.php`.
   - Validates `X-Signature` header using configured `chip_webhook_secret`.
-  - Matches invoice ID from purchase payload reference (`INV-{invoice_id}`).
+  - Matches invoice from purchase payload `reference`, which carries the structured invoice number (`INV-YYYYMM-#####`); legacy `INV-{invoice_id}` references are still resolved for purchases created before the change.
   - Automatically creates a `Payment` record with `payment_method = 'Chip Gateway'` and updates invoice status to `Paid`.
 
 ### 2. Manual Payment Recording & History

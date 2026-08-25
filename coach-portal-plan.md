@@ -42,7 +42,9 @@ This document outlines the architecture, page structure, and technical implement
 *   Mark specific dates as unavailable.
 
 ### My Payroll (`/coach/payroll`)
-*   **Read-Only Summary:** Sessions delivered per month, calculated expected pay based on hourly/session rate.
+*   **Read-Only Summary:** Sessions delivered per month, average rate, total pay, and status.
+*   **Payroll Details:** A detail modal shows the saved session breakdown and activity trail for the coach's own payrolls.
+*   **Access Control:** Coaches cannot edit payrolls or access another coach's payroll.
 
 ---
 

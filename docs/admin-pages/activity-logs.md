@@ -14,3 +14,7 @@
   - Subject model & ID
   - Date and time timestamp
 - Includes real-time search filter and server-side pagination.
+- Payroll actions use the `payroll` log name and include:
+  - System payroll generation/regeneration
+  - Admin Draft payroll edits with before/after values
+  - Admin processing and payment status transitions

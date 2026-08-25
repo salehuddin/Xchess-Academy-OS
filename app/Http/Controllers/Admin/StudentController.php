@@ -282,7 +282,7 @@ class StudentController extends Controller
             ->get();
 
         $appliedAdjustments = InvoiceAdjustment::query()
-            ->with('invoice:id,month_year,status')
+            ->with('invoice:id,invoice_number,month_year,status')
             ->where('student_id', $student->id)
             ->where('status', 'applied')
             ->latest()

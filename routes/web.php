@@ -93,6 +93,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
 
         Route::get('/payrolls', [PayrollController::class, 'index'])->name('payrolls.index');
+        Route::get('/payrolls/{payroll}', [PayrollController::class, 'show'])->name('payrolls.show');
+        Route::put('/payrolls/{payroll}', [PayrollController::class, 'update'])->name('payrolls.update');
         Route::put('/payrolls/{payroll}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
         Route::put('/payrolls/{payroll}/paid', [PayrollController::class, 'markPaid'])->name('payrolls.paid');
 
@@ -146,6 +148,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/students', [App\Http\Controllers\Coach\StudentController::class, 'index'])->name('students.index');
         Route::get('/students/{student}', [App\Http\Controllers\Coach\StudentController::class, 'show'])->name('students.show');
         Route::get('/payrolls', [App\Http\Controllers\Coach\PayrollController::class, 'index'])->name('payrolls.index');
+        Route::get('/payrolls/{payroll}', [App\Http\Controllers\Coach\PayrollController::class, 'show'])->name('payrolls.show');
 
         Route::get('/attendances/{class}/{date}', [App\Http\Controllers\Coach\AttendanceController::class, 'show'])->name('attendances.show');
         Route::post('/attendances/{class}/{date}', [App\Http\Controllers\Coach\AttendanceController::class, 'store'])->name('attendances.store');
@@ -156,6 +159,7 @@ use App\Http\Controllers\Portal\ChipPaymentController;
 
 Route::prefix('portal')->name('portal.')->group(function () {
     Route::get('/{token}', [ParentPortalController::class, 'index'])->name('parent');
+    Route::get('/{token}/students/{student}/details', [ParentPortalController::class, 'studentDetails'])->name('students.details');
     Route::get('/{token}/invoices/{invoice}', [ParentPortalController::class, 'invoice'])->name('invoice.show');
     Route::get('/{token}/invoices/{invoice}/pdf', [ParentPortalController::class, 'downloadInvoicePdf'])->name('invoice.pdf');
     Route::get('/{token}/invoices/{invoice}/receipt-pdf', [ParentPortalController::class, 'downloadReceiptPdf'])->name('invoice.receipt-pdf');

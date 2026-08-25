@@ -177,7 +177,7 @@ export default function Show({ invoice, pendingAdjustments = [] }) {
                         <div>
                             <div className="flex items-center gap-3">
                                 <h2 className="text-2xl font-bold leading-tight text-gray-800">
-                                    INV-{String(invoice.id).padStart(4, '0')}
+                                    {invoice.invoice_number}
                                 </h2>
                                 <Chip
                                     color={statusColorMap[invoice.status] ?? 'default'}
@@ -216,7 +216,7 @@ export default function Show({ invoice, pendingAdjustments = [] }) {
                 </div>
             }
         >
-            <Head title={`Invoice INV-${String(invoice.id).padStart(4, '0')}`} />
+            <Head title={`Invoice ${invoice.invoice_number}`} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

@@ -22,7 +22,7 @@ This file tracks implementation progress based on the revised `techincal-impleme
 - [ ] **Classes**: Verify & Standardize Create/Edit/Index/Show
 - [ ] **Users**: Verify & Standardize Index/Management
 - [ ] **Invoices**: Verify & Standardize Index/Show
-- [ ] **Payrolls**: Verify & Standardize Index
+- [x] **Payrolls**: Payroll index, detail modal, Draft editing, activity trail, and Coach Details history
 - [ ] **Attendance**: Verify & Standardize Index/Show
 - [ ] **Other Modules**: Packages, Rooms, Tasks, Reports, Payments
 
@@ -35,7 +35,7 @@ This file tracks implementation progress based on the revised `techincal-impleme
 - [ ] **Review & Finalize Student/Parent Models**: Check fields (`student_uid`, `recurring_discount`) & Relations (`parents`, `invoices`, `classes`)
 - [x] **Review & Finalize Class/Schedule/Room Models**: Check fields (`capacity`, `room_id`) & Relations (`schedules`, `attendances`)
 - [ ] **Review & Finalize Invoice/Payment Models**: Check fields (`manual_adjustment`, `status`, `notification_sent`) & Relations
-- [ ] **Review & Finalize Payroll Models**: Check fields (`sessions_delivered`, `hourly_rate`) & Relations
+- [x] **Review & Finalize Payroll Models**: Payroll totals, line-item snapshots, status preservation, and relations
 - [ ] **Review & Finalize Task/Audit Models**: Check polymorphic relations and activity logging setup
 
 ## Phase 2: Core Business Logic & CRUD

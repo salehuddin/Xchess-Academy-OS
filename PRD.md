@@ -45,9 +45,11 @@ This triggers the notification to the parent and moves the invoice to Pending.
 
 Session-Based: Coaches are paid strictly for the sessions they deliver.
 
-Calculation: Total Pay = (Number of Delivered Sessions) × (Coach Hourly Rate).
+Calculation: Total Pay = the sum of each delivered session's package coach rate per session. The average rate is stored for display, and each session's class, package, date, and rate are snapshotted as payroll line items.
 
 Independence: Coach pay is independent of student discounts or invoice adjustments.
+
+Review and Control: Admins can view the session-level calculation and activity trail. Draft payroll totals can be edited by Admins; Processed and Paid payrolls are read-only. Coaches can view only their own payroll details.
 
 ## 3 Task Management
 

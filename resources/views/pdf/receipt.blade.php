@@ -138,7 +138,7 @@
             </td>
             <td class="text-right">
                 <div class="section-heading">Invoice Reference</div>
-                <div>Invoice #: <strong>INV-{{ $invoice->id }}</strong></div>
+                <div>Invoice #: <strong>{{ $invoice->invoice_number }}</strong></div>
                 <div>Billing Period: <strong>{{ $invoice->month_year }}</strong></div>
             </td>
         </tr>
@@ -153,7 +153,7 @@
         </thead>
         <tbody>
             <tr>
-                <td>Full Tuition Payment for {{ $invoice->month_year }} (Invoice #INV-{{ $invoice->id }})</td>
+                <td>Full Tuition Payment for {{ $invoice->month_year }} (Invoice #{{ $invoice->invoice_number }})</td>
                 <td class="text-right">RM {{ number_format($invoice->total_amount, 2) }}</td>
             </tr>
         </tbody>

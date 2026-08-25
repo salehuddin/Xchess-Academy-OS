@@ -65,13 +65,13 @@ System Action: Sends an automated receipt to the Parent.
 
 Primary Actor: Finance
 
-Session Aggregation: At month-end, the system looks at all CLASS_SCHEDULE entries where is_delivered is true.
+Session Aggregation: At month-end, the system looks at distinct delivered `(class_id, attendance_date)` session pairs for each coach's classes.
 
-Payroll Drafting: System calculates total_pay for each coach based on their hourly_rate multiplied by delivered sessions.
+Payroll Drafting: System calculates each session using `packages.coach_rate_per_session`, stores the summed total and average rate, and snapshots the session line items.
 
-Review: Finance reviews the COACH_PAYROLL draft.
+Review: Finance reviews the COACH_PAYROLL draft, session breakdown, and activity trail. Admins may edit Draft totals; the edit is logged.
 
-Processing: Finance marks payroll as Processed. This is independent of whether students received discounts or paid their invoices.
+Processing: Finance marks payroll as Processed, then marks it Paid after disbursement. Generation and status changes are recorded in the payroll activity log. This is independent of whether students received discounts or paid their invoices.
 
 ## 5. Task Management Flow
 

@@ -137,7 +137,7 @@ class InvoiceController extends Controller
         $invoice->update(['finance_remarks' => $request->finance_remarks]);
         $invoice->recomputeTotal();
 
-        activity()->on($invoice)->log('Invoice #'.$invoice->id.' adjustments updated');
+        activity()->on($invoice)->log($invoice->invoice_number.' adjustments updated');
 
         return redirect()->back()->with('success', 'Invoice updated successfully.');
     }
@@ -163,7 +163,7 @@ class InvoiceController extends Controller
         app(InAppNotifier::class)->notifyRoles(
             [UserRole::Finance],
             'invoice_sent',
-            "Invoice #{$invoice->id} sent",
+            "Invoice {$invoice->invoice_number} sent",
             "Invoice {$invoice->month_year} for {$invoice->student?->name} was sent to the parent.",
             route('admin.invoices.show', $invoice),
             ['invoice_id' => $invoice->id],
@@ -192,6 +192,6 @@ class InvoiceController extends Controller
             'company' => $company,
         ]);
 
-        return $pdf->download('Invoice-INV-'.$invoice->id.'.pdf');
+        return $pdf->download('Invoice-'.$invoice->invoice_number.'.pdf');
     }
 }

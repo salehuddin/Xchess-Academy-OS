@@ -185,7 +185,7 @@ export default function CarryForwardAdjustments({ student, pendingAdjustments = 
                                     <TableCell>{adj.reason}</TableCell>
                                     <TableCell>
                                         {adj.invoice
-                                            ? `INV-${String(adj.invoice.id).padStart(4, '0')} · ${adj.invoice.month_year}`
+                                            ? `${adj.invoice.invoice_number} · ${adj.invoice.month_year}`
                                             : '—'}
                                     </TableCell>
                                 </TableRow>

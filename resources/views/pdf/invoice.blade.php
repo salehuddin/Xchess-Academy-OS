@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Invoice #INV-{{ $invoice->id }}</title>
+    <title>Invoice #{{ $invoice->invoice_number }}</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -124,7 +124,7 @@
             </td>
             <td class="text-right">
                 <div class="section-heading">Invoice Details</div>
-                <div>Invoice #: <strong>INV-{{ $invoice->id }}</strong></div>
+                <div>Invoice #: <strong>{{ $invoice->invoice_number }}</strong></div>
                 <div>Billing Period: <strong>{{ $invoice->month_year }}</strong></div>
                 <div>Issue Date: {{ $invoice->created_at?->format('d M Y') }}</div>
                 <div>Due Date: <strong>{{ $invoice->due_date ? $invoice->due_date->format('d M Y') : '-' }}</strong></div>
@@ -186,7 +186,7 @@
     <div class="footer-note">
         <div style="font-weight: bold; margin-bottom: 5px;">Payment Instructions & Bank Account</div>
         <div>{!! nl2br(e($company['bank_details'])) !!}</div>
-        <div style="margin-top: 8px; color: #6b7280; font-size: 11px;">Please include Invoice #<strong>INV-{{ $invoice->id }}</strong> as reference when making bank transfers.</div>
+        <div style="margin-top: 8px; color: #6b7280; font-size: 11px;">Please include Invoice #<strong>{{ $invoice->invoice_number }}</strong> as reference when making bank transfers.</div>
     </div>
 
 </body>

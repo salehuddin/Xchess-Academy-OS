@@ -147,7 +147,7 @@ export default function Index({ auth, invoices, summary, availableMonths, filter
             case 'id':
                 return (
                     <Link href={route('admin.invoices.show', invoice.id)} className="font-bold text-primary hover:underline">
-                        INV-{String(invoice.id).padStart(4, '0')}
+                        {invoice.invoice_number}
                     </Link>
                 );
             case 'student':

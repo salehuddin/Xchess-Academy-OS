@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
+import PayrollDetailModal from '@/Components/PayrollDetailModal';
 import {
     Table,
     TableHeader,
@@ -44,6 +45,13 @@ const CalendarIcon = (props) => (
         <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
         <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
         <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+    </svg>
+);
+
+const EyeIcon = (props) => (
+    <svg aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 24 24" width="1em" {...props}>
+        <path d="M15.58 12c0 1.98-1.6 3.58-3.58 3.58S8.42 13.98 8.42 12s1.6-3.58 3.58-3.58 3.58 1.6 3.58 3.58Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+        <path d="M12 20.27c3.53 0 6.82-2.08 9.11-5.68.9-1.41.9-3.78 0-5.19-2.29-3.6-5.58-5.68-9.11-5.68-3.53 0-6.82 2.08-9.11 5.68-.9 1.41-.9 3.78 0 5.19 2.29 3.6 5.58 5.68 9.11 5.68Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
     </svg>
 );
 
@@ -96,6 +104,7 @@ const columns = [
 export default function Index({ auth, payrolls, summary, availableMonths, filters }) {
     const [selectedMonth, setSelectedMonth] = useState(new Set(filters?.month ? [filters.month] : []));
     const [selectedStatus, setSelectedStatus] = useState(new Set(filters?.status ? [filters.status] : []));
+    const [detailPayroll, setDetailPayroll] = useState(null);
 
     const applyFilters = (month, status) => {
         const params = {};
@@ -134,6 +143,10 @@ export default function Index({ auth, payrolls, summary, availableMonths, filter
         if (confirm('Mark this payroll as paid?')) {
             router.put(route('admin.payrolls.paid', id));
         }
+    };
+
+    const viewDetail = (payroll) => {
+        setDetailPayroll(payroll);
     };
 
     const renderCell = useCallback((payroll, columnKey) => {
@@ -185,6 +198,16 @@ export default function Index({ auth, payrolls, summary, availableMonths, filter
             case "actions":
                 return (
                     <div className="flex items-center gap-2 justify-center">
+                        <Tooltip content="View Details">
+                            <button
+                                id={`view-payroll-${payroll.id}`}
+                                className="text-default-400 hover:text-default-600 transition-colors"
+                                onClick={() => viewDetail(payroll)}
+                                aria-label="View payroll details"
+                            >
+                                <EyeIcon />
+                            </button>
+                        </Tooltip>
                         {payroll.status === 'Draft' && (
                             <Tooltip content="Mark as Processed" color="primary">
                                 <button
@@ -367,6 +390,13 @@ export default function Index({ auth, payrolls, summary, availableMonths, filter
                     )}
                 </CardBody>
             </Card>
+
+            <PayrollDetailModal
+                isOpen={!!detailPayroll}
+                onClose={() => setDetailPayroll(null)}
+                url={detailPayroll ? route('admin.payrolls.show', detailPayroll.id) : null}
+                canEdit
+            />
         </AuthenticatedLayout>
     );
 }

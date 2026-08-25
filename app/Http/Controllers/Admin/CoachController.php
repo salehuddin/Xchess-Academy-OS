@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChessClass;
 use App\Models\ClassSession;
 use App\Models\CoachProfile;
+use App\Models\Payroll;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -169,11 +170,16 @@ class CoachController extends Controller
                 'classes_count' => $option->classes_count,
             ]);
 
+        $payrolls = Payroll::where('coach_id', $coach->id)
+            ->orderByDesc('month_year')
+            ->get();
+
         return Inertia::render('Admin/Coaches/Show', [
             'coach' => $coach,
             'classes' => $classes,
             'sessions' => $sessions,
             'coachOptions' => $coachOptions,
+            'payrolls' => $payrolls,
         ]);
     }
 

@@ -12,7 +12,7 @@
   - login credentials (email + password)
   - personal details (NRIC, phone)
   - bank details
-  - level + hourly_rate
+  - level + profile compensation details
   - availability (JSON array)
 
 ## How It Works (Technical)
@@ -20,4 +20,3 @@
 - Creates records in a DB transaction:
   - `users` row with `role=Coach` and hashed password (`Hash::make`)
   - `coach_profiles` row linked by `user_id`
-

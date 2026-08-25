@@ -4,9 +4,14 @@
 - `GET /admin/payrolls` (`admin.payrolls.index`)
 - Backend: [PayrollController@index](app/Http/Controllers/Admin/PayrollController.php#L12-L21)
 - UI: [Admin/Payrolls/Index.jsx](resources/js/Pages/Admin/Payrolls/Index.jsx)
+- Detail API: `GET /admin/payrolls/{payroll}` (`admin.payrolls.show`)
+- Draft update API: `PUT /admin/payrolls/{payroll}` (`admin.payrolls.update`)
 
 ## Features
 - Lists payroll records with coach info.
+- View action opens a modal containing the payroll summary, session line-item breakdown, and activity trail.
+- Draft payrolls can be edited in the detail modal. Admins can change total sessions, base rate, and total amount.
+- Processed and Paid payrolls cannot be edited.
 - Allows status updates:
   - Draft → Processed
   - Processed → Paid
@@ -16,4 +21,5 @@
   - `php artisan payroll:generate-monthly {month?}`
   - [GenerateMonthlyPayroll](app/Console/Commands/GenerateMonthlyPayroll.php)
 - Delivered sessions counted as distinct `(class_id, attendance_date)` pairs for classes where `classes.coach_id = coach.id`.
-
+- Each session is stored as a `payroll_line_items` snapshot with class, package, date, and rate.
+- Activity entries use the `payroll` activity log and include generation, edits, processing, and payment events.

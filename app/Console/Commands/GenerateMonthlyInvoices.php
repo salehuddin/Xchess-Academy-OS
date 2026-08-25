@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceAdjustment;
 use App\Models\Student;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class GenerateMonthlyInvoices extends Command
 {
@@ -33,10 +34,17 @@ class GenerateMonthlyInvoices extends Command
 
         $students = Student::with(['classes.package'])->get();
 
+        // One query instead of a per-student EXISTS lookup — the batch
+        // grows by 1000+ rows each month.
+        $existingStudentIds = Invoice::query()
+            ->where('month_year', $monthYear)
+            ->pluck('student_id')
+            ->flip();
+
         $count = 0;
         foreach ($students as $student) {
             // Check if invoice already exists for this month
-            if (Invoice::where('student_id', $student->id)->where('month_year', $monthYear)->exists()) {
+            if ($existingStudentIds->has($student->id)) {
                 $this->warn("Invoice for student {$student->name} already exists for {$monthYear}. Skipping.");
 
                 continue;
@@ -68,25 +76,29 @@ class GenerateMonthlyInvoices extends Command
 
             $totalAmount = max(0, $totalBeforeTax + $taxAmount + $netPending);
 
-            $invoice = Invoice::create([
-                'student_id' => $student->id,
-                'base_amount' => $baseAmount,
-                'tax_amount' => $taxAmount,
-                'recurring_discount_val' => $recurringDiscount,
-                'manual_adjustment' => round($netPending, 2),
-                'total_amount' => round($totalAmount, 2),
-                'status' => 'Draft',
-                'month_year' => $monthYear,
-                'due_date' => now()->addDays(7), // Default due date logic
-            ]);
-
-            // Mark carried-forward adjustments as applied so they are never reused.
-            foreach ($pendingAdjustments as $pendingAdjustment) {
-                $pendingAdjustment->update([
-                    'status' => 'applied',
-                    'invoice_id' => $invoice->id,
+            $invoice = DB::transaction(function () use ($student, $baseAmount, $taxAmount, $recurringDiscount, $netPending, $totalAmount, $monthYear, $pendingAdjustments) {
+                $invoice = Invoice::create([
+                    'student_id' => $student->id,
+                    'base_amount' => $baseAmount,
+                    'tax_amount' => $taxAmount,
+                    'recurring_discount_val' => $recurringDiscount,
+                    'manual_adjustment' => round($netPending, 2),
+                    'total_amount' => round($totalAmount, 2),
+                    'status' => 'Draft',
+                    'month_year' => $monthYear,
+                    'due_date' => now()->addDays(7), // Default due date logic
                 ]);
-            }
+
+                // Mark carried-forward adjustments as applied so they are never reused.
+                foreach ($pendingAdjustments as $pendingAdjustment) {
+                    $pendingAdjustment->update([
+                        'status' => 'applied',
+                        'invoice_id' => $invoice->id,
+                    ]);
+                }
+
+                return $invoice;
+            });
 
             $count++;
         }

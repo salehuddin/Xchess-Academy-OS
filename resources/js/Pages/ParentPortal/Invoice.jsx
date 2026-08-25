@@ -68,6 +68,12 @@ export default function Invoice({ token, parent, invoice }) {
                         <span>The Chip checkout session could not be completed. Please try again or contact finance.</span>
                     </div>
                 )}
+                {paymentStatus === 'cancelled' && (
+                    <div className="bg-default-100 border border-default-200 text-default-700 px-4 py-3 rounded-lg" role="alert">
+                        <strong className="font-bold">Payment Cancelled. </strong>
+                        <span>Checkout was cancelled. You can try again at any time.</span>
+                    </div>
+                )}
                 {flash.error && (
                     <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg" role="alert">
                         <strong className="font-bold">Notice: </strong>
@@ -79,7 +85,7 @@ export default function Invoice({ token, parent, invoice }) {
                     <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                         <div>
                             <div className="text-lg font-bold text-foreground">
-                                Invoice #{invoice.id} · {invoice.month_year}
+                                Invoice {invoice.invoice_number} · {invoice.month_year}
                             </div>
                             <div className="text-sm text-default-500">
                                 Student: {invoice.student?.name}
