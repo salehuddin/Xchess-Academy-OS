@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -165,5 +166,49 @@ class SettingsTest extends TestCase
         $this->actingAs($coach)->get(route('admin.settings.index'))->assertStatus(403);
         $this->actingAs($coach)->get(route('admin.activity-logs.index'))->assertStatus(403);
         $this->actingAs($coach)->get(route('admin.system-logs.index'))->assertStatus(403);
+    }
+
+    public function test_chip_connection_test_reports_available_payment_methods(): void
+    {
+        Http::fake([
+            'gate.chip-in.asia/api/v1/payment_methods/*' => Http::response([
+                'available_payment_methods' => ['visa', 'mastercard', 'fpx'],
+            ], 200),
+        ]);
+
+        $admin = User::factory()->create(['role' => UserRole::Admin->value]);
+        Setting::set('chip_brand_id', 'BRAND_123', 'chip');
+        Setting::set('chip_api_key', 'SECRET_KEY_123', 'chip');
+
+        $response = $this->actingAs($admin)->post(route('admin.settings.test-chip'));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+    }
+
+    public function test_chip_connection_test_reports_invalid_api_key(): void
+    {
+        Http::fake([
+            'gate.chip-in.asia/api/v1/payment_methods/*' => Http::response(['detail' => 'Invalid token.'], 401),
+        ]);
+
+        $admin = User::factory()->create(['role' => UserRole::Admin->value]);
+        Setting::set('chip_brand_id', 'BRAND_123', 'chip');
+        Setting::set('chip_api_key', 'BAD_KEY', 'chip');
+
+        $response = $this->actingAs($admin)->post(route('admin.settings.test-chip'));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+    }
+
+    public function test_chip_connection_test_requires_credentials(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin->value]);
+
+        $response = $this->actingAs($admin)->post(route('admin.settings.test-chip'));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
     }
 }

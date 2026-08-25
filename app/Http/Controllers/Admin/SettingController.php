@@ -205,12 +205,30 @@ class SettingController extends Controller
         }
 
         try {
-            $endpoint = config('services.chip.base_url').'/purchases/';
+            // /purchases/ is POST-only, so use the GET /payment_methods/
+            // lookup instead: it requires Bearer auth + brand_id, which
+            // validates both the API key and the brand in a single call,
+            // and returns the available payment methods in test/live mode.
+            $response = Http::withToken($apiKey)->get(
+                config('services.chip.base_url').'/payment_methods/',
+                [
+                    'brand_id' => $brandId,
+                    'currency' => 'MYR',
+                    'amount' => 1000,
+                ]
+            );
 
-            $response = Http::withToken($apiKey)->get($endpoint);
+            if ($response->successful()) {
+                $methods = collect($response->json('available_payment_methods', []));
+                $summary = $methods->isNotEmpty()
+                    ? 'Available methods: '.$methods->implode(', ')
+                    : 'Connected (no methods returned for RM 10).';
 
-            if ($response->successful() || $response->status() === 400 || $response->status() === 422) {
-                return back()->with('success', 'Chip API Connection Successful (Status Code: '.$response->status().')');
+                return back()->with('success', 'Chip API Connection Successful. '.$summary);
+            }
+
+            if (in_array($response->status(), [401, 403], true)) {
+                return back()->with('error', 'Chip API rejected the API key (status '.$response->status().'). Verify the key and environment match.');
             }
 
             return back()->with('error', 'Chip API Test Returned Status Code: '.$response->status());

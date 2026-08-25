@@ -195,12 +195,16 @@ KEY;
 
         Http::fake([
             'https://gate.chip-in.asia/api/v1/webhooks/' => Http::response([
-                [
-                    'id' => 'wh-1',
-                    'public_key' => $this->keyPair()['public'],
-                    'callback' => 'https://os.xchessacademy.com/webhooks/chip',
-                    'events' => ['purchase.paid'],
+                'results' => [
+                    [
+                        'id' => 'wh-1',
+                        'public_key' => $this->keyPair()['public'],
+                        'callback' => 'https://os.xchessacademy.com/webhooks/chip',
+                        'events' => ['purchase.paid'],
+                    ],
                 ],
+                'next' => null,
+                'previous' => null,
             ], 200),
         ]);
 
@@ -333,7 +337,7 @@ KEY;
         Setting::set('chip_api_key', 'TEST_API_KEY', 'chip');
 
         Http::fake([
-            'https://gate.chip-in.asia/api/v1/webhooks/' => Http::response([], 200),
+            'https://gate.chip-in.asia/api/v1/webhooks/' => Http::response(['results' => [], 'next' => null, 'previous' => null], 200),
         ]);
 
         $invoice = Invoice::factory()->create(['status' => 'Pending']);

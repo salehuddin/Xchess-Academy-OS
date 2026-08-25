@@ -239,8 +239,9 @@ class ChipPaymentController extends Controller
                     return [];
                 }
 
+                // GET /webhooks/ returns a paginated {results: [...]} object.
                 $keys = [];
-                foreach ($response->json() as $webhook) {
+                foreach ($response->json('results', []) as $webhook) {
                     if (! empty($webhook['public_key'])) {
                         $keys[] = trim($webhook['public_key']);
                     }
