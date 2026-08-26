@@ -199,7 +199,7 @@ KEY;
                     [
                         'id' => 'wh-1',
                         'public_key' => $this->keyPair()['public'],
-                        'callback' => 'https://os.xchessacademy.com/webhooks/chip',
+                        'callback' => route('webhooks.chip'),
                         'events' => ['purchase.paid'],
                     ],
                 ],
@@ -221,6 +221,43 @@ KEY;
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'status' => 'Paid']);
+    }
+
+    public function test_chip_webhook_ignores_sibling_webhooks_pointing_elsewhere(): void
+    {
+        Setting::set('chip_api_key', 'TEST_API_KEY', 'chip');
+
+        // Both webhooks are fetched, but only the one whose callback points to
+        // THIS platform is trusted. The other (a different app) is skipped.
+        Http::fake([
+            'https://gate.chip-in.asia/api/v1/webhooks/' => Http::response([
+                'results' => [
+                    [
+                        'id' => 'wh-other-app',
+                        'public_key' => $this->keyPair()['public'],
+                        'callback' => 'https://another-app.test/webhooks/chip',
+                        'events' => ['purchase.paid'],
+                    ],
+                ],
+                'next' => null,
+                'previous' => null,
+            ], 200),
+        ]);
+
+        $invoice = Invoice::factory()->create(['status' => 'Pending', 'total_amount' => 200.00]);
+
+        $webhookData = [
+            'event' => 'purchase.paid',
+            'id' => 'CHIP_TX_OTHER',
+            'reference' => $invoice->invoice_number,
+            'status' => 'paid',
+        ];
+
+        $response = $this->postJson(route('webhooks.chip'), $webhookData, $this->signedHeaders($webhookData));
+
+        // No trusted public key → 503 (signature can't be verified at all).
+        $response->assertStatus(503);
+        $this->assertDatabaseCount('payments', 0);
     }
 
     public function test_chip_webhook_is_idempotent_for_duplicate_events(): void

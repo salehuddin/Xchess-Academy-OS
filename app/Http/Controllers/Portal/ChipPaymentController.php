@@ -110,8 +110,9 @@ class ChipPaymentController extends Controller
         // Chip signs every webhook with an RSA PKCS#1 v1.5 signature of the
         // SHA256 digest of the raw request body, sent in the X-Signature
         // header. The public key lives on the Webhook object, fetched via the
-        // Chip API. An explicit public key may be configured to skip the fetch.
-        $publicKeys = $this->webhookPublicKeys();
+        // Chip API. Only webhooks whose callback URL points to THIS endpoint
+        // are trusted, so a sibling webhook aimed at another app is ignored.
+        $publicKeys = $this->webhookPublicKeys(route('webhooks.chip'));
 
         if (empty($publicKeys)) {
             Log::warning('Chip Webhook rejected: no webhook public key configured or fetchable');
@@ -214,7 +215,7 @@ class ChipPaymentController extends Controller
      *
      * @return string[]
      */
-    private function webhookPublicKeys(): array
+    private function webhookPublicKeys(string $expectedCallback): array
     {
         $explicit = Setting::get('chip_webhook_public_key', config('services.chip.webhook_public_key'));
 
@@ -228,7 +229,7 @@ class ChipPaymentController extends Controller
             return [];
         }
 
-        return Cache::remember('chip:webhook_public_keys', now()->addDay(), function () use ($apiKey) {
+        return Cache::remember('chip:webhook_public_keys', now()->addDay(), function () use ($apiKey, $expectedCallback) {
             try {
                 $response = Http::withToken($apiKey)
                     ->get(config('services.chip.base_url').'/webhooks/');
@@ -240,11 +241,26 @@ class ChipPaymentController extends Controller
                 }
 
                 // GET /webhooks/ returns a paginated {results: [...]} object.
+                // Only trust webhooks whose callback URL points to THIS
+                // platform's endpoint — a sibling webhook aimed at a different
+                // app must never be accepted here.
                 $keys = [];
                 foreach ($response->json('results', []) as $webhook) {
-                    if (! empty($webhook['public_key'])) {
-                        $keys[] = trim($webhook['public_key']);
+                    if (empty($webhook['public_key'])) {
+                        continue;
                     }
+
+                    if (! $this->callbackMatches($webhook['callback'] ?? '', $expectedCallback)) {
+                        Log::info('Chip webhook skipped: callback does not match this platform', [
+                            'webhook_id' => $webhook['id'] ?? null,
+                            'callback' => $webhook['callback'] ?? null,
+                            'expected' => $expectedCallback,
+                        ]);
+
+                        continue;
+                    }
+
+                    $keys[] = trim($webhook['public_key']);
                 }
 
                 return array_values(array_unique($keys));
@@ -254,6 +270,34 @@ class ChipPaymentController extends Controller
                 return [];
             }
         });
+    }
+
+    /**
+     * Compare a webhook callback URL against this platform's expected webhook
+     * URL, tolerating scheme, www, trailing-slash, and case differences.
+     */
+    private function callbackMatches(string $callback, string $expected): bool
+    {
+        if ($callback === '' || $expected === '') {
+            return false;
+        }
+
+        return $this->normalizeCallbackUrl($callback) === $this->normalizeCallbackUrl($expected);
+    }
+
+    private function normalizeCallbackUrl(string $url): string
+    {
+        $parts = parse_url(trim($url));
+
+        if (empty($parts['host'])) {
+            return '';
+        }
+
+        $scheme = strtolower($parts['scheme'] ?? 'https');
+        $host = strtolower($parts['host']);
+        $path = rtrim($parts['path'] ?? '', '/');
+
+        return $scheme.'://'.$host.$path;
     }
 
     /**
