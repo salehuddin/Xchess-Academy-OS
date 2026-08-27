@@ -41,7 +41,7 @@ class InboxController extends Controller
 
         return Inertia::render('Notifications/Index', [
             'notifications' => $notifications,
-            'filters' => $request->only(['filter', 'type', 'per_page']),
+            'filters' => (object) $request->only(['filter', 'type', 'per_page']),
             'types' => $types,
         ]);
     }

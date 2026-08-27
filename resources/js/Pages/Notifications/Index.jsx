@@ -51,10 +51,11 @@ function fmtRelative(value) {
     return date.toLocaleDateString();
 }
 
-export default function Index({ notifications, filters, types }) {
+export default function Index({ notifications, filters: rawFilters, types }) {
     const { auth } = usePage().props;
-    const [filter, setFilter] = useState(filters?.filter ?? '');
-    const [type, setType] = useState(filters?.type ?? '');
+    const filters = Array.isArray(rawFilters) || !rawFilters ? {} : rawFilters;
+    const [filter, setFilter] = useState(filters.filter ?? '');
+    const [type, setType] = useState(filters.type ?? '');
     const [busyId, setBusyId] = useState(null);
 
     const applyFilters = useCallback(() => {
@@ -129,22 +130,26 @@ export default function Index({ notifications, filters, types }) {
                     <div className="flex flex-col gap-3 md:flex-row md:items-end">
                         <Select
                             label="Filter"
-                            selectedKeys={filter ? [filter] : []}
-                            onChange={(e) => setFilter(e.target.value)}
+                            selectedKeys={[filter || 'all']}
+                            onSelectionChange={(keys) => {
+                                const value = Array.from(keys)[0];
+                                setFilter(value === 'all' || value == null ? '' : value);
+                            }}
                             className="w-full md:w-[200px]"
-                            disallowEmptySelection
                         >
-                            <SelectItem key="">All</SelectItem>
+                            <SelectItem key="all">All</SelectItem>
                             <SelectItem key="unread">Unread</SelectItem>
                         </Select>
                         <Select
                             label="Type"
-                            selectedKeys={type ? [type] : []}
-                            onChange={(e) => setType(e.target.value)}
+                            selectedKeys={[type || 'all']}
+                            onSelectionChange={(keys) => {
+                                const value = Array.from(keys)[0];
+                                setType(value === 'all' || value == null ? '' : value);
+                            }}
                             className="w-full md:w-[220px]"
-                            disallowEmptySelection
                         >
-                            <SelectItem key="">All types</SelectItem>
+                            <SelectItem key="all">All types</SelectItem>
                             {(types ?? []).map((t) => (
                                 <SelectItem key={t}>{TYPE_LABEL[t] ?? t}</SelectItem>
                             ))}
@@ -165,7 +170,7 @@ export default function Index({ notifications, filters, types }) {
                                         { preserveState: true, replace: true },
                                     )
                                 }
-                                value={filters?.per_page || 15}
+                                value={filters.per_page || 15}
                             >
                                 <option value="15">15</option>
                                 <option value="25">25</option>
